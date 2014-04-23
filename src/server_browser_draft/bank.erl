@@ -1,6 +1,6 @@
 -module(bank).
 
--export([deposit/2, withdraw/2, balance/1]).
+-export([add/2, remove/1, available/0, ping/1]).
 
 -include("bank.hrl").
 
@@ -12,33 +12,33 @@ add(Sname, Ip) ->
 		    Entry = #server{server_name = Sname,ip = Ip},
 		    mnesia:write(Entry),
 		    Ip;
-		[E] ->
+		[_E] ->
                     %% server name is taken, try again
                     {error, server_name_taken}
 	    end
     end.
 
-remove(Sname, Ip) ->
+remove(Sname) ->
     fun() ->
 	    case mnesia:read({server, Sname}) of
 		[] ->
 		    %% no server
 		    {error, no_such_server};
-		[E] ->
-                    mnesia:delete({server, Sname}),
+		[_E] ->
+                    mnesia:delete({server, Sname})
             end
     end.
 
 
 available() ->
     fun() ->
-            mnesia:fodl(fun(X,XS)-> [X|XS]
+            mnesia:foldl(fun(X,XS)-> [X|XS]
                         end, 
                         [], 
                         server)
     end.
 
-ping(Sname) ->
+ping(_Sname) ->
     fun() ->
             pong
     end.

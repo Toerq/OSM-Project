@@ -1,10 +1,11 @@
 -module(bank_client).
 
--export([deposit/2, withdraw/2, balance/1]).
+-export([add/2, remove/1, available/0, ping/1]).
 
-deposit(Who, X)  -> simple_rpc({deposit, Who, X}).
-withdraw(Who, X) -> simple_rpc({withdraw, Who, X}).
-balance(Who)     -> simple_rpc({balance, Who}).
+add(Server_Name, Ip) -> simple_rpc({add, Server_Name, Ip}).
+remove(Server_Name) -> simple_rpc({remove, Server_Name}).
+available() -> simple_rpc({available}).
+ping(Server_Name) -> simple_rpc({ping, Server_Name}).
 
 simple_rpc(X) ->
     case gen_tcp:connect("localhost", 3010, 

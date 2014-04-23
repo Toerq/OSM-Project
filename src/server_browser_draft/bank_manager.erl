@@ -7,8 +7,8 @@
 init_bank() ->
     mnesia:create_schema([node()]),
     mnesia:start(),
-    mnesia:create_table(account, 
+    mnesia:create_table(server, 
 			[{disc_copies,[node()]},
 			 {attributes, 
-			  record_info(fields, account)}]),
+			  record_info(fields, server)}]),
     mnesia:stop().
