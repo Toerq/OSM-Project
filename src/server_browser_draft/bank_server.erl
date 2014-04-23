@@ -37,7 +37,7 @@ do_call(C) ->
     Fun = the_func(C),
     mnesia:transaction(Fun).
 
-the_func({add, Who, X})  ->  bank:add(Who, X);
-the_func({remove, Who, X}) ->  bank:remove(Who, X);
-the_func({available, Who}) ->  bank:available(Who);
-the_func({ping, Who}) -> bank:ping(Who).
+the_func({add, Server_Name, Ip})  ->  bank:add(Server_Name, Ip);
+the_func({remove, Server_Name, Ip}) ->  bank:remove(Server_Name, Ip);
+the_func({available}) ->  bank:available();
+the_func({ping, Server_Name}) -> bank:ping(Server_Name).

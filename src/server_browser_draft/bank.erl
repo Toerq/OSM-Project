@@ -4,53 +4,43 @@
 
 -include("bank.hrl").
 
-add(Who, X) ->
+add(Sname, Ip) ->
     fun() ->
-	    case mnesia:read({server, Who}) of
+	    case mnesia:read({server, Sname}) of
 		[] ->
 		    %% no server, add it
-		    Entry = #server{server_name=Who,ip=X},
+		    Entry = #server{server_name = Sname,ip = Ip},
 		    mnesia:write(Entry),
-		    X;
+		    Ip;
 		[E] ->
                     %% server name is taken, try again
                     {error, server_name_taken}
-		    %% Old = E#account.balance,
-		    %% New = Old + X,
-		    %% E1 = E#account{balance=New},
-		    %% mnesia:write(E1),
-		    %% New
 	    end
     end.
 
-remove(Who, X) ->
+remove(Sname, Ip) ->
     fun() ->
-	    case mnesia:read({server, Who}) of
+	    case mnesia:read({server, Sname}) of
 		[] ->
 		    %% no server
 		    {error, no_such_server};
 		[E] ->
-                    mnesia:delete(E),
-		    %%Old = E#account.balance,
-		    %%if 
-                    %%Old >= X ->
-                    %%   New = Old - X,
-                    %%  E1 = E#account{balance=New},
-                    %% mnesia:delete(E),
-                    %%Old < X ->
-                    %%   {error, not_enough_money}
+                    mnesia:delete({server, Sname}),
             end
     end.
 
 
-avail(Who) ->
+available() ->
     fun() ->
-	    case mnesia:read({account, Who}) of
-		[] ->
-		    %% no account
-		    {error, no_such_account};
-		[E] ->
-		    B = E#account.balance,
-		    {ok, B}
-	    end
+            mnesia:fodl(fun(X,XS)-> [X|XS]
+                        end, 
+                        [], 
+                        server)
     end.
+
+ping(Sname) ->
+    fun() ->
+            pong
+    end.
+
+
