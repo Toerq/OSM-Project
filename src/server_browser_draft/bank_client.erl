@@ -1,17 +1,17 @@
 -module(bank_client).
 
--export([add/2, remove/1, available/0, ping/1]).
+-export([add/3, remove/2, available/1, ping/2]).
 
-add(Server_Name, Ip) -> simple_rpc({add, Server_Name, Ip}).
-remove(Server_Name) -> simple_rpc({remove, Server_Name}).
-available() -> simple_rpc({available}).
-ping(Server_Name) -> 
+add(Server_Name, Ip, DestIp) -> simple_rpc({add, Server_Name, Ip}, DestIp).
+remove(Server_Name, DestIp) -> simple_rpc({remove, Server_Name}, DestIp).
+available(DestIp) -> simple_rpc({available}, DestIp).
+ping(Server_Name, DestIp) -> 
     T1 = erlang:now(),
-    simple_rpc({ping, Server_Name}),
+    simple_rpc({ping, Server_Name}, DestIp),
     timer:now_diff(erlang:now(), T1).
 
-simple_rpc(X) ->
-    case gen_tcp:connect("localhost", 3010, 
+simple_rpc(X, DestIp) ->
+    case gen_tcp:connect(DestIp, 3010, 
 			 [binary, {packet, 4}]) of
 	{ok, Socket} ->
 	    gen_tcp:send(Socket, [term_to_binary(X)]),
