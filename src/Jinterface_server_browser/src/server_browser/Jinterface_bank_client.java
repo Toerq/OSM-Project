@@ -51,7 +51,7 @@ public class Jinterface_bank_client {
 	
 	public static void main(String[] args) {
 		Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
-		int[] ip = {192,168,1,2};
+		int[] ip = {130,238,18,45};
 		int[] newServerIp = {1,2,3,4};
 		client.add("hejsan", newServerIp, ip);
 		client.available(ip);

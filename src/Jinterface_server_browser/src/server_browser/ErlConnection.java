@@ -54,13 +54,19 @@ public class ErlConnection {
       }
       
       public OtpErlangObject receiveRPC() {
-    	  try {
-			return conn.receiveRPC();
-		} catch (OtpErlangExit | OtpAuthException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	  return null;
+			try {
+				return conn.receiveRPC();
+			} catch (OtpErlangExit e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (OtpAuthException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
       }
       
  
