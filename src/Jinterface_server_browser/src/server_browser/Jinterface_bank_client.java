@@ -66,8 +66,25 @@ public class Jinterface_bank_client {
 		conn.sendRPC("bank_client", "remove", argList);
 		OtpErlangObject received = conn.receiveRPC();
 		System.out.println(received + "\n");
+	}
+	
+	public void ping(String servername, int[] destIp) {
+		OtpErlangObject[] argArray = new OtpErlangObject[2];
+		OtpErlangObject sName = new OtpErlangAtom(servername);
+		argArray[0] = sName;
 		
+		int size = destIp.length;
+		OtpErlangObject tmp[] = new OtpErlangObject[size];
+		for (int i = 0; i < size; i++) {
+			tmp[i] = new OtpErlangInt(destIp[i]);
+		}
+		OtpErlangTuple destIpTuple = new OtpErlangTuple(tmp);
+		argArray[1] = destIpTuple;
 		
+		OtpErlangList argList = new OtpErlangList(argArray);
+		conn.sendRPC("bank_client", "ping", argList);
+		OtpErlangObject received = conn.receiveRPC();
+		System.out.println(received + "\n");
 	}
 	
 	public static void main(String[] args) {
@@ -80,6 +97,8 @@ public class Jinterface_bank_client {
 		client.add("hejsan", newServerIp, ip);
 		System.out.println("Available:");
 		client.available(ip);
+		System.out.println("Ping:");
+		client.ping("hejsan", ip);
 		System.out.println("Remove:");
 		client.remove("hejsan", ip);
 		System.out.println("Available:");
