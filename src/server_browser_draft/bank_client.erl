@@ -9,6 +9,7 @@ ping(Server_Name, DestIp) ->
     T1 = erlang:now(),
     simple_rpc({ping, Server_Name}, DestIp),
     timer:now_diff(erlang:now(), T1).
+clear(DestIp) -> simple_rpc({clear}, DestIp).
 
 simple_rpc(X, DestIp) ->
     case gen_tcp:connect(DestIp, 3010, 
