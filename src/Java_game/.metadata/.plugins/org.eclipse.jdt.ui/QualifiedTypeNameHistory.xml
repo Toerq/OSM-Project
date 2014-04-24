@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="com.ericsson.otp.erlang.OtpNode"/>
+<fullyQualifiedTypeName name="com.ericsson.otp.erlang.OtpMbox"/>
+<fullyQualifiedTypeName name="com.ericsson.otp.erlang.OtpErlangObject"/>
+<fullyQualifiedTypeName name="com.ericsson.otp.erlang.OtpErlangAtom"/>
+<fullyQualifiedTypeName name="com.ericsson.otp.erlang.OtpErlangTuple"/>
+</qualifiedTypeNameHistroy>
