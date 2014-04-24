@@ -1,6 +1,6 @@
 -module(bank).
 
--export([add/2, remove/1, available/0, ping/1]).
+-export([add/2, remove/1, available/0, ping/1, clear/0]).
 
 -include("bank.hrl").
 
@@ -41,6 +41,11 @@ available() ->
 ping(_Sname) ->
     fun() ->
             pong
+    end.
+
+clear() ->
+    fun() ->
+	    mnesia:clear_table(server)
     end.
 
 

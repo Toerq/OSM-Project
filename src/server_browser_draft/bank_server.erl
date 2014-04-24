@@ -40,4 +40,5 @@ do_call(C) ->
 the_func({add, Server_Name, Ip})  ->  bank:add(Server_Name, Ip);
 the_func({remove, Server_Name}) ->  bank:remove(Server_Name);
 the_func({available}) ->  bank:available();
+the_func({clear}) ->  bank:clear();
 the_func({ping, Server_Name}) -> bank:ping(Server_Name).
