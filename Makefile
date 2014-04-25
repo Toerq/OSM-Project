@@ -10,6 +10,7 @@ ERLC_FLAGS := -W -I include
 JAVAC := javac
 JAVAC_CFLAGS := -classpath ".:/it/sw/erlang/R16B/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar"
 # NOTE: this is not a general search path for ../OtpErlang.jar 
+# OBS: ./src/lib/jinterface-1.5.6.jar innehåller jar-filen
 #####################
 
 
