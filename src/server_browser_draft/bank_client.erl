@@ -1,6 +1,6 @@
 -module(bank_client).
 
--export([add/3, remove/2, available/1, ping/2]).
+-export([add/3, remove/2, available/1, ping/2, clear/1]).
 
 add(Server_Name, Ip, DestIp) -> simple_rpc({add, Server_Name, Ip}, DestIp).
 remove(Server_Name, DestIp) -> simple_rpc({remove, Server_Name}, DestIp).
