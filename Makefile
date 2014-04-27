@@ -8,9 +8,8 @@ ERLC := erlc
 ERLC_FLAGS := -W -I include
 
 JAVAC := javac
-JAVAC_CFLAGS := -classpath ".:/it/sw/erlang/R16B/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar"
-# NOTE: this is not a general search path for ../OtpErlang.jar 
-# OBS: ./src/lib/jinterface-1.5.6.jar innehåller jar-filen
+JAVAC_FLAGS := -classpath ".:./src/lib/jinterface-1.5.6.jar"
+# local jinterface .jar file
 #####################
 
 
@@ -33,14 +32,14 @@ BEAM_SERVER_BROWSER_DRAFT := $(patsubst src/server_browser_draft/%.erl,serverBro
 
 
 ## Java files - custom (ugly) version 1.0 ##
-JAVA_GAME_FILES := $(wildcard src/Java_game/src/*.java)
-CLASS_JAVA_GAME := $(patsubst src/Java_game/src/%.java,javaGame_jbin/%.class,${JAVA_GAME_FILES})
+#JAVA_GAME_FILES := $(wildcard src/Java_game/src/*.java)
+#CLASS_JAVA_GAME := $(patsubst src/Java_game/src/%.java,javaGame_jbin/%.class,${JAVA_GAME_FILES})
 
-JAVA_JINTERFACE_SB_FILES := $(wildcard src/Jinterface_server_browser/src/server_browser/*.java)
-CLASS_JINTERFACE_SB := $(patsubst src/Jinterface_server_browser/src/server_browser/%.java,jinterfaceSB_jbin/%.class,${JAVA_JINTERFACE_SB_FILES})
+#JAVA_JINTERFACE_SB_FILES := $(wildcard src/Jinterface_server_browser/src/server_browser/*.java)
+#CLASS_JINTERFACE_SB := $(patsubst src/Jinterface_server_browser/src/server_browser/%.java,jinterfaceSB_jbin/%.class,${JAVA_JINTERFACE_SB_FILES})
 
-JAVA_JINTERFACE_GAME_FILES := $(wildcard src/Jinterface_game/src/*.java)
-CLASS_JINTERFACE_GAME := $(patsubst src/Jinterface_game/src/%.java,jinterfaceGame_jbin/%.class,${JAVA_JINTERFACE_GAME_FILES})
+#JAVA_JINTERFACE_GAME_FILES := $(wildcard src/Jinterface_game/src/*.java)
+#CLASS_JINTERFACE_GAME := $(patsubst src/Jinterface_game/src/%.java,jinterfaceGame_jbin/%.class,${JAVA_JINTERFACE_GAME_FILES})
 ## end of Java files
 
 
@@ -63,30 +62,36 @@ ARCHIVE_DIR := ..
 
 
 
-all: $(CLASS_JINTERFACE_GAME) $(CLASS_JINTERFACE_SB) $(CLASS_JAVA_GAME) $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_SERVER_BROWSER_DRAFT) $(BEAM_FILES)
+all: game_server Java_game Jinterface_server_browser Jinterface_game $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_SERVER_BROWSER_DRAFT) $(BEAM_FILES)
 
 ebin/%.beam: src/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
 # $<     -is the name of the first dependency.
+
 
 ## ERLANG CUSTOM COMPILATION (.beam files in ebin folder)
 simpleUDP_ebin/%.beam: src/simple_UDP_testing/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
 
 serverBrowser_ebin/%.beam: src/server_browser_draft/%.erl
-	$(ERLC) $(ERLC_CFLAGS) -o ebin $<
+	$(ERLC) $(ERLC_FLAGS) -o ebin $<
 ## end of Erlang compilation
 
+
 ## JAVA CUSTOM COMPILATION (.class files in jbin folder)
-javaGame_jbin/%.class: src/Java_game/src/%.java
-	$(JAVAC) $(JAVAC_CFLAGS) -d jbin $<
+Java_game:
+	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Java_game/src/*.java
 
-jinterfaceSB_jbin/%.class: 
-	$(JAVAC) $(JAVAC_CFLAGS) -d jbin src/Jinterface_server_browser/src/server_browser/*.java
+Jinterface_server_browser: 
+	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_server_browser/src/server_browser/*.java
 
-jinterfaceGame_jbin/%.class:
-	$(JAVAC) $(JAVAC_CFLAGS) -d jbin src/Jinterface_game/src/*.java
+Jinterface_game:
+	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_game/src/*.java
+
+game_server:
+	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/game_server/src/*.java
 ## end of Java compilation
+
 
 start: all
 	(cd ebin && erl -eval 'foo:start(), init:stop()')
