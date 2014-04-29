@@ -1,13 +1,13 @@
 -module(game_client).
 
--export([addPlayer/1, removePlayer/1, getPos/1, getAllPos/0, move/3, wait_reply/1]).
+-export([addPlayer/2, removePlayer/2, getPos/2, getAllPos/1, move/4, wait_reply/1]).
 
-addPlayer(PlayerName) -> simple_rpc({addPlayer, PlayerName},"localhost").
-removePlayer(PlayerName) -> simple_rpc({removePlayer, PlayerName},"localhost").
-getPos(PlayerName) -> simple_rpc({getPos, PlayerName},"localhost").
-getAllPos() -> simple_rpc({getAllPos},"localhost").
-move(PlayerName, Direction, Amount) -> 
-    simple_rpc({move, PlayerName, Direction, Amount},"localhost").
+addPlayer(PlayerName, destIp) -> simple_rpc({addPlayer, PlayerName}, destIp).
+removePlayer(PlayerName, destIp) -> simple_rpc({removePlayer, PlayerName}, destIp).
+getPos(PlayerName, destIpd) -> simple_rpc({getPos, PlayerName}, destIp).
+getAllPos(destIp) -> simple_rpc({getAllPos}, destIp).
+move(PlayerName, Direction, Amount, destIp) -> 
+    simple_rpc({move, PlayerName, Direction, Amount}, destIp).
 %%ping(Server_Name, DestIp) -> 
 %%    T1 = erlang:now(),
 %%    simple_rpc({ping, Server_Name}, DestIp),
