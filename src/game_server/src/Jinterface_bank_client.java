@@ -1,4 +1,6 @@
 
+import java.util.ArrayList;
+
 import com.ericsson.otp.erlang.*; 
 
 public class Jinterface_bank_client {
@@ -8,6 +10,9 @@ public class Jinterface_bank_client {
 		this.conn = new ErlConnection(enode, cookie);
 	}
 	
+	public void initMailbox(Jinterface_bank_client client) {
+		
+	}
 	
 	public void add(String servername, int[] ip, int[] destIp) {
 		OtpErlangObject[] argArray = new OtpErlangObject[3];
@@ -77,16 +82,42 @@ public class Jinterface_bank_client {
 		
 	}
 
+	public ArrayList<Player> getAllPos() {
+		OtpErlangObject argArray[] = new OtpErlangObject[0];
+		OtpErlangList argList = new OtpErlangList(argArray);
+		conn.sendRPC("game_client", "getAllPos", argList);
+		
+		OtpErlangObject received = conn.receiveRPC();
+		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) received).elementAt(1);
+        ArrayList<Player> playerList = new ArrayList<Player>();
+        for(OtpErlangObject erlangPlayer : erlangPlayerList) {
+        	int x = 0;
+        	int y = 0;
+        	System.out.println("print av erlangPlayer: " + erlangPlayer);
+        	String playerName =  ((OtpErlangTuple) erlangPlayer).elementAt(1).toString();
+        	try {
+				x = ((OtpErlangLong) ((OtpErlangTuple) erlangPlayer).elementAt(2)).intValue();
+				y = ((OtpErlangLong) ((OtpErlangTuple) erlangPlayer).elementAt(3)).intValue();
+			} catch (OtpErlangRangeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	System.out.println("X: " + x);
+        	playerList.add(new Player(x, y, playerName));
+        }
+
+        return playerList;
+//		OtpErlangList erlangPlayerList = (OtpErlangList) received;
+//		OtpErlangObject[] list = erlangPlayerList.elements();
+//		int length = list.length;
+//		
+//		System.out.println(erlangPlayerList.elementAt(0));
+	}
 
 	public void updatePos(String playerName, Player player) {
 
 				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
 				OtpErlangList arg = new OtpErlangList(erlName);
-				
-	//			OtpErlangObject argArray[] = new OtpErlangObject[1];
-	//			argArray[0] = new OtpErlangAtom(playerName);
-	//			OtpErlangList argList = new OtpErlangList(argArray);
-				
 				
 				conn.sendRPC("game_client", "getPos", arg);
 				OtpErlangTuple received = (OtpErlangTuple) conn.receiveRPC();
@@ -120,6 +151,8 @@ public class Jinterface_bank_client {
 		//			e.printStackTrace();
 		//		}
 			}
+	
+	
 	
 //	public static void main(String[] args) {
 //		Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");

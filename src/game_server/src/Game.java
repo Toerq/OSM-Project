@@ -4,6 +4,8 @@
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+
 import javax.swing.JFrame;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
@@ -36,8 +38,15 @@ public class Game extends JFrame
                 int[] ip = {127, 0, 0, 1};
                 client.add("newServ", ip, ip);
                 client.available(ip);
-                Player player1 = new Player(10,10, "player1", ip, client);
-                game.run(client, player1);
+                Player clientPlayer = new Player(10,10, "player1");
+                clientPlayer.addPlayerToServer(ip, client);
+                Player player2 = new Player(20,20, "player2");
+                player2.addPlayerToServer(ip, client);
+                ArrayList<Player> playerList = new ArrayList<Player>();
+                //playerList.add(player1);
+                //playerList.add(player2);
+                
+                game.run(client, clientPlayer);
                 System.exit(0);
                 
         }
@@ -45,16 +54,18 @@ public class Game extends JFrame
         /**
          * This method starts the game and runs it in a loop
          */
-        public void run(Jinterface_bank_client client, Player player)
+        public void run(Jinterface_bank_client client, Player clientPlayer)
         {
                 initialize();
                
                 while(isRunning)
                 {
                         long time = System.currentTimeMillis();
-                       
-                        update(client, player);
-                        draw(player);
+                        ArrayList<Player> playerList = client.getAllPos();
+                        
+                        update(client, clientPlayer);
+                        draw(playerList);
+                      //  draw(playerList);
                        
                         //  delay for each frame  -   time it took for one frame
                         time = (1000 / fps) - (System.currentTimeMillis() - time);
@@ -124,8 +135,9 @@ public class Game extends JFrame
         /**
          * This method will draw everything
          */
-        void draw(Player player)
-        {              
+        // void draw(ArrayList<Player> playerList)
+         void draw(ArrayList<Player> playerList)
+        {       
                 Graphics g = getGraphics();
                
                 Graphics bbg = backBuffer.getGraphics();
@@ -134,7 +146,9 @@ public class Game extends JFrame
                 bbg.fillRect(0, 0, windowWidth, windowHeight);
                
                 bbg.setColor(Color.BLACK);
-                bbg.drawOval(player.getX(), player.getY(), 20, 20);
+                for(Player player : playerList) {
+                	bbg.drawOval(player.getX(), player.getY(), 20, 20);
+                }
                
                 g.drawImage(backBuffer, insets.left, insets.top, this);
         } 

@@ -4,13 +4,16 @@ public class Player {
 	private int y;
 	String playerName;
 
-	public Player(int x, int y, String playerName, int[] destIp, Jinterface_bank_client client) {
+	public Player(int x, int y, String playerName) {
 		this.x = x;
 		this.y = y;
 		this.playerName = playerName;
-        client.addPlayer(destIp, playerName);
 	}
 
+	public void addPlayerToServer(int[] destIp, Jinterface_bank_client client) {
+        client.addPlayer(destIp, this.playerName);
+	}
+	
 	public void setCoordinates(int x, int y) {
 		this.x = x;
 		this.y = y;
