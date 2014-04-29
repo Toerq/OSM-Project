@@ -61,35 +61,47 @@ ARCHIVE_DIR := ..
 
 
 
+all: ## game_server Java_game Jinterface_server_browser Jinterface_game $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_FILES) $(BEAM_SERVER_BROWSER_DRAFT)
 
-all: game_server Java_game Jinterface_server_browser Jinterface_game $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_SERVER_BROWSER_DRAFT) $(BEAM_FILES)
+## ERLANG CUSTOM COMPILATION (.beam files in ebin folder)
+erlc: server_browser_draft simple_UDP_testing
+
+server_browser_draft: src/server_browser_draft/
+	$(ERLC) $(ERLC_FLAGS) -o $< src/server_browser_draft/*.erl
+
+simple_UDP_testing: src/simple_UDP_testing/
+	$(ERLC) $(ERLC_FLAGS) -o $< src/simple_UDP_testing/*.erl
 
 ebin/%.beam: src/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
-# $<     -is the name of the first dependency.
 
-
-## ERLANG CUSTOM COMPILATION (.beam files in ebin folder)
 simpleUDP_ebin/%.beam: src/simple_UDP_testing/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
 
 serverBrowser_ebin/%.beam: src/server_browser_draft/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
+
 ## end of Erlang compilation
 
 
 ## JAVA CUSTOM COMPILATION (.class files in jbin folder)
+javac: Java_game Jinterface_server_browser Jinterface_game
+
 Java_game:
-	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Java_game/src/*.java
+	$(JAVAC) $(JAVAC_FLAGS) src/Java_game/src/*.java
+## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/Java_game/src/*.java
 
 Jinterface_server_browser: 
-	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_server_browser/src/server_browser/*.java
+	$(JAVAC) $(JAVAC_FLAGS) src/Jinterface_server_browser/src/server_browser/*.java
+## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_server_browser/src/server_browser/*.java
 
 Jinterface_game:
-	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_game/src/*.java
+	$(JAVAC) $(JAVAC_FLAGS) src/Jinterface_game/src/*.java
+## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/Jinterface_game/src/*.java
 
 game_server:
-	$(JAVAC) $(JAVAC_FLAGS) -d jbin src/game_server/src/*.java
+	$(JAVAC) $(JAVAC_FLAGS) src/game_server/src/*.java
+## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/game_server/src/*.java
 ## end of Java compilation
 
 
