@@ -31,7 +31,7 @@ wait_reply(Socket) ->
 	    gen_tcp:close(Socket),
 	    Term;
  	{tcp_closed, Socket} ->
-	    truez
+	    "tcp_is_closed!"
       end.
 %%asd: {badrpc,{'EXIT',{undef,[{game_client,getPos,[player1]},{rpc,'-handle_call_call/6-fun-0-',5}]}}}
 
