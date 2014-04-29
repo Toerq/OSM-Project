@@ -44,4 +44,5 @@ the_func({clear}) ->  bank:clear();
 the_func({ping, Server_Name}) -> bank:ping(Server_Name);
 the_func({addPlayer, PlayerName}) -> game_logic:addPlayer(PlayerName);
 the_func({getPos, PlayerName}) -> game_logic:getPos(PlayerName);
+the_func({getAllPos}) -> game_logic:getAllPos();
 the_func({move, PlayerName, Direction, Amount}) -> game_logic:move(PlayerName, Direction, Amount).
