@@ -61,16 +61,16 @@ ARCHIVE_DIR := ..
 
 
 
-all: ## game_server Java_game Jinterface_server_browser Jinterface_game $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_FILES) $(BEAM_SERVER_BROWSER_DRAFT)
+all: game_server Java_game Jinterface_server_browser Jinterface_game $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_FILES) $(BEAM_SERVER_BROWSER_DRAFT)
 
 ## ERLANG CUSTOM COMPILATION (.beam files in ebin folder)
 erlc: server_browser_draft simple_UDP_testing
 
-server_browser_draft: src/server_browser_draft/
-	$(ERLC) $(ERLC_FLAGS) -o $< src/server_browser_draft/*.erl
-
 simple_UDP_testing: src/simple_UDP_testing/
 	$(ERLC) $(ERLC_FLAGS) -o $< src/simple_UDP_testing/*.erl
+
+server_browser_draft: src/server_browser_draft/
+	$(ERLC) $(ERLC_FLAGS) -o $< src/server_browser_draft/*.erl
 
 ebin/%.beam: src/%.erl
 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
@@ -104,6 +104,15 @@ game_server:
 ## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/game_server/src/*.java
 ## end of Java compilation
 
+
+start_server: 
+	(cd src/server_browser_draft && erl -eval 'bank_manager:init_bank(), bank_server:start()')
+
+start_node:
+	(cd src/server_browser_draft && erl -sname enode -setcookie erlang)
+
+start_client:
+	(cd src/server_browser_draft && erl -eval 'bank_client:add("Testing", {123,123,0,1},{127,0,0,1}), bank_client:available({127,0,0,1})')
 
 start: all
 	(cd ebin && erl -eval 'foo:start(), init:stop()')
