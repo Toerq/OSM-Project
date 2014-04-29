@@ -30,12 +30,12 @@ public class Game extends JFrame
         InputHandler input;
        
         int x = 0;
+        static int[] ip = {127,0,0,1};
        
         public static void main(String[] args)
         {
                 Game game = new Game();
                 Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
-                int[] ip = {127, 0, 0, 1};
                 client.add("newServ", ip, ip);
                 client.available(ip);
                 Player clientPlayer = new Player(10,10, "player1");
@@ -61,7 +61,7 @@ public class Game extends JFrame
                 while(isRunning)
                 {
                         long time = System.currentTimeMillis();
-                        ArrayList<Player> playerList = client.getAllPos();
+                        ArrayList<Player> playerList = client.getAllPos(ip);
                         
                         update(client, clientPlayer);
                         draw(playerList);
@@ -112,24 +112,24 @@ public class Game extends JFrame
                 if (input.isKeyDown(KeyEvent.VK_RIGHT))
                 {
                         //x += 5;
-                	client.move(playerObj.getPlayerName(), "right", 5);
+                	client.move(playerObj.getPlayerName(), "right", 5, ip);
                 }
                 if (input.isKeyDown(KeyEvent.VK_LEFT))
                 {
-                	client.move(playerObj.getPlayerName(), "left", 5);
+                	client.move(playerObj.getPlayerName(), "left", 5, ip);
                 //	x -= 5;
                 }
                 if (input.isKeyDown(KeyEvent.VK_DOWN))
                 {
                         //x += 5;
-                	client.move(playerObj.getPlayerName(), "up", 5);
+                	client.move(playerObj.getPlayerName(), "up", 5, ip);
                 }
                 if (input.isKeyDown(KeyEvent.VK_UP))
                 {
-                	client.move(playerObj.getPlayerName(), "down", 5);
+                	client.move(playerObj.getPlayerName(), "down", 5, ip);
                 //	x -= 5;
                 }
-               client.updatePos(playerObj.getPlayerName(), playerObj);
+               client.updatePos(playerObj.getPlayerName(), playerObj, ip);
         }
        
         /**

@@ -19,20 +19,11 @@ public class Jinterface_bank_client {
 		OtpErlangObject sName = new OtpErlangAtom(servername);
 		argArray[0] = sName;
 		
-		int size = ip.length;
-		OtpErlangObject tmp[] = new OtpErlangObject[size];
-		for (int i = 0; i < size; i++) {
-			tmp[i] = new OtpErlangInt(ip[i]);
-		}
-		OtpErlangTuple IpTuple = new OtpErlangTuple(tmp);
-		argArray[1] = IpTuple;
+		OtpErlangTuple ipTuple = destIpToErlang(ip);
+		argArray[1] = ipTuple;
 		
-		size = destIp.length;
-		OtpErlangObject tmp2[] = new OtpErlangObject[size];
-		for (int i = 0; i < size; i++) {
-			tmp2[i] = new OtpErlangInt(destIp[i]);
-		}
-		OtpErlangTuple destIpTuple = new OtpErlangTuple(tmp2);
+
+		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
 		argArray[2] = destIpTuple;
 		
 		OtpErlangList argList = new OtpErlangList(argArray);
@@ -42,12 +33,7 @@ public class Jinterface_bank_client {
 	}
 	
 	public void available(int[] destIp) {
-		int size = destIp.length;
-		OtpErlangObject tmp[] = new OtpErlangObject[size];
-		for (int i = 0; i < size; i++) {
-			tmp[i] = new OtpErlangInt(destIp[i]);
-		}
-		OtpErlangTuple tuple = new OtpErlangTuple(tmp);
+		OtpErlangTuple tuple = destIpToErlang(destIp);
 		OtpErlangList arg = new OtpErlangList(tuple);
 		conn.sendRPC("bank_client", "available", arg);
 		OtpErlangObject received = conn.receiveRPC();
@@ -56,24 +42,37 @@ public class Jinterface_bank_client {
 	
 	public void addPlayer(int[] destIp, String playerName) {
 		OtpErlangObject[] argArray = new OtpErlangObject[2];
+		
 
-		int size = destIp.length;
-		OtpErlangObject tmp[] = new OtpErlangObject[size];
-		for (int i = 0; i < size; i++) {
-			tmp[i] = new OtpErlangInt(destIp[i]);
-		}
+		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
 		OtpErlangAtom erlName = new OtpErlangAtom(playerName);
+
+		argArray[0] = erlName;
+		argArray[1] = destIpTuple;
+		
 		OtpErlangList arg = new OtpErlangList(erlName);
 		conn.sendRPC("game_client", "addPlayer", arg);
 		OtpErlangObject received = conn.receiveRPC();
 	}
 	
-	public void move(String name, String dir, int amount) {
-		OtpErlangObject argArray[] = new OtpErlangObject[3];
+	private OtpErlangTuple destIpToErlang(int[] destIp) {
+		int size = destIp.length;
+		OtpErlangObject tmp[] = new OtpErlangObject[size];
+		for (int i = 0; i < size; i++) {
+			tmp[i] = new OtpErlangInt(destIp[i]);
+		}
+		return new OtpErlangTuple(tmp);
+	}
+	
+	public void move(String name, String dir, int amount, int[] destIp) {
+		OtpErlangObject argArray[] = new OtpErlangObject[4];
+
+		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
 		
 		argArray[0] = new OtpErlangAtom(name);
 		argArray[1] = new OtpErlangAtom(dir);
 		argArray[2] = new OtpErlangInt(amount);
+		argArray[3] = destIpTuple;
 		
 		OtpErlangList argList = new OtpErlangList(argArray);
 
@@ -82,12 +81,16 @@ public class Jinterface_bank_client {
 		
 	}
 
-	public ArrayList<Player> getAllPos() {
-		OtpErlangObject argArray[] = new OtpErlangObject[0];
+	public ArrayList<Player> getAllPos(int[] destIp) {
+		OtpErlangObject argArray[] = new OtpErlangObject[1];
+		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
+		argArray[0] = destIpTuple;
 		OtpErlangList argList = new OtpErlangList(argArray);
+		System.out.println(argList);
 		conn.sendRPC("game_client", "getAllPos", argList);
 		
 		OtpErlangObject received = conn.receiveRPC();
+		System.out.println("recieved from getAllPos: " + received);
 		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) received).elementAt(1);
         ArrayList<Player> playerList = new ArrayList<Player>();
         for(OtpErlangObject erlangPlayer : erlangPlayerList) {
@@ -114,11 +117,15 @@ public class Jinterface_bank_client {
 //		System.out.println(erlangPlayerList.elementAt(0));
 	}
 
-	public void updatePos(String playerName, Player player) {
-
+	public void updatePos(String playerName, Player player, int[] destIp) {
+				OtpErlangObject argArray[] = new OtpErlangObject[2];
 				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
-				OtpErlangList arg = new OtpErlangList(erlName);
 				
+				OtpErlangTuple destIpTuple = destIpToErlang(destIp);
+				argArray[0] = erlName;
+				argArray[1] = destIpTuple;
+				OtpErlangList arg = new OtpErlangList(argArray);
+				System.out.println("arg: " + arg);
 				conn.sendRPC("game_client", "getPos", arg);
 				OtpErlangTuple received = (OtpErlangTuple) conn.receiveRPC();
 				OtpErlangTuple coordinates = (OtpErlangTuple) received.elementAt(1);
