@@ -4,7 +4,7 @@
 
 addPlayer(PlayerName, destIp) -> simple_rpc({addPlayer, PlayerName}, destIp).
 removePlayer(PlayerName, destIp) -> simple_rpc({removePlayer, PlayerName}, destIp).
-getPos(PlayerName, destIpd) -> simple_rpc({getPos, PlayerName}, destIp).
+getPos(PlayerName, destIp) -> simple_rpc({getPos, PlayerName}, destIp).
 getAllPos(destIp) -> simple_rpc({getAllPos}, destIp).
 move(PlayerName, Direction, Amount, destIp) -> 
     simple_rpc({move, PlayerName, Direction, Amount}, destIp).
