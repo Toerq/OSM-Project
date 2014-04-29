@@ -85,7 +85,7 @@ serverBrowser_ebin/%.beam: src/server_browser_draft/%.erl
 
 
 ## JAVA CUSTOM COMPILATION (.class files in jbin folder)
-javac: Java_game Jinterface_server_browser Jinterface_game
+javac: game_server Java_game Jinterface_server_browser Jinterface_game
 
 Java_game:
 	$(JAVAC) $(JAVAC_FLAGS) src/Java_game/src/*.java
