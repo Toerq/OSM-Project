@@ -1,0 +1,41 @@
+
+public class Player {
+	private int x;
+	private int y;
+	String playerName;
+
+	public Player(int x, int y, String playerName, int[] destIp, Jinterface_bank_client client) {
+		this.x = x;
+		this.y = y;
+		this.playerName = playerName;
+        client.addPlayer(destIp, playerName);
+	}
+
+	public void setCoordinates(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
+	
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+	
+	
+	
+}

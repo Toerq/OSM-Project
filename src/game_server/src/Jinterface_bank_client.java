@@ -74,11 +74,12 @@ public class Jinterface_bank_client {
 
 		conn.sendRPC("game_client", "move", argList);
 		OtpErlangObject received = conn.receiveRPC();
-		System.out.println("___________________________________________________" + received);
+		
 	}
 
 
-	public int getPos(String playerName) {
+	public void updatePos(String playerName, Player player) {
+
 				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
 				OtpErlangList arg = new OtpErlangList(erlName);
 				
@@ -88,15 +89,23 @@ public class Jinterface_bank_client {
 				
 				
 				conn.sendRPC("game_client", "getPos", arg);
-				OtpErlangObject received = conn.receiveRPC();
+				OtpErlangTuple received = (OtpErlangTuple) conn.receiveRPC();
+				OtpErlangTuple coordinates = (OtpErlangTuple) received.elementAt(1);
 				int x;
-				OtpErlangTuple tuple = (OtpErlangTuple) received;
-				System.out.println("tuple: " + tuple.elementAt(1));
-				System.out.println("asd: " + received.toString());
+				int y;
+				//System.out.println("REC: " + received);
+				//OtpErlangTuple tuple = (OtpErlangTuple) received;
+				//System.out.println("tuple: " + tuple.elementAt(1));
+				//System.out.println("asd: " + received.toString());
 				try {
-					x = ((OtpErlangLong)(tuple.elementAt(1))).intValue();
-					//x = ((OtpErlangLong) received).intValue();
-					return x;
+					x =  ((OtpErlangLong) coordinates.elementAt(0)).intValue();
+					y =  ((OtpErlangLong) coordinates.elementAt(1)).intValue();
+					//x = (OtpErlangTuple) received.elementAt(1);
+					//x = ((OtpErlangLong ((OtpErlangTuple) received.elementAt(1))).intValue();
+					//x = ((OtpErlangLong)received).intValue();
+					player.setCoordinates(x, y);
+					System.out.println(x);
+					System.out.println(y);
 				} catch (OtpErlangRangeException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -110,7 +119,6 @@ public class Jinterface_bank_client {
 		//			// TODO Auto-generated catch block
 		//			e.printStackTrace();
 		//		}
-				return 0;
 			}
 	
 //	public static void main(String[] args) {

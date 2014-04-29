@@ -13,7 +13,7 @@ import com.ericsson.otp.erlang.OtpErlangDecodeException;
  */
 public class Game extends JFrame
 {       
-	static String  player = "player3";
+	static String  player123 = "player1";
         /**
 	 * 
 	 */
@@ -33,9 +33,11 @@ public class Game extends JFrame
         {
                 Game game = new Game();
                 Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
-                int[] arr = {127, 0, 0, 1};
-                client.addPlayer(arr, player);
-                game.run(client);
+                int[] ip = {127, 0, 0, 1};
+                client.add("newServ", ip, ip);
+                client.available(ip);
+                Player player1 = new Player(10,10, "player1", ip, client);
+                game.run(client, player1);
                 System.exit(0);
                 
         }
@@ -43,7 +45,7 @@ public class Game extends JFrame
         /**
          * This method starts the game and runs it in a loop
          */
-        public void run(Jinterface_bank_client client)
+        public void run(Jinterface_bank_client client, Player player)
         {
                 initialize();
                
@@ -51,8 +53,8 @@ public class Game extends JFrame
                 {
                         long time = System.currentTimeMillis();
                        
-                        update(client);
-                        draw();
+                        update(client, player);
+                        draw(player);
                        
                         //  delay for each frame  -   time it took for one frame
                         time = (1000 / fps) - (System.currentTimeMillis() - time);
@@ -94,25 +96,35 @@ public class Game extends JFrame
          * around and check for win conditions, etc
          * @throws OtpErlangDecodeException 
          */
-        void update(Jinterface_bank_client client)
+        void update(Jinterface_bank_client client, Player playerObj)
         {
                 if (input.isKeyDown(KeyEvent.VK_RIGHT))
                 {
                         //x += 5;
-                	client.move(player, "left", 5);
+                	client.move(playerObj.getPlayerName(), "right", 5);
                 }
                 if (input.isKeyDown(KeyEvent.VK_LEFT))
                 {
-                	client.move(player, "right", 5);
+                	client.move(playerObj.getPlayerName(), "left", 5);
                 //	x -= 5;
                 }
-               x = client.getPos(player);
+                if (input.isKeyDown(KeyEvent.VK_DOWN))
+                {
+                        //x += 5;
+                	client.move(playerObj.getPlayerName(), "up", 5);
+                }
+                if (input.isKeyDown(KeyEvent.VK_UP))
+                {
+                	client.move(playerObj.getPlayerName(), "down", 5);
+                //	x -= 5;
+                }
+               client.updatePos(playerObj.getPlayerName(), playerObj);
         }
        
         /**
          * This method will draw everything
          */
-        void draw()
+        void draw(Player player)
         {              
                 Graphics g = getGraphics();
                
@@ -122,7 +134,7 @@ public class Game extends JFrame
                 bbg.fillRect(0, 0, windowWidth, windowHeight);
                
                 bbg.setColor(Color.BLACK);
-                bbg.drawOval(x, 10, 20, 20);
+                bbg.drawOval(player.getX(), player.getY(), 20, 20);
                
                 g.drawImage(backBuffer, insets.left, insets.top, this);
         } 
