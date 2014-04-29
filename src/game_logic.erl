@@ -1,5 +1,16 @@
 -module(game_logic).
 
+-export([init_game/0]).
+
+init_game() ->
+    mnesia:create_schema([node()]),
+    mnesia:start(),
+    mnesia:create_table(player, 
+			[{disc_copies,[node()]},
+			 {attributes, 
+			  record_info(fields, player)}]),
+    mnesia:stop().
+
 addPlayer(PlayerName) ->
     fun() ->
 	    case mnesia:read({player, PlayerName}) of
