@@ -49,8 +49,8 @@ getPos(PlayerName) ->
 		    {error, player_not_found};
 		[E] ->
 		    %% give current pos
-%%		    {E#player.x_pos, E#player.y_pos}
-		    E#player.x_pos
+		    {E#player.x_pos, E#player.y_pos}
+		  %%  E#player.x_pos
 		    
 	    end
     end.
