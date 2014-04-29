@@ -2,12 +2,12 @@
 
 -export([addPlayer/2, removePlayer/2, getPos/2, getAllPos/1, move/4, wait_reply/1]).
 
-addPlayer(PlayerName, destIp) -> simple_rpc({addPlayer, PlayerName}, destIp).
-removePlayer(PlayerName, destIp) -> simple_rpc({removePlayer, PlayerName}, destIp).
-getPos(PlayerName, destIp) -> simple_rpc({getPos, PlayerName}, destIp).
-getAllPos(destIp) -> simple_rpc({getAllPos}, destIp).
-move(PlayerName, Direction, Amount, destIp) -> 
-    simple_rpc({move, PlayerName, Direction, Amount}, destIp).
+addPlayer(PlayerName, DestIp) -> simple_rpc({addPlayer, PlayerName}, DestIp).
+removePlayer(PlayerName, DestIp) -> simple_rpc({removePlayer, PlayerName}, DestIp).
+getPos(PlayerName, DestIp) -> simple_rpc({getPos, PlayerName}, DestIp).
+getAllPos(DestIp) -> simple_rpc({getAllPos}, DestIp).
+move(PlayerName, Direction, Amount, DestIp) -> 
+    simple_rpc({move, PlayerName, Direction, Amount}, DestIp).
 %%ping(Server_Name, DestIp) -> 
 %%    T1 = erlang:now(),
 %%    simple_rpc({ping, Server_Name}, DestIp),
