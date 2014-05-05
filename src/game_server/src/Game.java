@@ -122,11 +122,11 @@ public class Game extends JFrame
                 if (input.isKeyDown(KeyEvent.VK_DOWN))
                 {
                         //x += 5;
-                	client.move(playerObj.getPlayerName(), "up", 5, ip);
+                	client.move(playerObj.getPlayerName(), "down", -5, ip);
                 }
                 if (input.isKeyDown(KeyEvent.VK_UP))
                 {
-                	client.move(playerObj.getPlayerName(), "down", 5, ip);
+                	client.move(playerObj.getPlayerName(), "up", -5, ip);
                 //	x -= 5;
                 }
                client.updatePos(playerObj.getPlayerName(), playerObj, ip);
