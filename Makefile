@@ -80,7 +80,7 @@ game_server:
 
 
 start_server: 
-	(cd src/server_browser_draft && erl -eval 'game_logic:init_player(), bank_server:start()')
+	(cd src/server_browser_draft && erl -eval 'game_logic:init_player(), bank_manager:init_bank(), bank_server:start()')
 
 start_node:
 	(cd src/server_browser_draft && erl -sname enode -setcookie erlang)
