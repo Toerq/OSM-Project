@@ -50,9 +50,10 @@ public class Jinterface_bank_client {
 		argArray[0] = erlName;
 		argArray[1] = destIpTuple;
 		
-		OtpErlangList arg = new OtpErlangList(erlName);
+		OtpErlangList arg = new OtpErlangList(argArray);
 		conn.sendRPC("game_client", "addPlayer", arg);
 		OtpErlangObject received = conn.receiveRPC();
+		System.out.println(received);
 	}
 	
 	private OtpErlangTuple destIpToErlang(int[] destIp) {
