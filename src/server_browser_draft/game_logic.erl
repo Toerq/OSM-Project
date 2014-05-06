@@ -71,11 +71,11 @@ move(PlayerName, Direction, Amount) ->
 		    %% move player Amount of units in Diretction
 		    case Direction of
 			up ->
-			    E1 = E#player{y_pos = (E#player.y_pos + Amount + 500) rem 500},	      
+			    E1 = E#player{y_pos = (E#player.y_pos - Amount + 500) rem 500},	      
 			    mnesia:write(E1),
 			    ok;
 			down ->
-			    E1 = E#player{y_pos = (E#player.y_pos - Amount) rem 500},	      
+			    E1 = E#player{y_pos = (E#player.y_pos + Amount) rem 500},	      
 			    mnesia:write(E1),
 			    ok;
 			left ->
