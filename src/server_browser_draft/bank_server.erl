@@ -23,6 +23,7 @@ input_handler(Socket) ->
     receive
  	{tcp, Socket, Bin} ->
  	    Term = binary_to_term(Bin),
+	    %% io:format("~p", [Term]),
 	    Reply = do_call(Term),
  	    send_term(Socket, Reply),
 	    input_handler(Socket);
@@ -43,6 +44,7 @@ the_func({available}) ->  bank:available();
 the_func({clear}) ->  bank:clear();
 the_func({ping, Server_Name}) -> bank:ping(Server_Name);
 the_func({addPlayer, PlayerName}) -> game_logic:addPlayer(PlayerName);
+the_func({removePlayer, PlayerName}) -> game_logic:removePlayer(PlayerName);
 the_func({getPos, PlayerName}) -> game_logic:getPos(PlayerName);
 the_func({getAllPos}) -> game_logic:getAllPos();
 the_func({move, PlayerName, Direction, Amount}) -> game_logic:move(PlayerName, Direction, Amount).
