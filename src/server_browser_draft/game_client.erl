@@ -1,7 +1,8 @@
 -module(game_client).
 
--export([addPlayer/2, removePlayer/2, getPos/2, getAllPos/1, move/4, wait_reply/1]).
+-export([addPlayer/2, available/1, removePlayer/2, getPos/2, getAllPos/1, move/4, wait_reply/1]).
 
+available(DestIp) -> simple_rpc({available}, DestIp).
 addPlayer(PlayerName, DestIp) -> simple_rpc({addPlayer, PlayerName}, DestIp).
 removePlayer(PlayerName, DestIp) -> simple_rpc({removePlayer, PlayerName}, DestIp).
 getPos(PlayerName, DestIp) -> simple_rpc({getPos, PlayerName}, DestIp).
@@ -31,7 +32,7 @@ wait_reply(Socket) ->
 	    gen_tcp:close(Socket),
 	    Term;
  	{tcp_closed, Socket} ->
-	    "tcp_is_closed!"
+	    "tcp_is_closed! @ game_client.erl"
       end.
 %%asd: {badrpc,{'EXIT',{undef,[{game_client,getPos,[player1]},{rpc,'-handle_call_call/6-fun-0-',5}]}}}
 
