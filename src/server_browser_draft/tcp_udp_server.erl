@@ -1,6 +1,6 @@
 -module(tcp_udp_server).
 
--export([start/0, stop/0, game_state/3, state_sender/0, game_tick_once/1, do_call/1, available/0, add/2, remove/1]).
+-export([start/0, stop/0, game_state/3, state_sender/0, game_tick_once/1, do_call/1, available/0, add/2, remove/1, state_generator/2, action_generator/1]).
 
 -include("actions.hrl").
 
@@ -38,7 +38,7 @@ game_state(Tick, StateSender, State) ->
     {_,Actions} = do_call({a_available}), %% mnesia:foldl(fun(X,XS) -> [X|XS] end, [], actions),
     NewState = doActions(State, Actions),
     %% StateSender ! {new_state, NewState},
-    SleepTime = (1000 / Tick) - timer:now_diff(erlang:now(), Time),  
+    SleepTime = (1000000 / Tick) - timer:now_diff(erlang:now(), Time),  
     StateSender ! {new_state, SleepTime},  
     if SleepTime > 0 ->
 	    timer:sleep(SleepTime)
@@ -141,3 +141,18 @@ the_func({addPlayer, PlayerName}) -> game_logic:addPlayer(PlayerName);
 the_func({getPos, PlayerName}) -> game_logic:getPos(PlayerName);
 the_func({getAllPos}) -> game_logic:getAllPos();
 the_func({move, PlayerName, Direction, Amount}) -> game_logic:move(PlayerName, Direction, Amount).
+
+state_generator(ServerSettings, N) -> 
+    PlayerList = [{lists:append("Player",(lists:flatten(io_lib:format("~p", [X])))),5,5} || X <- lists:seq(1,N)],
+    {ServerSettings, PlayerList}.
+
+action_generator(N) ->
+    ActionList = [{lists:append("Player",(lists:flatten(io_lib:format("~p", [X])))),move_right} || X <- lists:seq(1,N)],
+    action_generator(ActionList, durp).
+
+action_generator([], durp) ->
+    ok;
+action_generator([X|XS], durp) ->
+    {Player_Name, Action} = X,
+    do_call({a_add, Player_Name, Action}),
+    action_generator(XS, durp).
