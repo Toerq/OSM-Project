@@ -32,12 +32,22 @@ public class Jinterface_bank_client {
 		System.out.println(received + "\n");
 	}
 	
-	public void available(int[] destIp) {
+	public String[][] available(int[] destIp) {
 		OtpErlangTuple tuple = destIpToErlang(destIp);
 		OtpErlangList arg = new OtpErlangList(tuple);
 		conn.sendRPC("bank_client", "available", arg);
 		OtpErlangObject received = conn.receiveRPC();
-		System.out.println("Server list: \n" + received + "\n");
+		//System.out.println("Server list: \n" + received + "\n");
+		OtpErlangList servers =  (OtpErlangList) ((OtpErlangTuple) received).elementAt(1);
+		//System.out.println("Server list: " + servers);
+		String [][] serverList = new String[servers.arity()][2];
+		for (int i = 0; i < servers.arity(); i++) {
+			for (int j = 0; j < 2; j++) {
+				serverList[i][j] =  ((OtpErlangTuple)servers.elementAt(i)).elementAt(j+1).toString();
+				System.out.println(serverList[i][j]);
+			}
+		}
+		return serverList;
 	}
 	
 	public void addPlayer(int[] destIp, String playerName) {
