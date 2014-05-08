@@ -1,4 +1,4 @@
--module(udp_player).
+-module(old_udp_player).
 -export([init_player/1]).
 
 init_player([Socket, Destination_ip, Destination_port]) ->

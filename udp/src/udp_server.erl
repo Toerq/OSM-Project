@@ -18,17 +18,18 @@
          handle_cast/2,
          handle_info/2, 
          terminate/2, 
-         code_change/3]).
+         code_change/3,
+	 spawn_client/3]).
 
--record(state, {port, listen_socket).
+-record(state, {port, listen_socket}).
 
 
 %%====================================================================
 %% API
 %%====================================================================
 
-spawn_client(Socket, Port, Destination_ip, Destination_port, Player_name) ->
-    spawn_link(udp_player, init_player, [Socket, Port, DestinationIp, DestinationPort, self()]).
+spawn_client(Socket, Destination_ip, Destination_port) ->
+    spawn_link(udp_player, init_player, [Socket, Destination_ip, Destination_port, self()]).
 
 
 %%====================================================================
@@ -47,7 +48,8 @@ stop() ->
 %%====================================================================
 init([Port]) ->
 {ok, Socket} = gen_udp:open(Port, "localhost"),
-{ok, #state{port = Port, listen_socket = Socket}.
+{ok, #state{port = Port, listen_socket = Socket}}.
+
 
 %% Synchronous, possible return values  
 % {reply,Reply,NewState} 
