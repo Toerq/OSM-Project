@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/0, checkout/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -29,6 +29,7 @@
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
@@ -52,10 +53,12 @@ init([]) ->
 %%                                      {stop, Reason, State}
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
-handle_call(_Request, _From, State) ->
+handle_call({checkout, Who, Book}, _From, Library) ->
   Reply = ok,
-  {reply, Reply, State}.
-
+  Who,
+  Book,
+  NewLibrary = Library,
+  {reply, Reply, NewLibrary}.
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
 %%                                      {noreply, State, Timeout} |
