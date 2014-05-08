@@ -14,7 +14,7 @@ init_player([Socket, Port, DestinationIp, DestinationPort]) ->
 receive_action() ->
     case gen_udp:recv(socket, 8, 300) of
 	{ok, {Address, Port, Packet}} ->
-	   upd_actionhandler([Address|Port], Packet, self());
+	   upd_actionhandler:handle_action([Address|Port], Packet, self());
 	{error, reason} -> {error, reason}
 	end,
 receive_and_send_state().
@@ -25,7 +25,4 @@ receive_and_send_state() ->
 	{state, State} ->
 	    gen_udp:send(socket, destination_ip, destination_port, State)
     end.
-			 
-
-
-
+		     

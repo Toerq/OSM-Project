@@ -45,7 +45,7 @@ handle_action([Address|Port], Packet, ReturnPid) -> gen_server:call(?MODULE, {ha
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
 init([]) ->
-    PlayerList;
+    game_logic:start().
     {ok, #state{}}.
 
 %%--------------------------------------------------------------------
@@ -62,7 +62,7 @@ handle_call(_Request, _From, State) ->
   {reply, Reply, State}.
 
 handle_call({handle_action, [Address|Port], Packet, ReturnPid}, _From, PlayerList) ->
-    game_logic:input([Address|Port], Packet, ReturnPid).
+    tcp_udp_server:do_call([Address|Port], Packet, ReturnPid).
 
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
