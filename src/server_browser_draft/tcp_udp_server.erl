@@ -1,6 +1,6 @@
 -module(tcp_udp_server).
 
--export([start/0, stop/0, game_state/3, state_sender/0, game_tick_once/1, do_call/1, available/0, add/2, remove/1, state_generator/2, action_generator/1]).
+-export([start/0, stop/0, game_state/4, state_sender/0, game_tick_once/1, do_call/1, available/0, add/2, remove/1, state_generator/2, action_generator/1]).
 
 -include("actions.hrl").
 
@@ -33,17 +33,19 @@ game_tick_once(State) ->
     NewState = doActions(State, Actions),
     {ok, timer:now_diff(erlang:now(), Time), NewState}.  
 
-game_state(Tick, StateSender, State) ->
+game_state(_Tick, _StateSender, State, 0) ->
+    State;
+game_state(Tick, StateSender, State, N) ->
     Time = erlang:now(),
     {_,Actions} = do_call({a_available}), %% mnesia:foldl(fun(X,XS) -> [X|XS] end, [], actions),
     NewState = doActions(State, Actions),
     %% StateSender ! {new_state, NewState},
-    SleepTime = (1000000 / Tick) - timer:now_diff(erlang:now(), Time),  
+    SleepTime = ((1000000 div Tick) - timer:now_diff(erlang:now(), Time))div 1000,  
     StateSender ! {new_state, SleepTime},  
     if SleepTime > 0 ->
 	    timer:sleep(SleepTime)
     end,
-    game_state(Tick, StateSender, NewState).
+    game_state(Tick, StateSender, NewState, N-1).
 
 doActions(State, []) ->
     State;
@@ -73,6 +75,8 @@ state_sender() ->
         {new_state, NewState} ->
             io:format("~w~n", [NewState]),
             state_sender();
+	{terminate, Reason} ->
+	    io:format("~w~n", [Reason]);
         E ->
             io:format("~w~n", [E]),
             state_sender()
