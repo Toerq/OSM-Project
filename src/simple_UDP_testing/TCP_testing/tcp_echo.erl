@@ -45,7 +45,12 @@ loop(Sock) ->
     receive
 	{tcp, Socket, Data} ->
 	    io:format("Got packet: ~p~n", [Data]),
-	    gen_tcp:send(Socket, Data),
+	    
+	    %% Send 4 bytes (32 bits) first to declare the size
+	    %% Java doesn't handle unsigned ints, so 8 bits
+	    %% range between -127 and 127
+	    Bin = <<4:32,1:8, 128:8, 123:8, 45:8>>,
+	    gen_tcp:send(Socket, Bin),
 	    loop(Socket);
 	{tcp_closed, Socket}->
 	    io:format("Socket ~p closed~n", [Socket]);
