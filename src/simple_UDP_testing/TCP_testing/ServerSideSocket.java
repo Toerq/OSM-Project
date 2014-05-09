@@ -3,9 +3,9 @@
 /*
   Send from erlang:
   
-  1> {ok, Sock} = gen_tcp:connect("localhost", 4020, [{nodelay, true}]).
+  1> {ok, Sock} = gen_tcp:connect({IP}, 4020, [{nodelay, true}]).
   {ok,#Port<0.516>}
-  2> gen_tcp:send(Sock, "DASFJOASJFOAJSOFJAOWJOFQWOFNOASNFONW").
+  2> gen_tcp:send(Sock, <<97,98,99,100>>).
   ok
   3> gen_tcp:close(Sock).
   

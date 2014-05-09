@@ -4,9 +4,10 @@
  */
 
 /*
-  1>{ok, Socket} = gen_udp:open(7777, [{ip,{127,0,0,1}}, binary]). 
+  
+  1>{ok, Socket} = gen_udp:open(7777, [{ip,{IP,TO,SEND,FROM}}, binary]). 
   {ok,#Port<0.511>}
-  2> gen_udp:send(Socket, {127,0,0,1}, 8080, "Hello").   
+  2> gen_udp:send(Socket, {IP,TO,SEND,TO}, 8080, "Hello").   
 
  */
 
