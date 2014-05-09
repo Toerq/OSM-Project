@@ -21,6 +21,10 @@ public class ClientSocket {
 	    toServer.println("Hello from " + socket.getLocalSocketAddress()); 
 	    String line = fromServer.readLine();
 	    System.out.println("Client received: " + line + " from Server");
+	    
+	    System.out.println("Press ENTER to close the connection.");
+	    System.in.read();
+	    
 	    toServer.close();
 	    fromServer.close();
 	    socket.close();
