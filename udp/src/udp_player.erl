@@ -10,13 +10,14 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, checkout/2]).
+-export([start_link/1, checkout/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--record(state, {}).
+-record(state, {player_id, accept_socket}).
+
 -define(SERVER, ?MODULE).
 
 %%====================================================================
@@ -26,8 +27,8 @@
 %% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Accept_socket) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, [Accept_socket], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
 %%====================================================================
@@ -41,8 +42,9 @@ checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).
 %%                         {stop, Reason}
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
-init([]) ->
-    {ok, Player_id} = udp_coordinator:join_lobby().
+init([Accept_socket]) ->
+    {ok, Player_id} = udp_coordinator:join_lobby(),
+    {ok, #state{player_id = Player_id, accept_socket = Accept_socket}}.
 
 %%--------------------------------------------------------------------
 %% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
@@ -53,20 +55,30 @@ init([]) ->
 %%                                      {stop, Reason, State}
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
-handle_call({checkout, Who, Book}, _From, Library) ->
-  Reply = ok,
-  Who,
-  Book,
-  NewLibrary = Library,
-  {reply, Reply, NewLibrary}.
+handle_call({standard, Message}, From, State) -> 
+    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
+    [Message, From, State]),
+    {reply, ok, State};
+
+handle_call({asd}, _From, _State) ->
+    tbi.
+
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
 %%                                      {noreply, State, Timeout} |
 %%                                      {stop, Reason, State}
 %% Description: Handling cast messages
 %%--------------------------------------------------------------------
-handle_cast(_Msg, State) ->
-  {noreply, State}.
+handle_cast({greet_state}, State) ->
+    io:format("asd______________________________________"),
+    Accept_socket = State#state.accept_socket,
+    gen_tcp:send(Accept_socket, "Hello and welcome");
+    
+handle_cast({recieve_choice_state, Accept_socket}, State) ->
+    Accept_socket = State#state.accept_socket,
+    {ok, Packet} = gen_tcp:recv(Accept_socket, 64),
+    %%handle everything
+    io:format(Packet).
 
 %%--------------------------------------------------------------------
 %% Function: handle_info(Info, State) -> {noreply, State} |

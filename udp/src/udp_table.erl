@@ -5,23 +5,28 @@
 %%%
 %%% Created :  5 Sep 2008 by Mitchell Hashimoto <mitchell.hashimoto@gmail.com>
 %%%-------------------------------------------------------------------
--module(udp_coordinator).
+-module(udp_table).
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, checkout/2, join_lobby/0]).
+-export([start_link/0, checkout/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--record(coordinator_state,
-	{players = [],
-	 tables = [],
-	 player_at_table = [],
-	 test}
-).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% players = list of player_pids
+%% game = udp_game-instance
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-record(table_state, {
+	  number_of_players,
+	  max_players,
+	  game,
+	  players = []}).
 
 -define(SERVER, ?MODULE).
 
@@ -36,8 +41,6 @@ start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
-join_lobby() -> gen_server:call(?MODULE, join_lobby).
-
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
@@ -50,7 +53,7 @@ join_lobby() -> gen_server:call(?MODULE, join_lobby).
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
 init([]) ->
-  {ok, #coordinator_state{test = ja}}.
+  {ok, #table_state{}}.
 
 %%--------------------------------------------------------------------
 %% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
@@ -61,55 +64,25 @@ init([]) ->
 %%                                      {stop, Reason, State}
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
-handle_call({standard, Message}, From, State) -> 
-    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
-    [Message, From, State]),
-    {reply, ok, State};
+handle_call({player_token_to_pid, Token}, _From, State) ->
+    Players = State#co_state.players,
+    {Pid, Token} = lists:keyfind(Token, 2, Players),
+    {reply, Pid, State};
 
-handle_call(browse_tables, _From, State) ->
-    Tables = State#coordinator_state.tables,
+
+handle_call({add_player, Player_id, Table_id}, _From, Table_state) ->
     
-    {reply, {ok, Tables}, State};
 
-
-%%{table_settings, {max_players, game_type, tick_rate(?), etc}}
-
-handle_call({add_player_to_table, Player_id, Table_ref}, _From, _State) ->
-%%    {Pid, _From} = From,
-    case gen_server:call(Table_ref, Player_id) of
-	{add_succeded} ->
-	    {add_succes};
-	{add_failed, Reason} ->
-	    {add_failed, Reason} 
-    end;
-
-handle_call(join_lobby, From, State) ->
-    {Pid, _From} = From,
-    Player_id = make_ref(),
-    Players = State#coordinator_state.players,
-    NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
-    io:format("_________________vi kom hit___________________"),
-    {reply, {ok, Player_id}, NewState}.
-
-
-    
+  {reply, Reply, NewLibrary}.
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
 %%                                      {noreply, State, Timeout} |
 %%                                      {stop, Reason, State}
 %% Description: Handling cast messages
 %%--------------------------------------------------------------------
-%ha som call istället, där caller måste hantera ifall table-create misslyckades.
-handle_cast(add_table, State) ->
-    %% TODO: case sats för ifall table-skapandet misslyckas,
-    %% implementera udp_table:init (working title)
-%case udp_table:init(table_ref), of ....
-%{Table_ref, Current_nmbr_of_players, Max_players, 
-    %%Game_type, Players, *referens till bordet}
-    Table = {make_ref(), 0, 20, mmo_tetris, []},
-    Tables =  State#coordinator_state.tables,
-    NewState = State#coordinator_state{tables = [Table | Tables]},
-    {noreply, NewState}.
+handle_cast(_Msg, State) ->
+  {noreply, State}.
+
 %%--------------------------------------------------------------------
 %% Function: handle_info(Info, State) -> {noreply, State} |
 %%                                       {noreply, State, Timeout} |

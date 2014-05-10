@@ -6,7 +6,7 @@
 %% A sample otp gen_server template
 %%
 %%====================================================================
--module(udp_dispatcher).
+-module(udp_dispatcher_backup).
 -behaviour(gen_server).
 
 % interface calls
@@ -48,27 +48,20 @@ stop() ->
 init([Port]) ->
     case gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}]) of
 	{ok, Listen_socket} ->
-	    accept_spawner(Listen_socket);
-%	    {ok, [accept_spawner(Listen_socket) || _ <- lists:seq(1,1)]};
+	    {ok, [accept_spawner(Listen_socket) || _ <- lists:seq(1,10)]};
 	{error, Reason} -> 
 	    {stop, Reason}
     end.
 
 accept_spawner(Listen_socket) ->
- %% spawn_link(fun() -> accept_function(Listen_socket, self()) end),%fun() -> accept_function(Listen_socket, self()) end).
-    accept_function(Listen_socket, self()),
-    Listen_socket.
-    
+    spawn_link(accept_function(Listen_socket, self())).
+
 accept_function(Listen_socket, Dispatcher_pid) ->
-    gen_tcp:controlling_process(Listen_socket, self()),
     {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
     {ok, Player_pid} = udp_player:start_link(Accept_socket),
     gen_tcp:controlling_process(Accept_socket, Player_pid),
-    gen_server:cast(Player_pid, {standard, this_is_a_message}),
     gen_server:cast(Player_pid, {greet_state, Accept_socket}),
-    io:format("player_pid: ~p", [Player_pid]),
-    gen_server:cast(Dispatcher_pid, {accept_spawner, Accept_socket}),
-    io:format("print: ~p~n", [Listen_socket]).
+    gen_server:cast(Dispatcher_pid, {accept_spawner, Accept_socket}).
     
     
     

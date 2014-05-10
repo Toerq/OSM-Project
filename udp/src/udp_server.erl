@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 % interface calls
--export([start/1, stop/0]).
+-export([start/0, stop/0]).
     
 % gen_server callbacks
 -export([init/1,
@@ -22,22 +22,24 @@
 	 spawn_client/3]).
 
 -record(state, {port, listen_socket}).
-
+-define(DEFAULT_PORT, 3010).
+-define(LOCAL_HOST, {127,0,0,1}).
 
 %%====================================================================
 %% API
 %%====================================================================
 
 spawn_client(Socket, Destination_ip, Destination_port) ->
-    spawn_link(udp_player, init_player, [Socket, Destination_ip, Destination_port, self()]).
+    spawn_link(udp_player, init_player, [Socket, Destination_ip, Destination_port, self()]),
+       io:format("pid from process: ~p", [self()]).
 
 
 %%====================================================================
 %% Server interface
 %%====================================================================
 %% Booting server (and linking to it)
-start(Port) -> 
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Port], []).
+start() -> 
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% Stopping server asynchronously
 stop() ->
@@ -46,9 +48,12 @@ stop() ->
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
-init([Port]) ->
-{ok, Socket} = gen_udp:open(Port, "localhost"),
-{ok, #state{port = Port, listen_socket = Socket}}.
+init([]) ->
+    Coordinator = udp_coordinator:start_link(),
+    Dispatcher = udp_dispatcher:start(?DEFAULT_PORT),
+
+    {ok, #state{port = ?DEFAULT_PORT}, Coordinator, Dispatcher}.
+
 
 
 %% Synchronous, possible return values  
@@ -61,8 +66,11 @@ init([Port]) ->
 % {stop,Reason,Reply,NewState} 
 % {stop,Reason,NewState}
 handle_call(Message, From, State) -> 
-    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",[Message, From, State]),
+    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
+    [Message, From, State]),
     {reply, ok, State}.
+
+
 
 %% Asynchronous, possible return values
 % {noreply,NewState} 
