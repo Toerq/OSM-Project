@@ -30,7 +30,7 @@ game_state(_Tick, _StateSender, State, 0) ->
     State;
 game_state(Tick, StateSender, State, N) ->
     Time = erlang:now(),
-    Actions = get_actions(), %% mnesia:foldl(fun(X,XS) -> [X|XS] end, [], actions),
+    Actions = get_actions(),
     NewState = doActions(State, Actions),
     %% StateSender ! {new_state, NewState},
     SleepTime = ((1000000 div Tick) - timer:now_diff(erlang:now(), Time))div 1000,  
@@ -186,7 +186,7 @@ clear() ->
 
 get_actions() ->
     {_, AList} = ?MODULE:do_call({a_available}),
-    [{X,Y,Z} ||{_, X, Y, Z} <-AList].
+    [{X,Y,Z} ||{_, X, Y, Z} <- AList].
 
 the_func({a_add, Player_Id, Action, VarList})  ->  ?MODULE:add(Player_Id, Action, VarList);
 the_func({a_remove, Player_Id})  ->  ?MODULE:remove(Player_Id);
@@ -197,7 +197,18 @@ the_func({a_available})  ->  ?MODULE:available().
 %% Player = {NameString, Pos, Vel, Hp, Id} where pos and vel are tuples of {x,y}
 %% State = {ServerSettings, PlayerList}
 
-%% test:action_generator(25).
-%% SS = {4, 1000, 21, 1}.
-%% State = test:state_generator(SS, 25).
+
+test(N) ->
+    test:init(),
+    test:start(),
+    test:action_generator(N),
+    SS = {4, 1000, 21, 1},
+    State = test:state_generator(SS, N),
+    StateSender = spawn(fun() -> test:state_sender() end),
+    test:game_state(30, StateSender, State, 30),
+    StateSender ! {terminate, "Test Done"},
+    mnesia:stop(),
+    ok.
+
+
 %% test:game_tick_once(State).
