@@ -114,7 +114,7 @@ state_sender() ->
             io:format("~w~n", [NewState]),
             state_sender();
 	{terminate, Reason} ->
-	    io:format("~w~n", [Reason]);
+	    io:format("~s~n", [Reason]);
         E ->
             io:format("~w~n", [E]),
             state_sender()
@@ -179,10 +179,8 @@ available() ->
                         action)
     end.
 
-clear() ->
-    fun() ->
-	    mnesia:clear_table(action)
-    end.
+clear() -> mnesia:clear_table(action).
+  
 
 get_actions() ->
     {_, AList} = ?MODULE:do_call({a_available}),
@@ -190,7 +188,6 @@ get_actions() ->
 
 the_func({a_add, Player_Id, Action, VarList})  ->  ?MODULE:add(Player_Id, Action, VarList);
 the_func({a_remove, Player_Id})  ->  ?MODULE:remove(Player_Id);
-the_func({a_clear})  ->  ?MODULE:clear();
 the_func({a_available})  ->  ?MODULE:available().
 
 %% ServerSettings = {VelFactor, GridLimit, VelLimit, Friction} VelFactor must be greater than Friction
@@ -198,17 +195,16 @@ the_func({a_available})  ->  ?MODULE:available().
 %% State = {ServerSettings, PlayerList}
 
 
-test(N) ->
+test(Players, Tick, N) ->
     test:init(),
     test:start(),
-    test:action_generator(N),
     SS = {4, 1000, 21, 1},
-    State = test:state_generator(SS, N),
+    State = test:state_generator(SS, Players),
     StateSender = spawn(fun() -> test:state_sender() end),
-    test:game_state(30, StateSender, State, 30),
+    mnesia:wait_for_tables([action], 1000),
+    test:clear(),
+    test:action_generator(Players),
+    test:game_state(Tick, StateSender, State, N),
     StateSender ! {terminate, "Test Done"},
     mnesia:stop(),
-    ok.
-
-
-%% test:game_tick_once(State).
+    {test_done, Players, Tick, N}.
