@@ -4,6 +4,7 @@
 %% should get a action.hrl file
 -record(action, {player_id, action, varlist}).
 
+
 %% ServerSettings = {VelFactor, GridLimit, VelLimit, Friction} VelFactor must be greater than Friction
 %% Player = {NameString, Pos, Vel, Hp, Id} where pos and vel are tuples of {x,y}
 %% State = {ServerSettings, PlayerList}
@@ -12,7 +13,7 @@ init() ->
     mnesia:create_schema([node()]),
     mnesia:start(),
     mnesia:create_table(action, 
-			[{disc_copies,[node()]},
+			[{ram_copies,[node()]},
 			 {attributes, 
 			  record_info(fields, action)}]),
     mnesia:stop().
@@ -42,10 +43,26 @@ game_state(Tick, StateSender, State, N) ->
     end,
     game_state(Tick, StateSender, NewState, N-1).
 
+
+
 doActions(State, []) ->
     State;
+doActions(State, [{Id, Action, Varlist} | T]) when Id =:= server ->
+    doActions(doServerAction(State, {Action, Varlist}), T);
 doActions({ServerSettings, PlayerList}, [A | T]) ->
     doActions({ServerSettings, doActionsAux(ServerSettings, PlayerList, [], A)}, T).
+
+doServerAction({ServerSettings, PlayerList}, {Action, Varlist}) ->
+    case Action of
+	add_player ->
+	    [Player|_] = Varlist,
+	    {ServerSettings, addPlayer(Player, PlayerList, [])};
+	change_settings ->
+	    {changeSettings(ServerSettings, Varlist), PlayerList};
+	remove_player ->
+	    [Player|_] = Varlist,
+	    {ServerSettings, removePlayer(Player, PlayerList, [])}
+    end.
 
 doActionsAux(_ServerSettings, [], PList, _Action)->
     PList;
@@ -109,6 +126,34 @@ modulor(X, Mod) ->
        true ->
 	    X
     end.
+
+addPlayer(Player, [], AuxList) ->
+    [Player | AuxList];
+addPlayer(Player, [P | T], AuxList) when P =/= Player ->
+    addPlayer(Player, T, [P | AuxList]);
+addPlayer(_ , Players, AuxList) ->
+    lists:append([Players, AuxList]).
+
+removePlayer(_Player, [], AuxList) ->
+    AuxList;
+removePlayer(Player, [P | T], AuxList) when P =:= Player ->
+    lists:append([T, AuxList]);
+removePlayer(Player, [P | T], AuxList) ->
+    removePlayer(Player, T, [P | AuxList]).
+
+
+changeSettings({VelFactor, GridLimit, VelLimit, Friction}, NewSettings) ->
+    OldSettings = [VelFactor, GridLimit, VelLimit, Friction],
+    [VelF, GridL, VelL, Fric] = settingsUpdate(OldSettings, NewSettings, []),
+    {VelF, GridL, VelL, Fric}.
+
+settingsUpdate([],[], Aux) ->
+    lists:reverse(Aux);
+settingsUpdate([O | OT], [N | NT], Aux) when N =:= no_change ->
+    settingsUpdate(OT, NT, [O | Aux]);
+settingsUpdate([_O | OT], [N | NT], Aux) ->
+    settingsUpdate(OT, NT, [N | Aux]).
+    
 
 state_sender() ->
     receive 
@@ -196,7 +241,44 @@ the_func({a_available})  ->  ?MODULE:available().
 %% Player = {NameString, Pos, Vel, Hp, Id} where pos and vel are tuples of {x,y}
 %% State = {ServerSettings, PlayerList}
 
+spawnplayers(0, _Tick, _I) ->
+    ok;
+spawnplayers(N, Tick, I) ->
+    spawn(fun() ->
+		  testplayer(N, Tick, I) 
+	  end),
+    spawnplayers(N-1, Tick, I).
 
+testplayer(_Id, _Tick, 0) ->
+    ok;
+testplayer(Id, Tick, N) ->
+    Time = erlang:now(),
+    Action = rand_action(),
+    do_call({a_add, Id, Action, []}),
+    SleepTime = ((1000000 div Tick) - timer:now_diff(erlang:now(), Time))div 1000,  
+    if SleepTime > 0 ->
+	    timer:sleep(SleepTime);
+       true ->
+	    ok %% no sleep
+    end,
+    testplayer(Id, Tick, N-1).
+
+rand_action() ->
+    case random:uniform(5) of
+	1 ->
+	    move_up;
+	2 ->
+	    move_down;
+	3 ->
+	    move_left;
+	4 ->
+	    move_right;
+	5 ->
+	    stop
+    end.
+	   
+%% To increase the threshold write limit use the following when mnesia is stopped.
+%% application:set_env(mnesia, dump_log_write_threshold, 50000).
 test(Players, Tick, N) ->
     test:init(),
     test:start(),
@@ -206,6 +288,7 @@ test(Players, Tick, N) ->
     mnesia:wait_for_tables([action], 1000),
     test:clear(),
     test:action_generator(Players),
+    test:spawnplayers(Players, Tick, N*2),
     test:game_state(Tick, StateSender, State, N),
     StateSender ! {terminate, "Test Done"},
     mnesia:stop(),
