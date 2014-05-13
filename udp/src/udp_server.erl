@@ -1,3 +1,5 @@
+%%  c(udp_player), c(udp_coordinator), c(udp_player), c(udp_dispatcher), c(udp_server), udp_server:start(3010).
+
 %%====================================================================
 %%
 %% @author Juanse Perez Herrero <juanseph@gmail.com> [http://bytefilia.com]
@@ -10,7 +12,7 @@
 -behaviour(gen_server).
 
 % interface calls
--export([start/0, stop/0]).
+-export([start/0, start/1, stop/0]).
     
 % gen_server callbacks
 -export([init/1,
@@ -21,8 +23,11 @@
          code_change/3,
 	 spawn_client/3]).
 
--record(state, {port, listen_socket}).
--define(DEFAULT_PORT, 3010).
+-record(state, {port, listen_socket, dispatcher, coordinator
+	       }).
+
+
+-define(DEFAULT_PORT, 41526).
 -define(LOCAL_HOST, {127,0,0,1}).
 
 %%====================================================================
@@ -38,8 +43,11 @@ spawn_client(Socket, Destination_ip, Destination_port) ->
 %% Server interface
 %%====================================================================
 %% Booting server (and linking to it)
+start(Port) -> 
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [Port], []).
+
 start() -> 
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [?DEFAULT_PORT], []).
 
 %% Stopping server asynchronously
 stop() ->
@@ -48,23 +56,16 @@ stop() ->
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
-init([]) ->
+init([Port]) ->
     Coordinator = udp_coordinator:start_link(),
-    Dispatcher = udp_dispatcher:start(?DEFAULT_PORT),
+    Dispatcher = udp_dispatcher:start_link(Port, self()),
+    io:format("~nprint från server~p~n, Coordinator pid: ~p~n", [self(), Coordinator]),
+    {ok, #state{port = Port, coordinator = Coordinator, dispatcher = Dispatcher} }.
+    
 
-    {ok, #state{port = ?DEFAULT_PORT}, Coordinator, Dispatcher}.
+handle_call(get_state, _From, State) ->
+    {reply, State#state.coordinator, State};
 
-
-
-%% Synchronous, possible return values  
-% {reply,Reply,NewState} 
-% {reply,Reply,NewState,Timeout}
-% {reply,Reply,NewState,hibernate}
-% {noreply,NewState}
-% {noreply,NewState,Timeout}
-% {noreply,NewState,hibernate}
-% {stop,Reason,Reply,NewState} 
-% {stop,Reason,NewState}
 handle_call(Message, From, State) -> 
     io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
     [Message, From, State]),
