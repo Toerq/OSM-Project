@@ -8,9 +8,9 @@
 %%====================================================================
 -module(udp_dispatcher).
 -behaviour(gen_server).
-
+-compile(export_all).
 % interface calls
--export([start/1, stop/0]).
+%-export([start_link/2, stop/0, accept_function/3, accept_spawner/1]).
     
 % gen_server callbacks
 -export([init/1,
@@ -35,76 +35,60 @@
 %% Server interface
 %%====================================================================
 %% Booting server (and linking to it)
-start(Port) -> 
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Port], []).
+start_link(Port, Server_pid) -> 
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [Port, Server_pid], []).
 
 %% Stopping server asynchronously
 stop() ->
     gen_server:cast(?MODULE, shutdown).
 
+
+
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
-init([Port]) ->
-    case gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}]) of
-	{ok, Listen_socket} ->
-	    accept_spawner(Listen_socket);
-%	    {ok, [accept_spawner(Listen_socket) || _ <- lists:seq(1,1)]};
-	{error, Reason} -> 
-	    {stop, Reason}
+init([Port, Server_pid]) ->
+    {ok, Listen_socket} = gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}]),
+    accept_spawner(Listen_socket, Server_pid),
+    {ok, {Listen_socket, Server_pid}}.
+
+accept_spawner(Listen_socket, Server_pid) ->
+   % [spawn(fun() -> accept_function(Listen_socket, self(), Index) end) || Index <- lists:seq(1, 20)].
+    proc_lib:spawn(?MODULE, accept_function, [Listen_socket, self(), 1, Server_pid]),
+    Listen_socket.
+		  
+%fun() -> accept_function(Listen_socket, self()) end).
+%    accept_function(Listen_socket, self()),
+%    proc_lib:spawn(?MODULE, accept_function, [{Listen_socket, self()}]).
+
+accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid) ->
+    case gen_tcp:accept(Listen_socket) of
+	{ok, Accept_socket} -> 
+	    io:format("~ninne i accept-funktionen~n"),
+	    gen_server:cast(Dispatcher_pid, {accept, Listen_socket, Dispatcher_pid}),
+	    io:format("~n____Index: ~p, Pid: ~p, accept socket: ~p~n", [Index, self(), Accept_socket]),
+	    {ok, Player_pid} = udp_player:start_link(Accept_socket, Server_pid, self()),
+	    gen_tcp:controlling_process(Accept_socket, Player_pid),
+	    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid});
+	{error, Reason} ->
+	    io:format("~n~nreason why accept failed: ~p~n~n", [Reason]) 
     end.
 
-accept_spawner(Listen_socket) ->
- %% spawn_link(fun() -> accept_function(Listen_socket, self()) end),%fun() -> accept_function(Listen_socket, self()) end).
-    accept_function(Listen_socket, self()),
-    Listen_socket.
+
+handle_cast({accept, Listen_socket, _Dispatcher_pid}, {_Listen_socket, Server_pid}) -> io:format("cast, accept, dispatcher, pid: ~p", [self()]),
+  %  proc_lib:spawn(fun() -> accept_function(Listen_socket, self(), 100, Server_pid) end),
+    {noreply, {accept_spawner(Listen_socket, self()), Server_pid}};
+
+handle_cast({standard, Message}, State) -> 
+    io:format("Generic call handler: '~p' while in '~p'~n", 
+	      [Message, State]),
+    {noreply, State}.
     
-accept_function(Listen_socket, Dispatcher_pid) ->
-    gen_tcp:controlling_process(Listen_socket, self()),
-    {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
-    {ok, Player_pid} = udp_player:start_link(Accept_socket),
-    gen_tcp:controlling_process(Accept_socket, Player_pid),
-    gen_server:cast(Player_pid, {standard, this_is_a_message}),
-    gen_server:cast(Player_pid, {greet_state, Accept_socket}),
-    io:format("player_pid: ~p", [Player_pid]),
-    gen_server:cast(Dispatcher_pid, {accept_spawner, Accept_socket}),
-    io:format("print: ~p~n", [Listen_socket]).
-    
-    
-    
-	
-    
-%% Synchronous, possible return values  
-% {reply,Reply,NewState} 
-% {reply,Reply,NewState,Timeout}
-% {reply,Reply,NewState,hibernate}
-% {noreply,NewState}
-% {noreply,NewState,Timeout}
-% {noreply,NewState,hibernate}
-% {stop,Reason,Reply,NewState} 
-% {stop,Reason,NewState}
+  
 handle_call(Message, From, State) -> 
     io:format("Generic call handler: '~p' from '~p' while in '~p'~n",[Message, From, State]),
     {reply, ok, State}.
 
-%% Asynchronous, possible return values
-% {noreply,NewState} 
-% {noreply,NewState,Timeout}
-% {noreply,NewState,hibernate}
-% {stop,Reason,NewState}
-%% normal termination clause
-handle_cast(shutdown, State) ->
-    io:format("Generic cast handler: *shutdown* while in '~p'~n",[State]),
-    {stop, normal, State};
-%% generic async handler
-handle_cast({accept_spawner, Listen_socket}, _State) ->
-    accept_spawner(Listen_socket).
-
-%% Informative calls
-% {noreply,NewState} 
-% {noreply,NewState,Timeout} 
-% {noreply,NewState,hibernate}
-% {stop,Reason,NewState}
 handle_info(_Message, _Server) -> 
     io:format("Generic info handler: '~p' '~p'~n",[_Message, _Server]),
     {noreply, _Server}.

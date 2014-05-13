@@ -10,11 +10,13 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, checkout/2, join_lobby/0]).
+-compile(export_all).
+-export([start_link/0, checkout/2]).
+
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+         terminate/2, code_change/3, test/0]).
 
 -record(coordinator_state,
 	{players = [],
@@ -25,73 +27,63 @@
 
 -define(SERVER, ?MODULE).
 
-%%====================================================================
-%% API
-%%====================================================================
-%%--------------------------------------------------------------------
-%% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
-%% Description: Starts the server
-%%--------------------------------------------------------------------
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
-
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
-join_lobby() -> gen_server:call(?MODULE, join_lobby).
-
-%%====================================================================
-%% gen_server callbacks
-%%====================================================================
-
-%%--------------------------------------------------------------------
-%% Function: init(Args) -> {ok, State} |
-%%                         {ok, State, Timeout} |
-%%                         ignore               |
-%%                         {stop, Reason}
-%% Description: Initiates the server
-%%--------------------------------------------------------------------
+join_lobby(Pid) -> gen_server:call(?MODULE, {join_lobby_2, Pid}).
+browse_tables() -> gen_server:call(?MODULE, browse_tables).
+add_player_to_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {add_player_to_table, Player_id, Table_ref}).
+add_table() -> gen_server:cast(?MODULE, add_table).
+browse_players() -> gen_server:call(?MODULE, browse_players).
+    
+    
 init([]) ->
   {ok, #coordinator_state{test = ja}}.
 
-%%--------------------------------------------------------------------
-%% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
-%%                                      {reply, Reply, State, Timeout} |
-%%                                      {noreply, State} |
-%%                                      {noreply, State, Timeout} |
-%%                                      {stop, Reason, Reply, State} |
-%%                                      {stop, Reason, State}
-%% Description: Handling call messages
-%%--------------------------------------------------------------------
 handle_call({standard, Message}, From, State) -> 
     io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
     [Message, From, State]),
     {reply, ok, State};
 
+handle_call(browse_players, _From, State) ->
+   {reply, State#coordinator_state.players, State};
+
 handle_call(browse_tables, _From, State) ->
-    Tables = State#coordinator_state.tables,
-    
-    {reply, {ok, Tables}, State};
+        {reply, State#coordinator_state.tables, State};
 
 
 %%{table_settings, {max_players, game_type, tick_rate(?), etc}}
 
-handle_call({add_player_to_table, Player_id, Table_ref}, _From, _State) ->
+handle_call(lewut, _From, State) ->
+    io:format("lewut"),
+    {reply, bbq, State};
+
+handle_call({add_player_to_table, Player_id, Table_ref}, _From, State) ->
 %%    {Pid, _From} = From,
     case gen_server:call(Table_ref, Player_id) of
 	{add_succeded} ->
-	    {add_succes};
+	    {reply, {add_succes}, State};
 	{add_failed, Reason} ->
-	    {add_failed, Reason} 
+	    {reply, {add_failed, Reason}, State}
     end;
 
+handle_call({join_lobby_2, Pid}, _From, State) ->
+    Player_id = make_ref(),
+    Players = State#coordinator_state.players,
+    NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
+    {reply, Player_id, NewState};
+
 handle_call(join_lobby, From, State) ->
+    io:format("~nI joinlobby, From: ~p, State: ~p", [From, State]),
     {Pid, _From} = From,
     Player_id = make_ref(),
     Players = State#coordinator_state.players,
     NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
-    io:format("_________________vi kom hit___________________"),
-    {reply, {ok, Player_id}, NewState}.
+    {reply, Player_id, NewState}.
 
-
+test() ->
+    io:format("~nprint från coordinator~p~n", [self()]).
+    
     
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
