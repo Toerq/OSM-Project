@@ -36,7 +36,9 @@ game_state(Tick, StateSender, State, N) ->
     SleepTime = ((1000000 div Tick) - timer:now_diff(erlang:now(), Time))div 1000,  
     StateSender ! {new_state, SleepTime},  
     if SleepTime > 0 ->
-	    timer:sleep(SleepTime)
+	    timer:sleep(SleepTime);
+       true ->
+	    ok %% no sleep
     end,
     game_state(Tick, StateSender, NewState, N-1).
 
