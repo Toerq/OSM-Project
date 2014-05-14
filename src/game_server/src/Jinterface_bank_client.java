@@ -1,69 +1,102 @@
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import com.ericsson.otp.erlang.*; 
 
 public class Jinterface_bank_client {
-	private ErlConnection conn;
+	private Socket socket; 
+	private OutputStream out;
+	private DataOutputStream dos;
+	private DataInputStream fromServer;
 	
-	public Jinterface_bank_client(String enode, String cookie) {
-		this.conn = new ErlConnection(enode, cookie);
+	public Jinterface_bank_client(String host, int port) {
+		try {
+			this.socket = new Socket (InetAddress.getByName(host), port);
+			this.out = socket.getOutputStream();
+			this.dos = new DataOutputStream(out);
+			this.fromServer = new DataInputStream(socket.getInputStream());
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void initMailbox(Jinterface_bank_client client) {
 		
 	}
-	
-	public void add(String servername, int[] ip, int[] destIp) {
+	public OtpErlangObject sendTCP(OtpErlangObject arg) {
+		OtpOutputStream availableStream = new OtpOutputStream(arg);
+		byte[] data = arrayPrepend(availableStream);
+		try {
+			dos.write(data);
+			byte[] message = new byte[248];
+			fromServer.read(message);
+
+			OtpErlangObject answer = (new OtpInputStream(message)).read_any();
+			return answer;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OtpErlangDecodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	public void add(String servername, int[] ip) {
 		OtpErlangObject[] argArray = new OtpErlangObject[3];
+		OtpErlangObject add = new OtpErlangAtom("add");
+		argArray[0] = add;
 		OtpErlangObject sName = new OtpErlangAtom(servername);
-		argArray[0] = sName;
+		argArray[1] = sName;
 		
 		OtpErlangTuple ipTuple = destIpToErlang(ip);
-		argArray[1] = ipTuple;
+		argArray[2] = ipTuple;
 		
-
-		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
-		argArray[2] = destIpTuple;
-		
-		OtpErlangList argList = new OtpErlangList(argArray);
-		conn.sendRPC("bank_client", "add", argList);
-		OtpErlangObject received = conn.receiveRPC();
-		System.out.println(received + "\n");
+		OtpErlangTuple dataTuple = new OtpErlangTuple(argArray);
+		 OtpErlangObject answer = sendTCP(dataTuple);
+		 System.out.println(answer);
 	}
+
+
 	
-	public String[][] available(int[] destIp) {
-		OtpErlangTuple tuple = destIpToErlang(destIp);
-		OtpErlangList arg = new OtpErlangList(tuple);
-		conn.sendRPC("bank_client", "available", arg);
-		OtpErlangObject received = conn.receiveRPC();
-		//System.out.println("Server list: \n" + received + "\n");
-		OtpErlangList servers =  (OtpErlangList) ((OtpErlangTuple) received).elementAt(1);
-		//System.out.println("Server list: " + servers);
-		String [][] serverList = new String[servers.arity()][2];
+	public String[][] available() {
+
+	    OtpErlangTuple availableTuple = new OtpErlangTuple(new OtpErlangAtom("available"));
+		OtpErlangObject answer = sendTCP(availableTuple);
+
+	    OtpErlangList servers =  (OtpErlangList) ((OtpErlangTuple) answer).elementAt(1);
+	    String [][] serverList = new String[servers.arity()][2];
+
 		for (int i = 0; i < servers.arity(); i++) {
 			for (int j = 0; j < 2; j++) {
 				serverList[i][j] =  ((OtpErlangTuple)servers.elementAt(i)).elementAt(j+1).toString();
-				System.out.println(serverList[i][j]);
 			}
 		}
 		return serverList;
 	}
 	
-	public void addPlayer(int[] destIp, String playerName) {
+	public void addPlayer(String playerName) {
 		OtpErlangObject[] argArray = new OtpErlangObject[2];
-		
-
-		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
+		OtpErlangAtom addPlayer = new OtpErlangAtom("addPlayer");
 		OtpErlangAtom erlName = new OtpErlangAtom(playerName);
 
-		argArray[0] = erlName;
-		argArray[1] = destIpTuple;
+		argArray[0] = addPlayer;
+		argArray[1] = erlName;
 		
-		OtpErlangList arg = new OtpErlangList(argArray);
-		conn.sendRPC("game_client", "addPlayer", arg);
-		OtpErlangObject received = conn.receiveRPC();
-		System.out.println(received);
+		OtpErlangTuple arg = new OtpErlangTuple(argArray);
+		OtpErlangObject answer = sendTCP(arg);
+		System.out.println(answer);
 	}
 	
 	private OtpErlangTuple destIpToErlang(int[] destIp) {
@@ -75,34 +108,25 @@ public class Jinterface_bank_client {
 		return new OtpErlangTuple(tmp);
 	}
 	
-	public void move(String name, String dir, int amount, int[] destIp) {
+	public void move(String name, String dir, int amount) {
 		OtpErlangObject argArray[] = new OtpErlangObject[4];
 
-		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
 		
-		argArray[0] = new OtpErlangAtom(name);
-		argArray[1] = new OtpErlangAtom(dir);
-		argArray[2] = new OtpErlangInt(amount);
-		argArray[3] = destIpTuple;
+		argArray[0] = new OtpErlangAtom("move");
+		argArray[1] = new OtpErlangAtom(name);
+		argArray[2] = new OtpErlangAtom(dir);
+		argArray[3] = new OtpErlangInt(amount);
 		
-		OtpErlangList argList = new OtpErlangList(argArray);
-
-		conn.sendRPC("game_client", "move", argList);
-		OtpErlangObject received = conn.receiveRPC();
-		
+		OtpErlangTuple arg = new OtpErlangTuple(argArray);
+		OtpErlangObject answer = sendTCP(arg);
+		System.out.println(answer);
 	}
 
-	public ArrayList<Player> getAllPos(int[] destIp) {
-		OtpErlangObject argArray[] = new OtpErlangObject[1];
-		OtpErlangTuple destIpTuple = destIpToErlang(destIp);
-		argArray[0] = destIpTuple;
-		OtpErlangList argList = new OtpErlangList(argArray);
-		System.out.println(argList);
-		conn.sendRPC("game_client", "getAllPos", argList);
-		
-		OtpErlangObject received = conn.receiveRPC();
-		System.out.println("recieved from getAllPos: " + received);
-		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) received).elementAt(1);
+	public ArrayList<Player> getAllPos() {
+		OtpErlangTuple arg = new OtpErlangTuple(new OtpErlangAtom("getAllPos"));
+		OtpErlangObject answer = sendTCP(arg);
+		System.out.println("recieved from getAllPos: " + answer);
+		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) answer).elementAt(1);
         ArrayList<Player> playerList = new ArrayList<Player>();
         for(OtpErlangObject erlangPlayer : erlangPlayerList) {
         	int x = 0;
@@ -121,37 +145,24 @@ public class Jinterface_bank_client {
         }
 
         return playerList;
-//		OtpErlangList erlangPlayerList = (OtpErlangList) received;
-//		OtpErlangObject[] list = erlangPlayerList.elements();
-//		int length = list.length;
-//		
-//		System.out.println(erlangPlayerList.elementAt(0));
 	}
 
-	public void updatePos(String playerName, Player player, int[] destIp) {
+	public void updatePos(String playerName, Player player) {
 				OtpErlangObject argArray[] = new OtpErlangObject[2];
 				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
 				
-				OtpErlangTuple destIpTuple = destIpToErlang(destIp);
-				argArray[0] = erlName;
-				argArray[1] = destIpTuple;
-				OtpErlangList arg = new OtpErlangList(argArray);
+				argArray[0] = new OtpErlangAtom("getPos");
+				argArray[1] = erlName;
+				OtpErlangTuple arg = new OtpErlangTuple(argArray);
 				System.out.println("arg: " + arg);
-				conn.sendRPC("game_client", "getPos", arg);
-				OtpErlangTuple received = (OtpErlangTuple) conn.receiveRPC();
-				OtpErlangTuple coordinates = (OtpErlangTuple) received.elementAt(1);
+
+				OtpErlangTuple answer = (OtpErlangTuple) sendTCP(arg);
+				OtpErlangTuple coordinates = (OtpErlangTuple) answer.elementAt(1);
 				int x;
 				int y;
-				//System.out.println("REC: " + received);
-				//OtpErlangTuple tuple = (OtpErlangTuple) received;
-				//System.out.println("tuple: " + tuple.elementAt(1));
-				//System.out.println("asd: " + received.toString());
 				try {
 					x =  ((OtpErlangLong) coordinates.elementAt(0)).intValue();
 					y =  ((OtpErlangLong) coordinates.elementAt(1)).intValue();
-					//x = (OtpErlangTuple) received.elementAt(1);
-					//x = ((OtpErlangLong ((OtpErlangTuple) received.elementAt(1))).intValue();
-					//x = ((OtpErlangLong)received).intValue();
 					player.setCoordinates(x, y);
 					System.out.println(x);
 					System.out.println(y);
@@ -159,25 +170,46 @@ public class Jinterface_bank_client {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-		//		int[] arr = new int[2];
-		//		try {
-		//			arr[0] = ((OtpErlangInt)(tuple.elementAt(0))).intValue();
-					
-		//			return arr;
-		//		} catch (OtpErlangRangeException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
 			}
 	
 	
 	
-//	public static void main(String[] args) {
-//		Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
-//		int[] ip = {127,0,0,1};
-//		int[] newServerIp = {1,2,3,4};
-//		client.add("hejsan123", newServerIp, ip);
-//		client.available(ip);
-//		client.conn.disconnect();
-//	}
+	/*public static void main(String[] args) {
+		Jinterface_bank_client client = new Jinterface_bank_client("127.0.0.1", 3010);
+		//int[] ip = {127,0,0,1};
+		int[] newServerIp = {12,3,4,5};
+		client.add("Ex5", newServerIp); //, ip);
+		String[][] serverList = client.available();
+		for (int i = 0; i < serverList.length; i++) {
+			System.out.println(serverList[i][0] + serverList[i][1]);
+		}
+		client.addPlayer("Player1");
+		client.move("player1", "up", 5);
+		client.getAllPos();
+		try {
+			client.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		//client.available(ip);
+		//client.conn.disconnect();
+	}
+*/
+	private void close() throws IOException {
+		this.out.close();
+		this.dos.close();
+		this.fromServer.close();
+		this.socket.close();
+	}
+	
+	private byte[] arrayPrepend(OtpOutputStream availableStream) {
+		byte[] tmp = availableStream.toByteArray();
+		 byte[] prepend = {(byte)131};
+		 byte[] data = new byte[prepend.length + tmp.length];
+		 System.arraycopy(prepend, 0, data, 0, prepend.length);
+		 System.arraycopy(tmp, 0, data, prepend.length, tmp.length);
+		return data;
+	}
 }

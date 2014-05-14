@@ -11,7 +11,7 @@ public class Player {
 	}
 
 	public void addPlayerToServer(int[] destIp, Jinterface_bank_client client) {
-        client.addPlayer(destIp, this.playerName);
+        client.addPlayer(this.playerName);
 	}
 	
 	public void setCoordinates(int x, int y) {

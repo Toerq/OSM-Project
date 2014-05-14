@@ -14,13 +14,13 @@ import javax.swing.table.DefaultTableModel;
 
 public class BrowserMenu extends JFrame {
 	
-	Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
-	int browserIp[] = {127,0,0,1};
+	Jinterface_bank_client client = new Jinterface_bank_client("127.0.0.1", 3010);
+	//int browserIp[] = {127,0,0,1};
 	String[] columnNames = {"Server name", "Ip", ""};
 	Object[][] data;
 	
 	public BrowserMenu() {
-		Object[][] tmp = client.available(browserIp);
+		Object[][] tmp = client.available();
 		data = new Object[tmp.length][3];
 		for(int i = 0; i < tmp.length; i++) {
 			for (int j = 0; j < 2; j++) {
@@ -54,8 +54,8 @@ public class BrowserMenu extends JFrame {
         //Place the JTable object in a JScrollPane for a scrolling table
         JScrollPane tableScrollPane = new JScrollPane(table);
 
-        this.add(tableScrollPane);
-        this.setVisible(true);
+        add(tableScrollPane);
+        setVisible(true);
         
     	Action join = new AbstractAction()
 		{
@@ -64,11 +64,13 @@ public class BrowserMenu extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				JTable table = (JTable)e.getSource();
 		        int modelRow = Integer.valueOf( e.getActionCommand() );
-		       
-		        Game game = new Game();
-		        Player clientPlayer = new Player(20,20, "player1");
+		        
 		        String ipString = (String)table.getValueAt(modelRow,1);
 		        int[] ip = Utility.stringToIp(ipString);
+		        
+		        Game game = new Game();
+		        Player clientPlayer = new Player(20,20, "player1");
+		        System.out.println(getFocusOwner());
                 
 		        clientPlayer.addPlayerToServer(ip, client);
                 game.run(client, clientPlayer);
@@ -76,16 +78,16 @@ public class BrowserMenu extends JFrame {
 				
 			}
 		};
+		
 		ButtonColumn buttonColumn = new ButtonColumn(table, join, 2);
 		buttonColumn.setMnemonic(KeyEvent.VK_D);
-		
 	}
 	
 	
-	/*public static void main(String [] args){
+	public static void main(String [] args){
 		
 		BrowserMenu bm = new BrowserMenu();
 		
 	}
-	*/
+	
 }

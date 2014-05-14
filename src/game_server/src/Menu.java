@@ -1,5 +1,6 @@
 import java.awt.*;
 import javax.swing.*;
+
 import java.awt.event.*;
 
 public class Menu extends JFrame
@@ -62,30 +63,39 @@ public class Menu extends JFrame
 	{
 		public void actionPerformed(ActionEvent e)
 		{
-
+			//SwingUtilities.invokeLater(new Runnable() {
+			//public void run() {
 			String ipString = (ip.getText()); //We use the getText & setText methods to manipulate the data entered into those fields.
 			System.out.println(ipString);
 			int [] ip = Utility.stringToIp(ipString);
 
-			Game game = new Game();
-			Jinterface_bank_client client = new Jinterface_bank_client("enode", "erlang");
+			Jinterface_bank_client client = new Jinterface_bank_client(ipString, 3010);
 			//client.add("newServ", ip, ip);
 			//client.available(ip);
-			Player clientPlayer = new Player(20,20, "player1");
+			Player clientPlayer = new Player(50,50, "player4");
 			clientPlayer.addPlayerToServer(ip, client);
+			Game game = new Game();
 			game.run(client, clientPlayer);
-			System.exit(0);
+			//System.exit(0);
+			//}
+			//});
 		}
 	}
 
 	private class sbButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
+			System.out.println(getFocusOwner());
 			BrowserMenu bm = new BrowserMenu();
 		}
 	}
 
 
 	public static void main(String [] args) {
-		Menu menu = new Menu();
+		SwingUtilities.invokeLater(new Runnable () {
+		@Override	
+			public void run() {
+				Menu menu = new Menu();
+			}
+		});
 	}
 }
