@@ -1,4 +1,4 @@
-%%  c(udp_player), c(udp_coordinator), c(udp_player), c(udp_dispatcher), c(udp_server), udp_server:start(3010).
+%%  c(udp_player), c(udp_coordinator), c(udp_player), c(udp_table), c(udp_dispatcher), c(udp_server), udp_server:start(3010).
 
 %%====================================================================
 %%

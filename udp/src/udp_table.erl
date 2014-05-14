@@ -30,50 +30,26 @@
 
 -define(SERVER, ?MODULE).
 
-%%====================================================================
-%% API
-%%====================================================================
-%%--------------------------------------------------------------------
-%% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
-%% Description: Starts the server
-%%--------------------------------------------------------------------
 start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+  gen_server:start_link(?MODULE, [], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
-%%====================================================================
-%% gen_server callbacks
-%%====================================================================
 
-%%--------------------------------------------------------------------
-%% Function: init(Args) -> {ok, State} |
-%%                         {ok, State, Timeout} |
-%%                         ignore               |
-%%                         {stop, Reason}
-%% Description: Initiates the server
-%%--------------------------------------------------------------------
 init([]) ->
-  {ok, #table_state{}}.
-
-%%--------------------------------------------------------------------
-%% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
-%%                                      {reply, Reply, State, Timeout} |
-%%                                      {noreply, State} |
-%%                                      {noreply, State, Timeout} |
-%%                                      {stop, Reason, Reply, State} |
-%%                                      {stop, Reason, State}
-%% Description: Handling call messages
-%%--------------------------------------------------------------------
+						%    proc_lib:start(fun() -> udp_game:test() end),
+    {ok, #table_state{number_of_players = 0, max_players = 20}}.
+	
 handle_call({player_token_to_pid, Token}, _From, State) ->
-    Players = State#co_state.players,
+    Players = State#table_state.players,
     {Pid, Token} = lists:keyfind(Token, 2, Players),
     {reply, Pid, State};
 
 
-handle_call({add_player, Player_id, Table_id}, _From, Table_state) ->
-    
+handle_call({add_player, Player_id}, From, State) ->
+    Players = State#table_state.players,
+    NewState = State#table_state{players = [{From, Player_id} | Players]},
+    {reply, ok, NewState}.
 
-  {reply, Reply, NewLibrary}.
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
 %%                                      {noreply, State, Timeout} |
@@ -102,13 +78,6 @@ handle_info(_Info, State) ->
 terminate(_Reason, _State) ->
   ok.
 
-%%--------------------------------------------------------------------
-%% Func: code_change(OldVsn, State, Extra) -> {ok, NewState}
-%% Description: Convert process state when code is changed
-%%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 
-%%--------------------------------------------------------------------
-%%% Internal functions
-%%--------------------------------------------------------------------

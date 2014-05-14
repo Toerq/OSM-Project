@@ -48,7 +48,7 @@ stop() ->
 %% gen_server callbacks
 %%====================================================================
 init([Port, Server_pid]) ->
-    {ok, Listen_socket} = gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}]),
+    {ok, Listen_socket} = gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}, {packet, 0}]),
     accept_spawner(Listen_socket, Server_pid),
     {ok, {Listen_socket, Server_pid}}.
 
@@ -64,9 +64,7 @@ accept_spawner(Listen_socket, Server_pid) ->
 accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid) ->
     case gen_tcp:accept(Listen_socket) of
 	{ok, Accept_socket} -> 
-	    io:format("~ninne i accept-funktionen~n"),
 	    gen_server:cast(Dispatcher_pid, {accept, Listen_socket, Dispatcher_pid}),
-	    io:format("~n____Index: ~p, Pid: ~p, accept socket: ~p~n", [Index, self(), Accept_socket]),
 	    {ok, Player_pid} = udp_player:start_link(Accept_socket, Server_pid, self()),
 	    gen_tcp:controlling_process(Accept_socket, Player_pid),
 	    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid});

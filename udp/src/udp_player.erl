@@ -34,17 +34,7 @@ start_link(Accept_socket, Server_Pid, Dispatcher_pid) ->
 %    gen_server:start({local, ?SERVER}, ?MODULE, [Accept_socket, Server_Pid, Dispatcher_pid], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
-%%====================================================================
-%% gen_server callbacks
-%%====================================================================
 
-%%--------------------------------------------------------------------
-%% Function: init(Args) -> {ok, State} |
-%%                         {ok, State, Timeout} |
-%%                         ignore               |
-%%                         {stop, Reason}
-%% Description: Initiates the server
-%%--------------------------------------------------------------------
 init([Accept_socket, Server_pid, _Dispatcher_pid]) ->
 %  Coordinator = gen_server:call(Server_pid, get_state),
    % gen_server:call(Dispatcher_pid, lewut),
@@ -72,11 +62,24 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 		"browse_tables" ->
 		    Tables = udp_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
-		    gen_tcp:send(Accept_socket, String1)
+		    gen_tcp:send(Accept_socket, String1);
+		{join_server, Table_ref} ->
+		    %% add player to table,
+		    %%enter game_state(Table_ref)
+		    tbi
 	    end
     end,
     talk_state(State).
     
+game_state(Table_ref, Accept_socket) ->
+tbi.
+%    recieve
+%	{tcp, Accept_socket, Actions} ->
+					     %%udp_game(Actions),
+					     %%{game_state, State},
+					     %% gen_tcp:send(Accept_socket, State).
+					     %%game_state(Table_ref, Accept_socket)
+
 handle_cast({start_player, Accept_socket, _Dispatcher_pid}, State) ->
     Player_id = udp_coordinator:join_lobby(self()),
     NewState = State#state{player_id = Player_id},

@@ -40,10 +40,6 @@ browse_players() -> gen_server:call(?MODULE, browse_players).
 init([]) ->
   {ok, #coordinator_state{test = ja}}.
 
-handle_call({standard, Message}, From, State) -> 
-    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",
-    [Message, From, State]),
-    {reply, ok, State};
 
 handle_call(browse_players, _From, State) ->
    {reply, State#coordinator_state.players, State};
@@ -59,8 +55,9 @@ handle_call(lewut, _From, State) ->
     {reply, bbq, State};
 
 handle_call({add_player_to_table, Player_id, Table_ref}, _From, State) ->
-%%    {Pid, _From} = From,
-    case gen_server:call(Table_ref, Player_id) of
+    Tables = State#coordinator_state.tables,
+    
+    case gen_server:call(Table_ref, {add_player, Player_id}) of
 	{add_succeded} ->
 	    {reply, {add_succes}, State};
 	{add_failed, Reason} ->
@@ -73,6 +70,7 @@ handle_call({join_lobby_2, Pid}, _From, State) ->
     NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
     {reply, Player_id, NewState};
 
+
 handle_call(join_lobby, From, State) ->
     io:format("~nI joinlobby, From: ~p, State: ~p", [From, State]),
     {Pid, _From} = From,
@@ -83,22 +81,17 @@ handle_call(join_lobby, From, State) ->
 
 test() ->
     io:format("~nprint från coordinator~p~n", [self()]).
-    
-    
-%%--------------------------------------------------------------------
-%% Function: handle_cast(Msg, State) -> {noreply, State} |
-%%                                      {noreply, State, Timeout} |
-%%                                      {stop, Reason, State}
-%% Description: Handling cast messages
-%%--------------------------------------------------------------------
-%ha som call istället, där caller måste hantera ifall table-create misslyckades.
+
 handle_cast(add_table, State) ->
     %% TODO: case sats för ifall table-skapandet misslyckas,
     %% implementera udp_table:init (working title)
 %case udp_table:init(table_ref), of ....
 %{Table_ref, Current_nmbr_of_players, Max_players, 
     %%Game_type, Players, *referens till bordet}
-    Table = {make_ref(), 0, 20, mmo_tetris, []},
+    {ok, Table_pid} = udp_table:start_link(),
+    io:format("~n~p~n", [Table_pid]),
+    Tables = State#coordinator_state.tables,
+    Table = {Table_pid, Name, mmo_tetris, 0, 20, mmo_tetris, []},
     Tables =  State#coordinator_state.tables,
     NewState = State#coordinator_state{tables = [Table | Tables]},
     {noreply, NewState}.
