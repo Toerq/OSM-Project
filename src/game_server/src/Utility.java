@@ -14,20 +14,17 @@ public class Utility {
 		}
 		return ip;
 	}
-	public static byte[] arrayPrepend(OtpOutputStream availableStream) {
-		byte[] tmp = availableStream.toByteArray();
-		 byte[] prepend = {(byte)131};
-		 byte[] data = new byte[prepend.length + tmp.length];
-		 System.arraycopy(prepend, 0, data, 0, prepend.length);
-		 System.arraycopy(tmp, 0, data, prepend.length, tmp.length);
-		return data;
-	}
 	public static byte[] arrayPrepend(byte[] tmp) {
-		//byte[] tmp = availableStream.toByteArray();
 		 byte[] prepend = {(byte)131};
 		 byte[] data = new byte[prepend.length + tmp.length];
 		 System.arraycopy(prepend, 0, data, 0, prepend.length);
 		 System.arraycopy(tmp, 0, data, prepend.length, tmp.length);
 		return data;
 	}
+	
+	public static byte[] arrayPrepend(OtpOutputStream availableStream) {
+		byte[] data = availableStream.toByteArray();
+		return arrayPrepend(data);
+	}
+
 }
