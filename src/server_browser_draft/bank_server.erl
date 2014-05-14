@@ -17,18 +17,22 @@ server(Port) ->
 				 input_handler(Socket) 
 			 end, 
 			 15,
-			 4).
+			 0).
 
 input_handler(Socket) ->
+    io:format("input handler: ~n"),
     receive
  	{tcp, Socket, Bin} ->
+	    io:format("Got packet: ~p~n", [Bin]),
  	    Term = binary_to_term(Bin),
-	    %% io:format("~p", [Term]),
+	    io:format("~p", [Term]),
 	    Reply = do_call(Term),
  	    send_term(Socket, Reply),
 	    input_handler(Socket);
  	{tcp_closed, Socket} ->
-	    true
+	    tcp_closed;
+	E ->
+	    io:format("~p", [E])
      end.
 
 send_term(Socket, Term) ->
