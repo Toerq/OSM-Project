@@ -1,5 +1,6 @@
 obs: namnen är preliminära.
 
+(starts a new erlang-process with a database)
 start(Db_name) -> ok / name_already_exist
 
 register_action(Db_name, Actions) ->
