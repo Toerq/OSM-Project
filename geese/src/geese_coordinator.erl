@@ -19,9 +19,10 @@
          terminate/2, code_change/3, test/0]).
 
 -record(coordinator_state,
-	{players = [],
+	{%% player = {Pid, Name, Socket}
+	  players = [],
+	 %%tables = [{table_pid, table_name, game_type, connected_players, max_players}
 	 tables = [],
-	 player_at_table = [],
 	 test}
 ).
 
@@ -30,97 +31,88 @@
 start_link() ->
   gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
-join_lobby(Pid) -> gen_server:call(?MODULE, {join_lobby_2, Pid}).
+join_lobby(Pid, Name, Socket) -> gen_server:call(?MODULE, {join_lobby, Pid, Name, Socket}).
 browse_tables() -> gen_server:call(?MODULE, browse_tables).
-add_player_to_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {add_player_to_table, Player_id, Table_ref}).
+join_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_id, Table_ref}).
 add_table() -> gen_server:cast(?MODULE, add_table).
 browse_players() -> gen_server:call(?MODULE, browse_players).
-    
-    
+
 init([]) ->
-  {ok, #coordinator_state{test = ja}}.
+  {ok, #coordinator_state{}}.
 
 
-handle_call(browse_players, _From, State) ->
+handle_call(browse_players_on_server, _From, State) ->
    {reply, State#coordinator_state.players, State};
 
 handle_call(browse_tables, _From, State) ->
         {reply, State#coordinator_state.tables, State};
 
-
-%%{table_settings, {max_players, game_type, tick_rate(?), etc}}
-
-handle_call(lewut, _From, State) ->
-    io:format("lewut"),
-    {reply, bbq, State};
-
-handle_call({add_player_to_table, Player_id, Table_ref}, _From, State) ->
+handle_call({join_table, Pid, Table_ref}, _From, State) ->
     Tables = State#coordinator_state.tables,
-    
-    case gen_server:call(Table_ref, {add_player, Player_id}) of
-	{add_succeded} ->
-	    {reply, {add_succes}, State};
-	{add_failed, Reason} ->
-	    {reply, {add_failed, Reason}, State}
+    Players = State#coordinator_state.players,
+    case lists:keyfind(Pid, 1, Players) of
+	false ->
+	    {reply, spelare_finns_ej_i_join_table_coordinator, State};
+	{Pid, Player_name, Socket} ->
+	   case gen_server:call(Table_ref, {Pid, Player_name, Socket}) of
+	       add_failed ->
+		   {reply, add_failed, State};
+	       ok ->
+		   case lists:keyfind(Table_ref, 1, Tables) of
+		       false -> 
+			   {reply, table_not_found_obscure, State};
+		       {_Table_pid, _Table_name, _Game_type, Connected_players, _Max_players} ->
+			   NewTable = {_Table_pid, _Table_name, _Game_type, Connected_players + 1, _Max_players},
+			   NewTableList = lists:keydelete(Table_ref, 1, Tables),
+			   NewState = State#coordinator_state{tables = [NewTable | NewTableList]},
+			   {reply, add_succeeded, NewState}
+		   end
+	   end
     end;
 
-handle_call({join_lobby_2, Pid}, _From, State) ->
-    Player_id = make_ref(),
+handle_call({join_lobby, Name, Pid, Socket}, _From, State) ->
     Players = State#coordinator_state.players,
-    NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
-    {reply, Player_id, NewState};
-
-
-handle_call(join_lobby, From, State) ->
-    io:format("~nI joinlobby, From: ~p, State: ~p", [From, State]),
-    {Pid, _From} = From,
-    Player_id = make_ref(),
-    Players = State#coordinator_state.players,
-    NewState = State#coordinator_state{players = [{Pid, Player_id} | Players]},
-    {reply, Player_id, NewState}.
+    case lists:keyfind(Pid, 1, Players) of
+	%%Spelaren fanns inte i listan
+	false ->
+	    NewState = State#coordinator_state{players = [{Pid, Name, Socket} | Players]},
+	    {reply, join_succeeded, NewState};
+	_Player -> 
+	    {reply, player_already_exists, State}
+    end.
+	    
 
 test() ->
     io:format("~nprint från coordinator~p~n", [self()]).
 
+%%tables = [{table_pid, table_name, game_type, connected_players, max_players}
 handle_cast(add_table, State) ->
-    %% TODO: case sats för ifall table-skapandet misslyckas,
-    %% implementera geese_table:init (working title)
-%case geese_table:init(table_ref), of ....
-%{Table_ref, Current_nmbr_of_players, Max_players, 
-    %%Game_type, Players, *referens till bordet}
     {ok, Table_pid} = geese_table:start_link(),
-    io:format("~n~p~n", [Table_pid]),
     Tables = State#coordinator_state.tables,
-    Table = {Table_pid, name, mmo_tetris, 0, 20, mmo_tetris, []},
+    Table = {Table_pid, name, mmo_tetris, 0, 20},
     Tables =  State#coordinator_state.tables,
     NewState = State#coordinator_state{tables = [Table | Tables]},
-    {noreply, NewState}.
-%%--------------------------------------------------------------------
-%% Function: handle_info(Info, State) -> {noreply, State} |
-%%                                       {noreply, State, Timeout} |
-%%                                       {stop, Reason, State}
-%% Description: Handling all non call/cast messages
-%%--------------------------------------------------------------------
+    {noreply, NewState};
+
+handle_cast({remove_table, Table_pid}, State) ->
+    Tables = State#coordinator_state.tables,
+    case lists:keyfind(Table_pid, 1, Tables) of
+	false ->
+	    {reply, no_such_table_exists, State};
+	_Table -> 
+	    NewTables = lists:keydelete(Table_pid, 1, Table_pid),
+	    NewState = State#coordinator_state{tables = NewTables},
+	    gen_server:cast(Table_pid, exit),
+	    {reply, removal_succeeded, NewState}
+    end.
+
+
 handle_info(_Info, State) ->
   {noreply, State}.
 
-%%--------------------------------------------------------------------
-%% Function: terminate(Reason, State) -> void()
-%% Description: This function is called by a gen_server when it is about to
-%% terminate. It should be the opposite of Module:init/1 and do any necessary
-%% cleaning up. When it returns, the gen_server terminates with Reason.
-%% The return value is ignored.
-%%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
   ok.
 
-%%--------------------------------------------------------------------
-%% Func: code_change(OldVsn, State, Extra) -> {ok, NewState}
-%% Description: Convert process state when code is changed
-%%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 
-%%--------------------------------------------------------------------
-%%% Internal functions
-%%--------------------------------------------------------------------

@@ -49,30 +49,49 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
     Accept_socket = State#state.accept_socket,
     gen_tcp:send(Accept_socket, "~n~nalternatives: add_table, ping, browse_tables~n"),
     receive
-	{tcp, Accept_socket, Packet} ->
-	    case Packet of
-		"add_table" -> 
+	{tcp, Accept_socket, [Packet]} ->
+	    case binary_to_term(Packet) of
+		
+		{join_lobby, Name} ->
+		    geese_coordinator:join_lobby(Name, self());
+
+		Asd ->
+		    gen_tcp:send(Accept_socket, Packet),
+		    io:format(Asd);
+		add_table -> 
 		    geese_coordinator:add_table(),
 		    gen_tcp:send(Accept_socket, "~nUpdated tables:"),
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    gen_tcp:send(Accept_socket, String1);
-		"ping" ->
+		ping ->
 		    gen_tcp:send(Accept_socket, "pong");
-		"browse_tables" ->
+		browse_tables ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    gen_tcp:send(Accept_socket, String1);
-		{join_server, Table_ref} ->
-		    %% add player to table,
-		    %%enter game_state(Table_ref)
-		    tbi
+		true ->
+		    gen_tcp:send(Accept_socket, "wrong input")
+%		{join_server, Table_ref} ->
+%		    Player_id = State#state.player_id,
+%		    case geese_coordinator:add_player_to_table(Player_id, Table_ref) of
+%			{add_success, {player_id}Db_name} ->
+%			    receive_state(Accept_socket, Db_name),
+%			    geese_statesender:start(Accept_socket, Db_name),
+%			    gen_tcp:send(Accept_socket, "You have been added to the game");
+%			    {add_failed, Reason} -> 
+%			    gen_tcp:send(Accept_socket, Reason)
+%		    end
+%	    end
 	    end
     end,
     talk_state(State).
+
+%eceive_state(Accept_socket, Db_name) ->
     
-game_state(Table_ref, Accept_socket) ->
-tbi.
+
+%game_state(Table_ref, Accept_socket) ->
+%tbi.
 %    recieve
 %	{tcp, Accept_socket, Actions} ->
 					     %%geese_game(Actions),
