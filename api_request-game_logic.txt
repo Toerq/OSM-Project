@@ -1,0 +1,8 @@
+obs: namnen är preliminära.
+
+start(Db_name) -> ok / name_already_exist
+
+register_action(Db_name, Actions) ->
+
+get_state(Db_name) -> State / alternativt att du har en egen loop skickar statesen
+		      	      till alla geese_statesend-processer ex. 30 ggr/sek 
