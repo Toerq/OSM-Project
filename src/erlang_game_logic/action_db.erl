@@ -1,5 +1,5 @@
 -module(action_db).
--export([get_actions/1, do_call/1, init/1]).
+-export([get_actions/1, do_call/1, init/1, stop/0]).
 -record(action, {player_id, action, varlist}).
 
 %% init(Db_name) ->

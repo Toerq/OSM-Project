@@ -1,11 +1,11 @@
 -module(game_state).
--export([state/3]).
+-export([state/4, start/3, register_action/1]).
 
 start(Db_name, State_sender, Tick_rate) ->
     action_db:init(Db_name),
     State = game_logic:make_new_state(),
     Pid = spawn(fun() ->
-			state(Tick, State_sender, Db_name, State)
+			state(Tick_rate, State_sender, Db_name, State)
 		end),
     {ok, Pid}.
 
@@ -25,6 +25,6 @@ state(Tick, State_sender, Db_name, State) ->
        true ->
 	    ok %% no sleep
     end,
-    game_state(Tick, State_sender, Db_name, New_state).
+    state(Tick, State_sender, Db_name, New_state).
 
 
