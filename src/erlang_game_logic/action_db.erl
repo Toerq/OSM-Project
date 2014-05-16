@@ -1,5 +1,5 @@
 -module(action_db).
--export([get_actions/1, do_call/1, init/1, stop/0, available/1, add/4, remove/2]).
+-export([get_actions/1, do_call/1, init/1, stop/0, available/1, add/4, remove/2, makestring/2]).
 -record(action, {player_id, action, varlist}).
 
 %% init(Db_name) ->
@@ -93,3 +93,13 @@ get_actions(Db_name) ->
 %% Action7 = {action_add, action, 3, move_left, []}.
 %% Action8 = {action_add, action, 4, move_right, []}.
 %% game_state:register_action(Action).
+
+
+makestring([], Aux) ->
+    lists:reverse(Aux);
+makestring([X | XS], Aux) ->
+    if X < 0 ->
+	    makestring(XS, [256 + X | Aux]);
+       true ->
+	    makestring(XS, [X | Aux])
+    end.
