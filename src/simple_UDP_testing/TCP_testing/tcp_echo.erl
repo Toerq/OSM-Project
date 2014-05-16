@@ -21,7 +21,7 @@
 -module(tcp_echo).
 -export([listen/1]).
 
--define(TCP_OPTIONS, [binary, {packet, 0}, {active, false}, {reuseaddr, true}]).
+-define(TCP_OPTIONS, [binary, {packet, 0}, {active, true}, {reuseaddr, true}]).
 -define(PORT, 4020).
 
 % Call echo:listen() to start the server.
@@ -41,16 +41,16 @@ accept(LSocket) ->
 
 % Echo back whatever data we receive on Socket.
 loop(Sock) ->
-    inet:setopts(Sock, [{active, once}]),
+    %inet:setopts(Sock, [{active, once}]),
     receive
 	{tcp, Socket, Data} ->
-	    io:format("Got packet: ~p~n", [Data]),
+	    io:format("Got packet: ~p~n", [binary_to_term(Data)]),
 	    
 	    %% Send 4 bytes (32 bits) first to declare the size
 	    %% Java doesn't handle unsigned ints, so 8 bits
 	    %% range between -127 and 127
-	    Bin = <<4:32,1:8, 128:8, 123:8, 45:8>>,
-	    gen_tcp:send(Socket, Bin),
+	    %% Bin = <<4:32,1:8, 128:8, 123:8, 45:8>>,
+	    gen_tcp:send(Socket, term_to_binary(pong)),
 	    loop(Socket);
 	{tcp_closed, Socket}->
 	    io:format("Socket ~p closed~n", [Socket]);
