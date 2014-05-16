@@ -1,12 +1,15 @@
 -module(game_logic).
--export([do_actions/2]).
+-export([do_actions/2, make_new_state/0]).
+
+make_new_state() ->
+    {{20,500,10,10}, []}.
 
 do_actions(State, []) ->
     State;
 do_actions(State, [{Id, Action, Var_list} | T]) when Id =:= server ->
     do_actions(do_server_action(State, {Action, Var_list}), T);
 do_actions({Server_settings, Player_list}, [A | T]) ->
-    do_actions({Server_settings, do_actionsAux(Server_settings, Player_list, [], A)}, T).
+    do_actions({Server_settings, do_actions_aux(Server_settings, Player_list, [], A)}, T).
 
 do_server_action({Server_settings, Player_list}, {Action, Var_list}) ->
     case Action of
@@ -23,9 +26,9 @@ do_server_action({Server_settings, Player_list}, {Action, Var_list}) ->
 do_actions_aux(_Server_settings, [], P_list, _Action)->
     P_list;
 do_actions_aux(Server_settings, [{Name, Pos, Vel, Hp, Id} | T], P_list, {Player_id, Action, _Var_list}) when Id =:= Player_id ->
-    do_actions_aux(Server_settings, T, [do_action(Server_settings, {Name, Pos, Vel, Hp, Id}, Action) | P_list], {Player_id, Action});
+    do_actions_aux(Server_settings, T, [do_action(Server_settings, {Name, Pos, Vel, Hp, Id}, Action) | P_list], {Player_id, Action, _Var_list});
 do_actions_aux(Server_settings, [{Name, Pos, Vel, Hp, Id} | T], P_list, {Player_id, Action, _Var_list}) when Player_id =:= global ->
-    do_actions_aux(Server_settings, T, [do_action(Server_settings, {Name, Pos, Vel, Hp, Id}, Action) | P_list], {Player_id, Action});
+    do_actions_aux(Server_settings, T, [do_action(Server_settings, {Name, Pos, Vel, Hp, Id}, Action) | P_list], {Player_id, Action, _Var_list});
 do_actions_aux(Settings, [P | T], P_list, Action) ->
     do_actions_aux(Settings, T, [P | P_list], Action).
 
@@ -76,23 +79,24 @@ limitor(X, Limit, Fric) ->
 
 modulor(X, Mod) ->
     if X > Mod ->
-	    X - Mod - 1;
+	    X - Mod;
        X < 0 ->
-	    Mod + X + 1;
+	    Mod + X;
        true ->
 	    X
     end.
 
 add_player(Player, [], Aux_list) ->
     [Player | Aux_list];
-add_player(Player, [P | T], Aux_list) when P =/= Player ->
-    add_player(Player, T, [P | Aux_list]);
+add_player({Name, Pos, Vel, Hp, Id}, [{N, P, V, H, I} | T], Aux_list) when I =/= Id ->
+    add_player({Name, Pos, Vel, Hp, Id}, T, [{N, P, V, H, I} | Aux_list]);
 add_player(_ , Players, Aux_list) ->
     lists:append([Players, Aux_list]).
 
 remove_player(_Player, [], Aux_list) ->
     Aux_list;
-remove_player(Player, [P | T], Aux_list) when P =:= Player ->
+%%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
+remove_player({_Name, _Pos, _Vel, _Hp, Id}, [{_N, _P, _V, _H, I} | T], Aux_list) when I =:= Id ->
     lists:append([T, Aux_list]);
 remove_player(Player, [P | T], Aux_list) ->
     remove_player(Player, T, [P | Aux_list]).

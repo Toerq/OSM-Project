@@ -15,13 +15,22 @@ public class Jinterface_bank_client {
 	private OutputStream out;
 	private DataOutputStream dos;
 	private DataInputStream fromServer;
+	private currentStateThread stateThread;
 	
 	public Jinterface_bank_client(String host, int port) {
 		try {
+			System.out.println("Nuuuuu börjar vi....");
 			this.socket = new Socket (InetAddress.getByName(host), port);
+			System.out.println("Socket: " + socket);
 			this.out = socket.getOutputStream();
 			this.dos = new DataOutputStream(out);
 			this.fromServer = new DataInputStream(socket.getInputStream());
+			
+			// Starts a thread to get current state (getAllPos)
+			OtpErlangTuple arg = new OtpErlangTuple(new OtpErlangAtom("getAllPos"));
+			stateThread = new currentStateThread(host, port, arg);
+			new Thread(stateThread).start();
+			
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -64,8 +73,8 @@ public class Jinterface_bank_client {
 		argArray[2] = ipTuple;
 		
 		OtpErlangTuple dataTuple = new OtpErlangTuple(argArray);
-		 OtpErlangObject answer = sendTCP(dataTuple);
-		 System.out.println(answer);
+		OtpErlangObject answer = sendTCP(dataTuple);
+		System.out.println(answer);
 	}
 
 
@@ -119,19 +128,19 @@ public class Jinterface_bank_client {
 		
 		OtpErlangTuple arg = new OtpErlangTuple(argArray);
 		OtpErlangObject answer = sendTCP(arg);
-		System.out.println(answer);
+		System.out.println("Just moved " + name + ": " + answer);
 	}
 
 	public ArrayList<Player> getAllPos() {
-		OtpErlangTuple arg = new OtpErlangTuple(new OtpErlangAtom("getAllPos"));
-		OtpErlangObject answer = sendTCP(arg);
-		System.out.println("recieved from getAllPos: " + answer);
+		OtpErlangObject answer = stateThread.getCurrentState();
+		
+		System.out.println("received from getAllPos: " + answer);
 		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) answer).elementAt(1);
         ArrayList<Player> playerList = new ArrayList<Player>();
         for(OtpErlangObject erlangPlayer : erlangPlayerList) {
         	int x = 0;
         	int y = 0;
-        	System.out.println("print av erlangPlayer: " + erlangPlayer);
+        	//System.out.println("print av erlangPlayer: " + erlangPlayer);
         	String playerName =  ((OtpErlangTuple) erlangPlayer).elementAt(1).toString();
         	try {
 				x = ((OtpErlangLong) ((OtpErlangTuple) erlangPlayer).elementAt(2)).intValue();
@@ -140,7 +149,7 @@ public class Jinterface_bank_client {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-        	System.out.println("X: " + x);
+        	//System.out.println("X: " + x);
         	playerList.add(new Player(x, y, playerName));
         }
 
@@ -148,31 +157,29 @@ public class Jinterface_bank_client {
 	}
 
 	public void updatePos(String playerName, Player player) {
-				OtpErlangObject argArray[] = new OtpErlangObject[2];
-				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
-				
-				argArray[0] = new OtpErlangAtom("getPos");
-				argArray[1] = erlName;
-				OtpErlangTuple arg = new OtpErlangTuple(argArray);
-				System.out.println("arg: " + arg);
-
-				OtpErlangTuple answer = (OtpErlangTuple) sendTCP(arg);
-				OtpErlangTuple coordinates = (OtpErlangTuple) answer.elementAt(1);
-				int x;
-				int y;
-				try {
-					x =  ((OtpErlangLong) coordinates.elementAt(0)).intValue();
-					y =  ((OtpErlangLong) coordinates.elementAt(1)).intValue();
-					player.setCoordinates(x, y);
-					System.out.println(x);
-					System.out.println(y);
-				} catch (OtpErlangRangeException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-	
-	
+		OtpErlangObject argArray[] = new OtpErlangObject[2];
+		OtpErlangAtom erlName = new OtpErlangAtom(playerName);
+		
+		argArray[0] = new OtpErlangAtom("getPos");
+		argArray[1] = erlName;
+		OtpErlangTuple arg = new OtpErlangTuple(argArray);
+		//System.out.println("arg: " + arg);
+		
+		OtpErlangTuple answer = (OtpErlangTuple) sendTCP(arg);
+		OtpErlangTuple coordinates = (OtpErlangTuple) answer.elementAt(1);
+		int x;
+		int y;
+		try {
+			x =  ((OtpErlangLong) coordinates.elementAt(0)).intValue();
+			y =  ((OtpErlangLong) coordinates.elementAt(1)).intValue();
+			player.setCoordinates(x, y);
+			//System.out.println(x);
+			//System.out.println(y);
+		} catch (OtpErlangRangeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	/*public static void main(String[] args) {
 		Jinterface_bank_client client = new Jinterface_bank_client("127.0.0.1", 3010);
