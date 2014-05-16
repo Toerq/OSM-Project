@@ -2,6 +2,15 @@
 -export([get_actions/1, do_call/1, init/1]).
 -record(action, {player_id, action, varlist}).
 
+%% init(Db_name) ->
+%%     mnesia:create_schema([node()]),
+%%     mnesia:start(),
+%%     mnesia:create_table(Db_name, 
+%% 			[{ram_copies,[node()]},
+%% 			 {attributes, 
+%% 			  record_info(fields, action)}]),
+%%     mnesia:stop().
+
 init(Db_name) ->
     mnesia:create_schema([node()]),
     mnesia:start(),
@@ -9,6 +18,9 @@ init(Db_name) ->
 			[{ram_copies,[node()]},
 			 {attributes, 
 			  record_info(fields, action)}]),
+    mnesia:wait_for_tables([Db_name], 1000).
+
+stop() ->
     mnesia:stop().
 
 

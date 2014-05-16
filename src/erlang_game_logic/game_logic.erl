@@ -1,6 +1,9 @@
 -module(game_logic).
 -export([do_actions/2]).
 
+make_new_state() ->
+    {{20,500,10,10}, []}.
+
 do_actions(State, []) ->
     State;
 do_actions(State, [{Id, Action, Var_list} | T]) when Id =:= server ->
