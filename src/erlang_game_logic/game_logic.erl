@@ -1,12 +1,15 @@
 -module(game_logic).
--export([do_actions/2]).
+-export([do_actions/2, make_new_state/0]).
+
+make_new_state() ->
+    {{20,500,10,10}, []}.
 
 do_actions(State, []) ->
     State;
 do_actions(State, [{Id, Action, Var_list} | T]) when Id =:= server ->
     do_actions(do_server_action(State, {Action, Var_list}), T);
 do_actions({Server_settings, Player_list}, [A | T]) ->
-    do_actions({Server_settings, do_actionsAux(Server_settings, Player_list, [], A)}, T).
+    do_actions({Server_settings, do_actions_aux(Server_settings, Player_list, [], A)}, T).
 
 do_server_action({Server_settings, Player_list}, {Action, Var_list}) ->
     case Action of
