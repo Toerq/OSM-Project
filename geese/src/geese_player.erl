@@ -59,16 +59,17 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 
 		add_table -> 
 		    geese_coordinator:add_table(),
-		    gen_tcp:send(Accept_socket, "~nUpdated tables:"),
+		 %   gen_tcp:send(Accept_socket, "~nUpdated tables:"),
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
-		    gen_tcp:send(Accept_socket, String1);
+		    gen_tcp:send(Accept_socket, "abc");
 		ping ->
 		    gen_tcp:send(Accept_socket, term_to_binary(pong));
 		browse_tables ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
-		    gen_tcp:send(Accept_socket, String1);
+%		    gen_tcp:send(Accept_socket, String1);
+		    gen_tcp:send(Accept_socket, term_to_binary(Tables));
 		browse_players -> 
 		    Players = geese_coordinator:browse_players(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),
@@ -76,8 +77,8 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 		    gen_tcp:send(Accept_socket, String1);
 		true ->
 		    gen_tcp:send(Accept_socket, "wrong input");
-		{join_table, Pid, Table} ->
-		    geese_coordinator:join_table(Pid, Table);
+		{join_table, Table} ->
+		    geese_coordinator:join_table(self(), Table);
 		Arbitary -> io:format("~n In Arbitary-clause, recieved ~p~n", [Arbitary])
 %		{join_server, Table_ref} ->
 %		    Player_id = State#state.player_id,

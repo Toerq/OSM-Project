@@ -52,7 +52,8 @@ init([Port, Server_pid]) ->
 			       %% {dontroute, true},
 %			       {nodelay,true},
 			       {packet, 0},
-			       {reuseaddr, true}, 
+			       % worked last time{active, true}, 
+						{reuseaddr, true},
 			       {active, true}]),
 	%gen_tcp:listen(Port, [{active, true}, {reuseaddr, true}, binary, {packet, 0}]),
     accept_spawner(Listen_socket, Server_pid),
@@ -60,23 +61,24 @@ init([Port, Server_pid]) ->
 
 accept_spawner(Listen_socket, Server_pid) ->
    % [spawn(fun() -> accept_function(Listen_socket, self(), Index) end) || Index <- lists:seq(1, 20)].
-    proc_lib:spawn(?MODULE, accept_function, [Listen_socket, self(), 1, Server_pid]),
+    spawn(?MODULE, accept_function, [Listen_socket, self(), 1, Server_pid]),
     Listen_socket.
 		  
-%fun() -> accept_function(Listen_socket, self()) end).
-%    accept_function(Listen_socket, self()),
-%    proc_lib:spawn(?MODULE, accept_function, [{Listen_socket, self()}]).
-
 accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid) ->%
-    case gen_tcp:accept(Listen_socket) of
-	{ok, Accept_socket} -> 
-	    gen_server:cast(Dispatcher_pid, {accept, Listen_socket, Dispatcher_pid}),
-	    {ok, Player_pid} = geese_player:start_link(Accept_socket, Server_pid, self()),
-	    gen_tcp:controlling_process(Accept_socket, Player_pid),
-	    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid});
-	{error, Reason} ->
-	    io:format("~n~nreason why accept failed: ~p~n~n", [Reason]) 
-    end.
+    {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
+    {ok, Player_pid} = geese_player:start_link(Accept_socket, Server_pid, self()),
+    gen_tcp:controlling_process(Accept_socket, Player_pid),
+    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid}),
+    accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid).
+   %% case gen_tcp:accept(Listen_socket) of
+	%%{ok, Accept_socket} -> 
+	%%    gen_server:cast(Dispatcher_pid, {accept, Listen_socket, Dispatcher_pid}),
+	%%    {ok, Player_pid} = geese_player:start_link(Accept_socket, Server_pid, self()),
+	%%    gen_tcp:controlling_process(Accept_socket, Player_pid),
+	%%    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid});
+	%%{error, Reason} ->
+	%%    io:format("~n~nreason why accept failed: ~p~n~n", [Reason]) 
+  %%  end.
 
 
 handle_cast({accept, Listen_socket, _Dispatcher_pid}, {_Listen_socket, Server_pid}) -> io:format("cast, accept, dispatcher, pid: ~p", [self()]),
