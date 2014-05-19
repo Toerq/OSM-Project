@@ -1,7 +1,7 @@
 -module(game_logic).
 -include("game_logic.hrl").
 
--export([addPlayer/1, removePlayer/1, getPos/1, getAllPos/0, move/3, init_player/0]).
+-export([addPlayer/3, removePlayer/1, getPos/1, getAllPos/0, move/3, init_player/0]).
 
 init_player() ->
     mnesia:create_schema([node()]),
@@ -12,12 +12,12 @@ init_player() ->
 			  record_info(fields, player)}]),
     mnesia:stop().
 
-addPlayer(PlayerName) ->
+addPlayer(PlayerName, X, Y) ->
     fun() ->
 	    case mnesia:read({player, PlayerName}) of
 		[] ->
 		    %% add player
-		    NewPlayer = #player{playername = PlayerName, x_pos = 10, y_pos = 10},
+		    NewPlayer = #player{playername = PlayerName, x_pos = X, y_pos = Y},
 		    mnesia:write(NewPlayer),
 		    io:format("aqwd"),
 		    ok;
