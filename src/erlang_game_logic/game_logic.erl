@@ -1,8 +1,25 @@
+%% @author Johan Gille
 -module(game_logic).
 -export([do_actions/2, make_new_state/0]).
 
+%% @doc Returns a empty game sate with some standard settings.
+%% === Example ===
+%% <div class="example">
+%% make_new_state().
+%% {{10,500,5,5}, []}. %% (State)
+%% </div>
+-spec make_new_state() -> tuple().
+
 make_new_state() ->
-    {{20,500,10,10}, []}.
+    {{10,500,5,5}, []}.
+
+%% @doc Will take a State and a list of actions and do all actions on the state.
+%% returns the newstate where all actions have been executed.
+%% === Example ===
+%% <div class="example">
+%% do_actions(State, Action_list) -> New_state.
+%% </div>
+-spec do_actions(State::tuple(), Actions::list()) -> New_state::tuple().
 
 do_actions(State, []) ->
     State;

@@ -2,7 +2,8 @@
 -module(game_state).
 -export([state/4, start/3, register_action/1, state_sender/1]).
 
-%% @doc Starts a mnesia database with Db_name as table name, 
+%% @doc Starts a new state loop with a given tickrate and a table name.
+%% Starts a mnesia database with Db_name as table name, 
 %% also starts a state with given Tick_rate that will send its state to
 %% State_sender. Returns {ok, Pid} where Pid is the Pid of the state process.
 %% === Example ===
@@ -20,7 +21,7 @@ start(Db_name, State_sender, Tick_rate) ->
 		end),
     {ok, Pid}.
 
-%% @doc Will register Action into an mnesia database.
+%% @doc Will register a action into an mnesia database.
 %% return value varies depending on action.
 %% === Example ===
 %% <div class="example">
@@ -31,7 +32,7 @@ start(Db_name, State_sender, Tick_rate) ->
 register_action(Action) ->
     action_db:do_call(Action).
     
-%% @doc state will loop and update its State depending on what actions
+%% @doc State will loop and read actions so it can update its State. Depending on what actions
 %% it will read. It will calculate a newstate and send it at a given tickrate.
 %% The new state will be sent to the State_sender and the action will be 
 %% read from the mnesia database with table Db_name.
@@ -51,7 +52,8 @@ state(Tick, State_sender, Db_name, State) ->
     end,
     state(Tick, State_sender, Db_name, New_state).
 
-%% @doc state_sender will loop a given State and update it when it 
+%% @doc Will loop and update and send out its State. 
+%% state_sender will loop a given State and update it when it 
 %% receives a new state and send its current sate if someone asks for it.
 -spec state_sender(State::tuple()) -> ok.
 state_sender(State) ->
