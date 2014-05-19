@@ -21,18 +21,73 @@ import javax.swing.table.DefaultTableModel;
 public class Main implements ActionListener {
 	byte [] ip = {127,0,0,1};
 	Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
+	String playerName;
 	String[] columnNames = {"Server name", "Ip", ""};
 	Object[][] data;
 	Action join;
 
-	Main() {
+	Main(String name) {
+		playerName = name;
 		int[] ip = {127,0,0,1};
 		client.add("Server1", ip);
-		final JFrame f = new JFrame("Menu Demo");
+		final JFrame f = new JFrame("GEESE - " + name);
 		f.setSize(800, 600);
 		f.setLocationRelativeTo(null);
 
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		initializeMenu(f);
+
+		createServerTable(f);
+		f.setVisible(true);
+	}
+	
+	
+	
+	private void createServerTable(final JFrame f) {
+		Object[][] tmp = client.available();
+		data = new Object[tmp.length][3];
+		for(int i = 0; i < tmp.length; i++) {
+			for (int j = 0; j < 2; j++) {
+				data[i][j] = tmp[i][j];
+			}
+			data[i][2] = "Join";
+		}
+		JTable table = new JTable(new DefaultTableModel(data, columnNames));
+
+		//Set the column sorting functionality on
+		table.setAutoCreateRowSorter(true);
+
+		JScrollPane tableScrollPane = new JScrollPane(table);
+		f.add(tableScrollPane);
+
+		table.setGridColor(Color.BLACK);
+		table.setBackground(Color.WHITE);
+
+		join =new AbstractAction()
+		{
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JTable table = (JTable)e.getSource();
+				int modelRow = Integer.valueOf( e.getActionCommand() );
+
+				String ipString = (String)table.getValueAt(modelRow,1);
+				System.out.println(ipString);
+				byte[] ip = Utility.stringToIp(ipString);
+				Framework framework = new Framework();
+				Framework.serverIP = ip;
+				Framework.playerName = playerName;
+				f.setContentPane(framework);
+				f.validate();
+				System.out.println(framework.requestFocusInWindow());
+			}
+		};
+
+		ButtonColumn buttonColumn = new ButtonColumn(table, join, 2);
+		buttonColumn.setMnemonic(KeyEvent.VK_D);
+	}
+
+	private void initializeMenu(final JFrame f) {
 		JMenuBar jmb = new JMenuBar();
 
 		JMenu jmFile = new JMenu("File");
@@ -79,48 +134,6 @@ public class Main implements ActionListener {
 		jmiAbout.addActionListener(this);
 
 		f.setJMenuBar(jmb);
-
-		Object[][] tmp = client.available();
-		data = new Object[tmp.length][3];
-		for(int i = 0; i < tmp.length; i++) {
-			for (int j = 0; j < 2; j++) {
-				data[i][j] = tmp[i][j];
-			}
-			data[i][2] = "Join";
-		}
-		JTable table = new JTable(new DefaultTableModel(data, columnNames));
-
-		//Set the column sorting functionality on
-		table.setAutoCreateRowSorter(true);
-
-		JScrollPane tableScrollPane = new JScrollPane(table);
-		f.add(tableScrollPane);
-
-		table.setGridColor(Color.BLACK);
-		table.setBackground(Color.WHITE);
-
-		join = new AbstractAction()
-		{
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JTable table = (JTable)e.getSource();
-				int modelRow = Integer.valueOf( e.getActionCommand() );
-
-				String ipString = (String)table.getValueAt(modelRow,1);
-				System.out.println(ipString);
-				byte[] ip = Utility.stringToIp(ipString);
-				Framework framework = new Framework();
-				Framework.serverIP = ip;
-				f.setContentPane(framework);
-				f.validate();
-				System.out.println(framework.requestFocusInWindow());
-			}
-		};
-
-		ButtonColumn buttonColumn = new ButtonColumn(table, join, 2);
-		buttonColumn.setMnemonic(KeyEvent.VK_D);
-		f.setVisible(true);
 	}
 	
 	public void actionPerformed(ActionEvent ae) {
@@ -131,7 +144,7 @@ public class Main implements ActionListener {
 		SwingUtilities.invokeLater(new Runnable () {
 			@Override	
 				public void run() {
-		new Main();
+		new Main("player1");
 			}
 		});
 	}

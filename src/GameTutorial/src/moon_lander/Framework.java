@@ -70,7 +70,6 @@ public class Framework extends Canvas {
     // The actual game
     private static Game game;
     
-    
     /**
      * Image for menu.
      */
@@ -78,6 +77,8 @@ public class Framework extends Canvas {
     
     //public static String serverIP;
     public static byte[] serverIP;
+    
+    public static String playerName;
     
     public Framework ()
     {

@@ -96,10 +96,10 @@ public class PlayerRocket {
     public int rocketImgHeight;
     
     
-    public PlayerRocket(String name)
+    public PlayerRocket()
     {
     	client = new Jinterface_bank_client(Framework.serverIP, 3010);
-    	this.playerName = name;
+    	this.playerName = Framework.playerName;
     	
         Initialize();
         LoadContent();
@@ -156,7 +156,7 @@ public class PlayerRocket {
         //client.updatePos("player1", this);
         x = random.nextInt(Framework.frameWidth - rocketImgWidth);
         y = 10;
-        client.restart(x, y);
+        client.restart(this.playerName, x, y);
         
         speedX = 0;
         speedY = 0;

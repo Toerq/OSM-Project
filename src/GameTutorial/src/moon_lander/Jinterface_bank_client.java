@@ -177,35 +177,15 @@ public class Jinterface_bank_client {
 				}
 			}
 	
-	public void restart(int x, int y) {
-		OtpErlangTuple clear = new OtpErlangTuple(new OtpErlangAtom("clear"));
-		sendTCP(clear);
-		addPlayer("player1", x, y);
+	public void restart(String name, int x, int y) {
+		OtpErlangAtom remove = new OtpErlangAtom("removePlayer");
+		OtpErlangAtom playerName = new OtpErlangAtom(name);
+		OtpErlangObject[] arg = {remove, playerName};
+		OtpErlangTuple tuple = new OtpErlangTuple(arg);
+		sendTCP(tuple);
+		addPlayer(name, x, y);
 	}
 	
-	/*public static void main(String[] args) {
-		Jinterface_bank_client client = new Jinterface_bank_client("127.0.0.1", 3010);
-		//int[] ip = {127,0,0,1};
-		int[] newServerIp = {12,3,4,5};
-		client.add("Ex5", newServerIp); //, ip);
-		String[][] serverList = client.available();
-		for (int i = 0; i < serverList.length; i++) {
-			System.out.println(serverList[i][0] + serverList[i][1]);
-		}
-		client.addPlayer("Player1");
-		client.move("player1", "up", 5);
-		client.getAllPos();
-		try {
-			client.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//client.available(ip);
-		//client.conn.disconnect();
-	}
-*/
 	private void close() throws IOException {
 		this.out.close();
 		this.dos.close();
