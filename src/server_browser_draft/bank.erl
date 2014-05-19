@@ -43,7 +43,7 @@ ping(_Sname) ->
             pong
     end.
 
-clear() ->  mnesia:clear_table(server),
+clear() ->  mnesia:clear_table(player),
 	    fun()-> 
 		    ok
 	    end.

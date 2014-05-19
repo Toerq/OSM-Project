@@ -13,7 +13,7 @@ clear(DestIp) -> simple_rpc({clear}, DestIp).
 
 simple_rpc(X, DestIp) ->
     case gen_tcp:connect(DestIp, 3010, 
-			 [binary, {packet, 4}]) of
+			 [binary, {packet, 0}]) of
 	{ok, Socket} ->
 	    gen_tcp:send(Socket, [term_to_binary(X)]),
 	    wait_reply(Socket);
