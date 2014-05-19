@@ -63,7 +63,7 @@ public class Game {
      */
     private void Initialize()
     {
-        playerRocket = new PlayerRocket("player1");
+        playerRocket = new PlayerRocket();
         landingArea  = new LandingArea();
     }
     
