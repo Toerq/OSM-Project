@@ -46,7 +46,7 @@ init([Accept_socket, Server_pid, _Dispatcher_pid]) ->
 %talk_state() -> gen_server:cast(?MODULE, talk_state).
 
 talk_state(State) -> %handle_cast({talk_state}, State) ->
-    io:format("ASDLKAJSDKAJSDAJSDLKJASJDL"),
+    io:format("<In talk state>"),
     Accept_socket = State#state.accept_socket,
    % gen_tcp:send(Accept_socket, "alternatives: add_table, ping, browse_tables"),
     receive
@@ -61,15 +61,16 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 		    geese_coordinator:add_table(),
 		 %   gen_tcp:send(Accept_socket, "~nUpdated tables:"),
 		    Tables = geese_coordinator:browse_tables(),
-		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
-		    gen_tcp:send(Accept_socket, "abc");
+		    String1 = lists:flatten(io_lib:format("~p~n", [Tables]));
+%		    gen_tcp:send(Accept_socket, String1);
 		ping ->
 		    gen_tcp:send(Accept_socket, term_to_binary(pong));
 		browse_tables ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
-%		    gen_tcp:send(Accept_socket, String1);
-		    gen_tcp:send(Accept_socket, term_to_binary(Tables));
+		    io:format("~noutput from browse_tables: ~p~n", [Tables]),
+		    gen_tcp:send(Accept_socket, String1);
+%		    gen_tcp:send(Accept_socket, term_to_binary(Tables));
 		browse_players -> 
 		    Players = geese_coordinator:browse_players(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),

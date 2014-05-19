@@ -45,6 +45,15 @@ handle_call(get_state, _From, State) ->
 	     State#table_state.max_players},
 	     State};
 
+handle_call({check_player, Player_pid}, _From, State) ->
+    Players = State#table_state.players,
+    case lists:keyfind(Player_pid, 1, Players) of
+	false ->
+	    {reply, player_not_in_table, State};
+	_E ->
+	    {reply, player_already_in_table, State}
+    end;
+
 handle_call(get_players, _From, State) ->
     {reply, State#table_state.players, State};
 
@@ -58,18 +67,26 @@ handle_call(db_name, _From, State) ->
     {reply, State#table_state.db_name, State};
 
 handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
-    Number_of_players = Players = State#table_state.number_of_players,
+    Number_of_players = State#table_state.number_of_players,
     Max_players = State#table_state.max_players,
     if (Max_players > Number_of_players) 
        -> 
-	    %Db_name = State#table_state.db_name,
+	    Players = State#table_state.players,
+	    case lists:keyfind(Pid, 1, Players) of
+		false ->
+	    New_number_of_players = Number_of_players + 1,
+	    
+	    NewState = State#table_state{players = [{Pid, Player_name} | Players], number_of_players = New_number_of_players},
+	    {reply, ok, NewState};
+	    	_E ->
+	    	    {reply, join_failed, State}
+	    end;
+       	    %Db_name = State#table_state.db_name,
             %register_action(Db_name, %% ADD_PLAYER %%),
 	    
-
+	    
 	    %Players = State#table_state.players,
-	    New_number_of_players = Number_of_players + 1,
-	    NewState = State#table_state{players = {Pid, Player_name}, number_of_players = New_number_of_players},
-	    {reply, ok, NewState};
+	    
        true -> 
 	    {reply, join_failed, State}
     end;

@@ -68,16 +68,21 @@ handle_call({join_table, Pid, Table_ref}, _From, State) ->
 
 		ok ->
 		    io:format("c4"),
-		    case lists:keyfind({Table_ref}, 1, Tables) of
+		    case lists:keyfind(Table_pid, 1, Tables) of
 			false -> 
 			    io:format("c5"),
 			    {reply, table_not_found_obscure, State};
 			{_Table_pid, _Table_name, _Game_type, Connected_players, _Max_players} ->
+%			    case gen_server:call(Table_pid, {check_player, Pid}) of
+%				player_already_in_table ->
+%				    {reply, player_already_added};
+%				player_not_in_table ->
 			    io:format("c6"),
 			    NewTable = {_Table_pid, _Table_name, _Game_type, Connected_players + 1, _Max_players},
-			    NewTableList = lists:keydelete(Table_ref, 1, Tables),
+			    NewTableList = lists:keydelete(Table_pid, 1, Tables),
 			    NewState = State#coordinator_state{tables = [NewTable | NewTableList]},
-			    {reply, add_succeeded, NewState}
+			    {reply, add_succeeded, NewState}	
+%			    end
 		    end
 	    end
     end;
