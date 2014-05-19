@@ -46,18 +46,17 @@ init([Accept_socket, Server_pid, _Dispatcher_pid]) ->
 %talk_state() -> gen_server:cast(?MODULE, talk_state).
 
 talk_state(State) -> %handle_cast({talk_state}, State) ->
+    io:format("ASDLKAJSDKAJSDAJSDLKJASJDL"),
     Accept_socket = State#state.accept_socket,
-    gen_tcp:send(Accept_socket, "~n~nalternatives: add_table, ping, browse_tables~n"),
+   % gen_tcp:send(Accept_socket, "alternatives: add_table, ping, browse_tables"),
     receive
-	{tcp, Accept_socket, [Packet]} ->
+	{tcp, Accept_socket, Packet} ->
+	    io:format("~nPacket ->~p<-~n",[binary_to_term(Packet)]),
 	    case binary_to_term(Packet) of
-		
-		{join_lobby, Name} ->
-		    geese_coordinator:join_lobby(Name, self());
 
-		Asd ->
-		    gen_tcp:send(Accept_socket, Packet),
-		    io:format(Asd);
+		{join_lobby, Name} ->
+		    geese_coordinator:join_lobby(self(), Name, Accept_socket);
+
 		add_table -> 
 		    geese_coordinator:add_table(),
 		    gen_tcp:send(Accept_socket, "~nUpdated tables:"),
@@ -65,13 +64,21 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    gen_tcp:send(Accept_socket, String1);
 		ping ->
-		    gen_tcp:send(Accept_socket, "pong");
+		    gen_tcp:send(Accept_socket, term_to_binary(pong));
 		browse_tables ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    gen_tcp:send(Accept_socket, String1);
+		browse_players -> 
+		    Players = geese_coordinator:browse_players(),
+		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),
+		    io:format("jaasd"),
+		    gen_tcp:send(Accept_socket, String1);
 		true ->
-		    gen_tcp:send(Accept_socket, "wrong input")
+		    gen_tcp:send(Accept_socket, "wrong input");
+		{join_table, Pid, Table} ->
+		    geese_coordinator:join_table(Pid, Table);
+		Arbitary -> io:format("~n In Arbitary-clause, recieved ~p~n", [Arbitary])
 %		{join_server, Table_ref} ->
 %		    Player_id = State#state.player_id,
 %		    case geese_coordinator:add_player_to_table(Player_id, Table_ref) of
@@ -83,13 +90,13 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 %			    gen_tcp:send(Accept_socket, Reason)
 %		    end
 %	    end
-	    end
+	    end;
+	E -> io:format("<<<E>>>: ~p vs. Accept_socket ~p", [E, Accept_socket])
+	     
     end,
     talk_state(State).
 
 %eceive_state(Accept_socket, Db_name) ->
-    
-
 %game_state(Table_ref, Accept_socket) ->
 %tbi.
 %    recieve
@@ -100,22 +107,22 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 					     %%game_state(Table_ref, Accept_socket)
 
 handle_cast({start_player, Accept_socket, _Dispatcher_pid}, State) ->
-    Player_id = geese_coordinator:join_lobby(self()),
+    Player_id = geese_coordinator:join_lobby(self(), test_name, Accept_socket),
     NewState = State#state{player_id = Player_id},
-    gen_tcp:send(Accept_socket, "mhhh"),
+   % gen_tcp:send(Accept_socket, "mhhh"),
     Tables = geese_coordinator:browse_tables(),
     String1 = lists:flatten(io_lib:format("Tillgängliga servrar: ~p~n", [Tables])),
-    gen_tcp:send(Accept_socket, String1), 
+   % gen_tcp:send(Accept_socket, String1), 
     Players = geese_coordinator:browse_players(),
     
     String2 = lists:flatten(io_lib:format("Tillgängliga spelare: ~p~n", [Players])),
-    gen_tcp:send(Accept_socket, String2),
+    %gen_tcp:send(Accept_socket, String2),
     talk_state(NewState),
     {noreply, NewState};
 
 handle_cast({greet_state, Accept_socket, _Dispatcher_pid}, State) ->
     %Coordinator = State#state.coordinator,
-    gen_tcp:send(Accept_socket, "mhhh"),
+   % gen_tcp:send(Accept_socket, "mhhh"),
     %gen_server:call(Dispatcher_pid, aa),
 %    io:format("asdasdasdad"),
 						%  %  NewState = State#state{player_id = Player_id},
