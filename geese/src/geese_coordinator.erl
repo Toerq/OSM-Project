@@ -73,7 +73,45 @@ handle_call({remove_player_from_table, Pid}, _From, State) ->
     
 
 
-handle_call({join_table, Pid, _Table_ref_use_this_later}, _From, State) ->
+handle_call({join_table, Pid, Table_ref}, _From, State) ->
+    Tables = State#coordinator_state.tables,
+    Players = State#coordinator_state.players,
+    io:format("~nTables: ~p~n", [Tables]),
+    %[{Table_pid, _, _, _, _}|_Rest] = Tables,
+    %%Kolla ifall spelaren finns i lobbyn.
+    case lists:keyfind(Pid, 1, Players) of
+	false ->
+	    io:format("c1"),
+	    {reply, spelare_finns_ej_i_join_table_coordinator, State};
+	{Pid, Player_name, Socket, _} ->
+	    io:format("~nTable pid: ~p~n", [Table_ref]),
+	    case gen_server:call(Table_ref, {join_table, Pid, Player_name, Socket}) of
+		join_failed ->
+		    io:format("c3"),
+		    {reply, join_failed, State};
+
+		Tuple ->
+		    io:format("c4"),
+		    case lists:keyfind(Table_ref, 1, Tables) of
+			false -> 
+			    io:format("c5"),
+			    {reply, table_not_found_obscure, State};
+			{_Table_ref, _Table_name, _Game_type, Connected_players, _Max_players} ->
+			    
+			    io:format("c6"),
+			    NewTable = {_Table_ref, _Table_name, _Game_type, Connected_players + 1, _Max_players},
+			    New_player_list = lists:keydelete(Pid, 1, Players),
+			    New_player = {Pid, Player_name, Socket, Table_ref}, 
+			    New_table_list = lists:keydelete(Table_ref, 1, Tables),
+			    NewState = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
+			    %% add succeeded
+			    {reply, Tuple, NewState}	
+		    end
+	    end
+    end;
+
+
+handle_call({join_table_debug, Pid, _Table_ref_use_this_later}, _From, State) ->
     Table_ref = get_table_ref(State),
     Tables = State#coordinator_state.tables,
     Players = State#coordinator_state.players,
