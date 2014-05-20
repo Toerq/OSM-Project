@@ -24,8 +24,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -record(table_state, {
 	  number_of_players,
-	  state_sender,
 	  max_players,
+	  state_sender,
 	  db_name,
 	  players = []}).
 
@@ -82,7 +82,11 @@ handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
 	    New_number_of_players = Number_of_players + 1,
 	    
 	    NewState = State#table_state{players = [{Pid, Player_name} | Players], number_of_players = New_number_of_players},
-	    {reply, ok, NewState};
+		    State_sender = State#table_state.state_sender,
+		    Db_name = State#table_state.db_name,
+		    Return_tuple = {self(), State_sender, Db_name},
+
+	    {reply, Return_tuple, NewState};
 	    	_E ->
 	    	    {reply, join_failed, State}
 	    end;

@@ -38,10 +38,17 @@ browse_tables() -> gen_server:call(?MODULE, browse_tables).
 join_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_id, Table_ref}).
 add_table() -> gen_server:cast(?MODULE, add_table).
 browse_players() -> gen_server:call(?MODULE, browse_players_on_server).
+remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_from_table, Player_id}).
+    
 
 init([]) ->
     {ok, #coordinator_state{}}.
 
+%%används endast för debug
+get_table_ref(State) ->
+    Tables = State#coordinator_state.tables,
+    [{Table_ref, _, _, _, _}|_Rest] = Tables,
+    Table_ref.
 
 handle_call(browse_players_on_server, _From, State) ->
     {reply, State#coordinator_state.players, State};
@@ -49,40 +56,57 @@ handle_call(browse_players_on_server, _From, State) ->
 handle_call(browse_tables, _From, State) ->
     {reply, State#coordinator_state.tables, State};
 
-handle_call({join_table, Pid, Table_ref}, _From, State) ->
+handle_call({remove_player_from_table, Pid}, _From, State) ->
+    Players = State#coordinator_state.players,
+    Tables = State#coordinator_state.tables,
+    case lists:keyfind(Pid, 1, Players) of
+	{_, _, _, not_in_any_table} ->
+	    {reply, not_in_any_table, State};
+	{_, _, _, Table_ref} ->
+	    {_, Table_name, Game_type, Connected_players, Max_players} = lists:keyfind(Table_ref, 1, Tables),
+	    New_table = {Table_ref, Table_name, Game_type, Connected_players - 1, Max_players},
+	    New_table_list = lists:keydelete(Table_ref, 1, Tables),
+	    NewState = State#coordinator_state{tables = [New_table | New_table_list]},
+	    Reply = gen_server:call(Table_ref, {remove_player, Pid}),
+	    {reply, Reply, NewState}
+    end;
+    
+
+
+handle_call({join_table, Pid, _Table_ref_use_this_later}, _From, State) ->
+    Table_ref = get_table_ref(State),
     Tables = State#coordinator_state.tables,
     Players = State#coordinator_state.players,
     io:format("~nTables: ~p~n", [Tables]),
-    [{Table_pid, _, _, _, _}|_Rest] = Tables,
+    %[{Table_pid, _, _, _, _}|_Rest] = Tables,
     %%Kolla ifall spelaren finns i lobbyn.
     case lists:keyfind(Pid, 1, Players) of
 	false ->
 	    io:format("c1"),
 	    {reply, spelare_finns_ej_i_join_table_coordinator, State};
-	{Pid, Player_name, Socket} ->
-	    io:format("~nTable pid: ~p~n", [Table_pid]),
-	    case gen_server:call(Table_pid, {join_table, Pid, Player_name, Socket}) of
+	{Pid, Player_name, Socket, _} ->
+	    io:format("~nTable pid: ~p~n", [Table_ref]),
+	    case gen_server:call(Table_ref, {join_table, Pid, Player_name, Socket}) of
 		join_failed ->
 		    io:format("c3"),
 		    {reply, join_failed, State};
 
-		ok ->
+		Tuple ->
 		    io:format("c4"),
-		    case lists:keyfind(Table_pid, 1, Tables) of
+		    case lists:keyfind(Table_ref, 1, Tables) of
 			false -> 
 			    io:format("c5"),
 			    {reply, table_not_found_obscure, State};
-			{_Table_pid, _Table_name, _Game_type, Connected_players, _Max_players} ->
-%			    case gen_server:call(Table_pid, {check_player, Pid}) of
-%				player_already_in_table ->
-%				    {reply, player_already_added};
-%				player_not_in_table ->
+			{_Table_ref, _Table_name, _Game_type, Connected_players, _Max_players} ->
+			    
 			    io:format("c6"),
-			    NewTable = {_Table_pid, _Table_name, _Game_type, Connected_players + 1, _Max_players},
-			    NewTableList = lists:keydelete(Table_pid, 1, Tables),
-			    NewState = State#coordinator_state{tables = [NewTable | NewTableList]},
-			    {reply, add_succeeded, NewState}	
-%			    end
+			    NewTable = {_Table_ref, _Table_name, _Game_type, Connected_players + 1, _Max_players},
+			    New_player_list = lists:keydelete(Pid, 1, Players),
+			    New_player = {Pid, Player_name, Socket, Table_ref}, 
+			    New_table_list = lists:keydelete(Table_ref, 1, Tables),
+			    NewState = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
+			    %% add succeeded
+			    {reply, Tuple, NewState}	
 		    end
 	    end
     end;
@@ -92,7 +116,7 @@ handle_call({join_lobby, Pid, Name, Socket}, _From, State) ->
     case lists:keyfind(Pid, 1, Players) of
 	%%Spelaren fanns inte i listan
 	false ->
-	    NewState = State#coordinator_state{players = [{Pid, Name, Socket} | Players]},
+	    NewState = State#coordinator_state{players = [{Pid, Name, Socket, not_in_any_table} | Players]},
 	    {reply, join_succeeded, NewState};
 	_Player -> 
 	    io:format("~nPlayer already exists!"),

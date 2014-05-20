@@ -83,19 +83,21 @@ talk_state(State) ->
 		    talk_state(State);
 		
 		{join_table, Table_ref} ->
-		    geese_coordinator:join_table(Player_id, Table_ref),
-		    game_state(State);
+		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
+		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
+		    game_state(New_state);
 		{join_table_java, Table_ref} ->
-		    geese_coordinator:join_table(Player_id, Table_ref),
+		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    talk_state(State);
 
 		join_table_debug ->
-		    geese_coordinator:join_table(Player_id, not_used),
+		    {Table_pid, Game_pid, Db_name} = coordinator:join_table(Player_id, not_used),
 		    talk_state(State);
 		    
-		{remove_player_from_table, Table} ->
-		    geese_coordinator:remove_player_from_table(self(), Table);
-
+		remove_player_from_table ->
+		    coordinator:remove_player_from_table(self()),
+		    talk_state(State);
+		
 		Arbitary -> 
 		    io:format("~n In Arbitary-clause, recieved ~p~n", [Arbitary]),
 		    talk_state(State)
