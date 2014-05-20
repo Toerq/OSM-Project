@@ -85,6 +85,14 @@ talk_state(State) ->
 		{join_table, Table_ref} ->
 		    geese_coordinator:join_table(Player_id, Table_ref),
 		    game_state(State);
+		{join_table_java, Table_ref} ->
+		    geese_coordinator:join_table(Player_id, Table_ref),
+		    talk_state(State);
+
+		join_table_debug ->
+		    geese_coordinator:join_table(Player_id, not_used),
+		    talk_state(State);
+		    
 		{remove_player_from_table, Table} ->
 		    geese_coordinator:remove_player_from_table(self(), Table);
 
@@ -133,7 +141,7 @@ handle_cast(start_player, State) ->
     Player_id = State#state.player_id,
     geese_coordinator:join_lobby(Player_id, Name, Accept_socket),
     talk_state(State),
-    {noreply, State};
+    {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
