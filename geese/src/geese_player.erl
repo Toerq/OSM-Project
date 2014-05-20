@@ -86,6 +86,7 @@ talk_state(State) ->
 		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
 		    game_state(New_state);
+
 		{join_table_java, Table_ref} ->
 		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    talk_state(State);
@@ -106,7 +107,6 @@ talk_state(State) ->
 	    io:format("<<<E>>>: ~p vs. Accept_socket ~p", [E, Accept_socket])
     end.
 
-
 game_state(State) ->
     Accept_socket = State#state.accept_socket, 
     Db_name = State#state.db_name,  
@@ -116,12 +116,13 @@ game_state(State) ->
     receive 
 	{tcp, Accept_socket, Packet} ->
 	    case binary_to_term(Packet) of
-		{do_action, Action} ->
-		    tbi,
+		{do_action, {Action, Var_list}} ->
+		    Call = {action_add, Db_name, Player_id, Action, Var_list},
+		    game_state:register_action(Call),
 		    game_state(State);
 
 		get_state ->
-		    tbi,
+		    State_sender ! {get_state, Player_id},
 		    game_state(State);
 
 		leave_game ->
@@ -131,7 +132,12 @@ game_state(State) ->
 		E ->
 		    tbi
  		    %% annat
-	    end;		
+	    end;
+	{state, Game_state} ->
+	    %% tcp send Game state socket
+	    Bin = term_to_binary({state, Game_state}),
+	    gen_tcp:send(Accept_socket, Bin),
+	    game_state(State);
 	E ->
 	    tbi
 	    %% annat
