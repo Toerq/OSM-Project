@@ -1,4 +1,8 @@
-%%  c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(geese_server), geese_server:start(3010).
+%%  c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(game_state), c(game_logic), c(action_db), c(geese_server), geese_server:start(3010).
+
+% f(Socket), {ok, Socket} = gen_tcp:connect({127,0,0,1}, 3010, []).
+
+%gen_tcp:send(Socket, term_to_binary(add_table)).   
 
 %%====================================================================
 %%
