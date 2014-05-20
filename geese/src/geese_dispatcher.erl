@@ -66,9 +66,9 @@ accept_spawner(Listen_socket, Server_pid) ->
 		  
 accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid) ->%
     {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
-    {ok, Player_pid} = geese_player:start_link(Accept_socket, Server_pid, self()),
+    {ok, Player_pid} = geese_player:start_link(Accept_socket),
     gen_tcp:controlling_process(Accept_socket, Player_pid),
-    gen_server:cast(Player_pid, {start_player, Accept_socket, Dispatcher_pid}),
+    gen_server:cast(Player_pid, start_player),
     accept_function(Listen_socket, Dispatcher_pid, Index, Server_pid).
    %% case gen_tcp:accept(Listen_socket) of
 	%%{ok, Accept_socket} -> 
