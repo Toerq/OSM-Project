@@ -123,59 +123,13 @@ game_state(State) ->
 	    %% annat
     end.
 
-
-%eceive_state(Accept_socket, Db_name) ->
-%game_state(Table_ref, Accept_socket) ->
-%tbi.
-%    recieve
-%	{tcp, Accept_socket, Actions} ->
-					     %%geese_game(Actions),
-					     %%{game_state, State},
-					     %% gen_tcp:send(Accept_socket, State).
-					     %%game_state(Table_ref, Accept_socket)
-
-handle_cast({start_player, _Accept_socket, _Dispatcher_pid}, State) ->
+handle_cast(start_player, State) ->
     Accept_socket = State#state.accept_socket, 
     Name = State#state.name, 
-    geese_coordinator:join_lobby(self(), Name, Accept_socket),
-    NewState = State#state{player_id = Player_id},
-   % gen_tcp:send(Accept_socket, "mhhh"),
-    Tables = geese_coordinator:browse_tables(),
-    String1 = lists:flatten(io_lib:format("Tillgängliga servrar: ~p~n", [Tables])),
-   % gen_tcp:send(Accept_socket, String1), 
-    Players = geese_coordinator:browse_players(),
-    
-    String2 = lists:flatten(io_lib:format("Tillgängliga spelare: ~p~n", [Players])),
-    %gen_tcp:send(Accept_socket, String2),
-    talk_state(NewState),
-    {noreply, NewState};
-
-handle_cast({greet_state, Accept_socket, _Dispatcher_pid}, State) ->
-    %Coordinator = State#state.coordinator,
-   % gen_tcp:send(Accept_socket, "mhhh"),
-    %gen_server:call(Dispatcher_pid, aa),
-%    io:format("asdasdasdad"),
-						%  %  NewState = State#state{player_id = Player_id},
-    
-%    gen_tcp:send(Accept_socket, io_lib:format("Tillgängliga servrar före: " ++ Tables ++ "~n")), 
-    geese_coordinator:add_table(),
-    Tables2 = geese_coordinator:browse_tables(),%gen_server:call(Coordinator, browse_tables),
- %   gen_tcp:send(Accept_socket, io_lib:format("Tillgängliga servrar efter: " ++ Tables2 ++ "~n")), 
-    io:format("~nEfter: ~p", [Tables2]),
-    receive
-	{tcp, Accept_socket, Data} ->
-	    io:format("Got packet: ~p", [Data])
-    end,
-    %NewTables = gen_server:call(Coordinator, browse_tables),
-    %gen_server:call(Coordinator, add_table),
-    %gen_tcp:send(Accept_socket, io_lib:format("~nTillgängliga servrar efter: " ++ NewTables)), 
-%    {reply, Reply} = gen_server:call(self(), {recieve_choice_state, Accept_socket}, infinity),
-    {noreply, State}.
-
-greet_state(Accept_socket, Dispatcher_pid) ->
-    gen_server:cast(?MODULE, {greet_state, Accept_socket, Dispatcher_pid}).
-    
-
+    Player_id = State#state.player_id,
+    geese_coordinator:join_lobby(Player_id, Name, Accept_socket),
+    talk_state(State),
+    {noreply, State};
 
 %%--------------------------------------------------------------------
 %% Function: handle_cast(Msg, State) -> {noreply, State} |
