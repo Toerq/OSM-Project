@@ -31,22 +31,22 @@
 %%--------------------------------------------------------------------
 start_link(Accept_socket) ->
     gen_server:start(?MODULE, [Accept_socket], []).
-%    gen_server:start({local, ?SERVER}, ?MODULE, [Accept_socket, Server_Pid, Dispatcher_pid], []).
+						%    gen_server:start({local, ?SERVER}, ?MODULE, [Accept_socket, Server_Pid, Dispatcher_pid], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
 
 init([Accept_socket]) ->
     %%  Coordinator = gen_server:call(Server_pid, get_state),
-   % gen_server:call(Dispatcher_pid, lewut),
-   % Pid = proc_lib:spawn_link(fun() -> greet_state(Accept_socket, Dispatcher_pid) end),
-    %geese_coordinator:join_lobby(Pid),
-    %gen_tcp:controlling_process(Accept_socket, Pid),
+						% gen_server:call(Dispatcher_pid, lewut),
+						% Pid = proc_lib:spawn_link(fun() -> greet_state(Accept_socket, Dispatcher_pid) end),
+						%geese_coordinator:join_lobby(Pid),
+						%gen_tcp:controlling_process(Accept_socket, Pid),
     {ok, #state{player_id = self(), accept_socket = Accept_socket, name = "Player"}}.
 
-%talk_state() -> gen_server:cast(?MODULE, talk_state).
+						%talk_state() -> gen_server:cast(?MODULE, talk_state).
 
 talk_state(State) -> 
-    io:format("<In talk state>"),
+    io:format("<In talk state>~n"),
     Accept_socket = State#state.accept_socket,
     Player_id = State#state.player_id,
     receive
@@ -55,12 +55,20 @@ talk_state(State) ->
 	    case binary_to_term(Packet) of
 		{change_name, Name} ->
 		    New_state = State#state{name = Name},
-		    geese_coordinator:change_name(Player_id, Name, Accept_socket),
+		    %% TODO geese_coordinator:change_name(Player_id, Name, Accept_socket),
 		    talk_state(New_state);
 
 		add_table -> 
 		    geese_coordinator:add_table(),
 		    talk_state(State);
+
+		debug_print_state ->
+		    io:format("~nState: ~p~n", [State]),
+		    talk_state(State);
+
+		debug_reset_state ->
+		    New_state = State#state{name = "Player", db_name = undef, state_sender = undef, table_ref = undef},
+		    talk_state(New_state);
 
 		ping ->
 		    gen_tcp:send(Accept_socket, term_to_binary(pong)),
@@ -79,7 +87,7 @@ talk_state(State) ->
 		    io:format("jaasd"),
 		    gen_tcp:send(Accept_socket, String1),
 		    talk_state(State);
-		
+
 		join_table_game ->
 		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, not_used),
 		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
@@ -97,11 +105,11 @@ talk_state(State) ->
 		join_table_debug ->
 		    {Table_pid, Game_pid, Db_name} = coordinator:join_table(Player_id, not_used),
 		    talk_state(State);
-		    
+
 		remove_player_from_table ->
 		    coordinator:remove_player_from_table(self()),
 		    talk_state(State);
-		
+
 		Arbitary -> 
 		    io:format("~n In Arbitary-clause, recieved ~p~n", [Arbitary]),
 		    talk_state(State)
@@ -111,6 +119,7 @@ talk_state(State) ->
     end.
 
 game_state(State) ->
+    io:format("<In game state>~n"),
     Accept_socket = State#state.accept_socket, 
     Db_name = State#state.db_name,  
     State_sender = State#state.state_sender,
@@ -118,6 +127,7 @@ game_state(State) ->
     Player_id = State#state.player_id,
     receive 
 	{tcp, Accept_socket, Packet} ->
+	    io:format("<Game command -In->~n"),
 	    case binary_to_term(Packet) of
 		{do_action, {Action, Var_list}} ->
 		    Call = {action_add, Db_name, Player_id, Action, Var_list},
@@ -137,6 +147,7 @@ game_state(State) ->
  		    %% annat
 	    end;
 	{state, Game_state} ->
+	    io:format("<State command -Out->~n"),
 	    %% tcp send Game state socket
 	    Bin = term_to_binary({state, Game_state}),
 	    gen_tcp:send(Accept_socket, Bin),
@@ -161,7 +172,7 @@ handle_cast(start_player, State) ->
 %% Description: Handling cast messages
 %% gen_tcp:send(Socket, io_lib:format(Str++"~n", Args)),
 %%--------------------------------------------------------------------
-    
+
 handle_call({call}, _From, State) ->
     {reply, State, State}.
 
@@ -174,7 +185,7 @@ handle_call({call}, _From, State) ->
 %% Description: Handling all non call/cast messages
 %%--------------------------------------------------------------------
 handle_info(_Info, State) ->
-  {noreply, State}.
+    {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% Function: terminate(Reason, State) -> void()
@@ -184,14 +195,14 @@ handle_info(_Info, State) ->
 %% The return value is ignored.
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
-  ok.
+    ok.
 
 %%--------------------------------------------------------------------
 %% Func: code_change(OldVsn, State, Extra) -> {ok, NewState}
 %% Description: Convert process state when code is changed
 %%--------------------------------------------------------------------
 code_change(_OldVsn, State, _Extra) ->
-  {ok, State}.
+    {ok, State}.
 
 %%--------------------------------------------------------------------
 %%% Internal functions
