@@ -11,7 +11,7 @@
 
 -compile(export_all).
 %% API
--export([start_link/3, checkout/2]).
+-export([start_link/1, checkout/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
