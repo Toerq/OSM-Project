@@ -85,7 +85,9 @@ talk_state(State) ->
 		{join_table, Table_ref} ->
 		    geese_coordinator:join_table(Player_id, Table_ref),
 		    game_state(State);
-		
+		{remove_player_from_table, Table} ->
+		    geese_coordinator:remove_player_from_table(self(), Table);
+
 		Arbitary -> 
 		    io:format("~n In Arbitary-clause, recieved ~p~n", [Arbitary]),
 		    talk_state(State)
@@ -117,9 +119,11 @@ game_state(State) ->
 		    talk_state(State);
 
 		E ->
+		    tbi
  		    %% annat
-	    end;				
+	    end;		
 	E ->
+	    tbi
 	    %% annat
     end.
 
