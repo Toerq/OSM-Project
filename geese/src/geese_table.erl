@@ -24,6 +24,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -record(table_state, {
 	  number_of_players,
+	  state_sender,
 	  max_players,
 	  db_name,
 	  players = []}).
@@ -36,8 +37,11 @@ start_link() ->
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
 
 init([]) ->
-						%    proc_lib:start(fun() -> geese_game:test() end),
-    {ok, #table_state{number_of_players = 0, max_players = 20}}.
+    State_sender = spawn(fun() -> game_state:state_sender(game_logic:make_new_state()) end),
+    Db_name = server01,
+    Tick = 30,
+    {ok, Game_pid} = game_state:start(Db_name, State_sender, Tick),
+    {ok, #table_state{number_of_players = 0, max_players = 20, state_sender = State_sender, db_name = Db_name, players = []}}.
 
 handle_call(get_state, _From, State) ->
     {reply, {State#table_state.players, 
