@@ -40,8 +40,9 @@ init([]) ->
     State_sender = spawn(fun() -> game_state:state_sender(game_logic:make_new_state()) end),
     Db_name = server01,
     Tick = 30,
-    {ok, Game_pid} = game_state:start(Db_name, State_sender, Tick),
+    {ok, _} = game_state:start(Db_name, State_sender, Tick),
     {ok, #table_state{number_of_players = 0, max_players = 20, state_sender = State_sender, db_name = Db_name, players = []}}.
+
 
 handle_call(get_state, _From, State) ->
     {reply, {State#table_state.players, 
@@ -95,15 +96,17 @@ handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
 	    {reply, join_failed, State}
     end;
 
-handle_call(remove_player, {Pid, _Tag}, State) ->
+handle_call({remove_player, Pid}, _From, State) ->
     Players = State#table_state.players,
     case lists:keyfind(Pid, 1, Players) of
 	false -> 
 	    {reply, no_such_player_exists, State};
-	NewPlayerList ->
+	_ ->
+	    Number_of_players = State#table_state.number_of_players,
+	    New_number_of_players = Number_of_players - 1,
             %register_action(Db_name, %% ADD_PLAYER %%),
-	    lists:keydelete(Pid, 1, Players),
-	    NewState = State#table_state{players = NewPlayerList},
+	    NewPlayerList = lists:keydelete(Pid, 1, Players),
+	    NewState = State#table_state{players = NewPlayerList, number_of_players = New_number_of_players},
 	    {reply, removal_succeeded, NewState}
     end.
 handle_cast(exit, State) ->
