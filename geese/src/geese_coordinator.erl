@@ -36,7 +36,7 @@ checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).
 join_lobby(Pid, Name, Socket) -> gen_server:call(?MODULE, {join_lobby, Pid, Name, Socket}).
 browse_tables() -> gen_server:call(?MODULE, browse_tables).
 join_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_id, Table_ref}).
-add_table() -> gen_server:cast(?MODULE, add_table).
+add_table(Name, Game_type, Max_players) -> gen_server:cast(?MODULE, {add_table, Name, Game_type, Max_players}).
 browse_players() -> gen_server:call(?MODULE, browse_players_on_server).
 remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_from_table, Player_id}).
     
@@ -167,13 +167,13 @@ test() ->
     io:format("~nprint från coordinator~p~n", [self()]).
 
 %%tables = [{table_pid, table_name, game_type, connected_players, max_players}
-handle_cast(add_table, State) ->
+handle_cast({add_table, Name, Game_type, Max_players}, State) ->
     {ok, Table_pid} = geese_table:start_link(),
     io:format("~ntable pid from add_table: ~p~n", [Table_pid]),
     {Players, Nmbr, Maxplyrs} = gen_server:call(Table_pid, get_state),
     io:format("~nPlayers: ~p, NmbrOfPlayers: ~p, Maxplayers: ~p~n", [Players, Nmbr, Maxplyrs]),
     Tables = State#coordinator_state.tables,
-    Table = {Table_pid, name, mmo_tetris, 0, 20},
+    Table = {Table_pid, Name, Game_type, 0, Max_players},
     Tables =  State#coordinator_state.tables,
 						%    NewState = State#coordinator_state{tables = Table, test_table = Table_pid},
     NewState = State#coordinator_state{tables = [Table | Tables], test_table = Table_pid},

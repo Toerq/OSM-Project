@@ -58,8 +58,12 @@ talk_state(State) ->
 		    %% TODO geese_coordinator:change_name(Player_id, Name, Accept_socket),
 		    talk_state(New_state);
 
-		add_table -> 
-		    geese_coordinator:add_table(),
+		add_table_hw ->
+		    geese_coordinator:add_table(hw_name, hw_game_type, 5),
+		    talk_state(State);
+		    
+		{add_table, Name, Game_type, Max_players} -> 
+		    geese_coordinator:add_table(Name, Game_type, Max_players),
 		    talk_state(State);
 
 		debug_print_state ->
