@@ -60,8 +60,6 @@ talk_state(State) ->
 
 		add_table -> 
 		    geese_coordinator:add_table(),
-		    Tables = geese_coordinator:browse_tables(),
-		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    talk_state(State);
 
 		ping ->
@@ -82,6 +80,11 @@ talk_state(State) ->
 		    gen_tcp:send(Accept_socket, String1),
 		    talk_state(State);
 		
+		join_table_game ->
+		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, not_used),
+		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
+		    game_state(New_state);
+
 		{join_table, Table_ref} ->
 		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
