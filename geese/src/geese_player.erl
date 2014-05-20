@@ -17,7 +17,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--record(state, {player_id, accept_socket, server_pid, coordinator}).
+-record(state, {player_id, accept_socket, table_ref, db_name, state_sender, name}).
 
 -define(SERVER, ?MODULE).
 
@@ -29,33 +29,35 @@
 %% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-start_link(Accept_socket, Server_Pid, Dispatcher_pid) ->
-    gen_server:start(?MODULE, [Accept_socket, Server_Pid, Dispatcher_pid], []).
+start_link(Accept_socket) ->
+    gen_server:start(?MODULE, [Accept_socket], []).
 %    gen_server:start({local, ?SERVER}, ?MODULE, [Accept_socket, Server_Pid, Dispatcher_pid], []).
 
 checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
 
-init([Accept_socket, Server_pid, _Dispatcher_pid]) ->
+init([Accept_socket]) ->
 %  Coordinator = gen_server:call(Server_pid, get_state),
    % gen_server:call(Dispatcher_pid, lewut),
    % Pid = proc_lib:spawn_link(fun() -> greet_state(Accept_socket, Dispatcher_pid) end),
     %geese_coordinator:join_lobby(Pid),
     %gen_tcp:controlling_process(Accept_socket, Pid),
-    {ok, #state{player_id = layer_id, accept_socket = Accept_socket, server_pid = Server_pid, coordinator = oordinator}}.
+    {ok, #state{player_id = self(), accept_socket = Accept_socket, name = "Player"}}.
 
 %talk_state() -> gen_server:cast(?MODULE, talk_state).
 
 talk_state(State) -> %handle_cast({talk_state}, State) ->
     io:format("<In talk state>"),
     Accept_socket = State#state.accept_socket,
+    Player_id = State#state.player_id,
    % gen_tcp:send(Accept_socket, "alternatives: add_table, ping, browse_tables"),
     receive
 	{tcp, Accept_socket, Packet} ->
 	    io:format("~nPacket ->~p<-~n",[binary_to_term(Packet)]),
 	    case binary_to_term(Packet) of
-
-		{join_lobby, Name} ->
-		    geese_coordinator:join_lobby(self(), Name, Accept_socket);
+		{change_name, Name} ->
+		    New_state = State#state{name = Name},
+		    geese_coordinator:change_name(Player_id, Name, Accept_socket),
+		    talk_state(New_state);
 
 		add_table -> 
 		    geese_coordinator:add_table(),
@@ -98,6 +100,33 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
     end,
     talk_state(State).
 
+
+game_state(State) ->
+    Accept_socket = State#state.accept_socket, 
+    Db_name = State#state.db_name,  
+    State_sender = State#state.state_sender,
+    Table_ref = State#state.table_ref,
+    Player_id = State#state.player_id,
+    receive 
+	{tcp, Accept_socket, Packet} ->
+	    case binary_to_term(Packet) of
+		{do_action, Action} ->
+		    tbi,
+		    game_state(State);
+		get_state ->
+		    tbi,
+		    game_state(State);
+		leave_game ->
+		    tbi,
+		    talk_state(State);
+		E ->
+ 		    %% annat
+	    end;				
+	E ->
+	    %% annat
+    end.
+
+
 %eceive_state(Accept_socket, Db_name) ->
 %game_state(Table_ref, Accept_socket) ->
 %tbi.
@@ -108,8 +137,10 @@ talk_state(State) -> %handle_cast({talk_state}, State) ->
 					     %% gen_tcp:send(Accept_socket, State).
 					     %%game_state(Table_ref, Accept_socket)
 
-handle_cast({start_player, Accept_socket, _Dispatcher_pid}, State) ->
-    Player_id = geese_coordinator:join_lobby(self(), test_name, Accept_socket),
+handle_cast({start_player, _Accept_socket, _Dispatcher_pid}, State) ->
+    Accept_socket = State#state.accept_socket, 
+    Name = State#state.name, 
+    geese_coordinator:join_lobby(self(), Name, Accept_socket),
     NewState = State#state{player_id = Player_id},
    % gen_tcp:send(Accept_socket, "mhhh"),
     Tables = geese_coordinator:browse_tables(),
