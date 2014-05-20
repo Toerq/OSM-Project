@@ -42,7 +42,7 @@ remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_f
     
 
 init([]) ->
-    {ok, #coordinator_state{}}.
+    {ok, #coordinator_state{tables = []}}.
 
 %%används endast för debug
 get_table_ref(State) ->
