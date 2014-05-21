@@ -137,6 +137,8 @@ public class Framework extends Canvas {
             switch (gameState)
             {
                 case PLAYING:
+                	System.out.println();
+                	System.out.println("Game loop: In playing state");
                     gameTime += System.nanoTime() - lastTime;
                     
                     game.UpdateGame(gameTime, mousePosition());
@@ -210,10 +212,11 @@ public class Framework extends Canvas {
         switch (gameState)
         {
             case PLAYING:
+            	System.out.println("Drawing game");
                 game.Draw(g2d, mousePosition());
             break;
             case GAMEOVER:
-                game.DrawGameOver(g2d, mousePosition(), gameTime);
+            //    game.DrawGameOver(g2d, mousePosition(), gameTime);
             break;
             case MAIN_MENU:
                 g2d.drawImage(moonLanderMenuImg, 0, 0, frameWidth, frameHeight, null);
