@@ -92,9 +92,16 @@ talk_state(State) ->
 		    gen_tcp:send(Accept_socket, String1),
 		    talk_state(State);
 
-		join_table_game ->
-		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, not_used),
+		join_table_debug ->
+		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table_debug(Player_id, not_used),
 		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
+
+		    Name = State#state.name,
+		    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
+		    io:format("Point1~n"),
+		    Call = {action_add, Db_name, server, add_player, [{Name, {15,15}, {0,0}, 100, Player_id}]},
+		    game_state:register_action(Call),
+
 		    game_state(New_state);
 
 		{join_table, Table_ref} ->
