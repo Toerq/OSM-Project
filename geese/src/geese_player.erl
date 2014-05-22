@@ -82,14 +82,15 @@ talk_state(State) ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    io:format("~noutput from browse_tables: ~p~n", [Tables]),
-		    gen_tcp:send(Accept_socket, String1),
+%%		    gen_tcp:send(Accept_socket, String1),
+		    gen_tcp:send(Accept_socket, term_to_binary(Tables)),
 		    talk_state(State);
 
 		browse_players -> 
 		    Players = geese_coordinator:browse_players(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),
 		    io:format("jaasd"),
-		    gen_tcp:send(Accept_socket, String1),
+		    gen_tcp:send(Accept_socket, term_to_binary(Players)),
 		    talk_state(State);
 
 		join_table_debug ->
