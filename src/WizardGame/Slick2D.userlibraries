@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="Slick2D" systemlibrary="false">
+        <archive path="/WizardGame/lib/jinput.jar"/>
+        <archive path="/WizardGame/lib/lwjgl_util.jar"/>
+        <archive path="/WizardGame/lib/lwjgl.jar"/>
+        <archive path="/WizardGame/lib/slick.jar"/>
+    </library>
+</eclipse-userlibraries>
