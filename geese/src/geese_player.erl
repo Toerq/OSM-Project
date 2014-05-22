@@ -89,7 +89,7 @@ talk_state(State) ->
 		    Players = geese_coordinator:browse_players(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),
 		    io:format("jaasd"),
-		    gen_tcp:send(Accept_socket, String1),
+		    gen_tcp:send(Accept_socket, term_to_binary(Players)),
 		    talk_state(State);
 
 		join_table_debug ->
