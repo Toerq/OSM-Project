@@ -41,17 +41,21 @@ public class Game {
 
     public Game()
     {
+    	 System.out.println("Game state = " + Framework.gameState);
         Framework.gameState = Framework.GameState.GAME_CONTENT_LOADING;
-        
+        System.out.println("Game state = " + Framework.gameState);
         Thread threadForInitGame = new Thread() {
             @Override
             public void run(){
                 // Sets variables and objects for the game.
+            	System.out.println("Initialize...");
                 Initialize();
                 // Load game files (images, sounds, ...)
+                System.out.println("Loading conent...");
                 LoadContent();
-                
+                System.out.println("Game state = " + Framework.gameState);
                 Framework.gameState = Framework.GameState.PLAYING;
+                System.out.println("Game state = " + Framework.gameState);
             }
         };
         threadForInitGame.start();
@@ -63,7 +67,9 @@ public class Game {
      */
     private void Initialize()
     {
-        playerRocket = new PlayerRocket();
+    	System.out.println("Creating Player Rocket...");
+    	playerRocket = new PlayerRocket();
+    	System.out.println("Creating Landing Area...");
         landingArea  = new LandingArea();
     }
     
@@ -91,7 +97,7 @@ public class Game {
      */
     public void RestartGame()
     {
-        playerRocket.ResetPlayer();
+      //  playerRocket.ResetPlayer();
     }
     
     
@@ -104,26 +110,9 @@ public class Game {
     public void UpdateGame(long gameTime, Point mousePosition)
     {
         // Move the rocket
+    	System.out.println("Updating game");
         playerRocket.Update();
-        
-        // Checks where the player rocket is. Is it still in the space or is it landed or crashed?
-        // First we check bottom y coordinate of the rocket if is it near the landing area.
-        if(playerRocket.y + playerRocket.rocketImgHeight - 10 > landingArea.y)
-        {
-            // Here we check if the rocket is over landing area.
-            if((playerRocket.x > landingArea.x) && (playerRocket.x < landingArea.x + landingArea.landingAreaImgWidth - playerRocket.rocketImgWidth))
-            {
-                // Here we check if the rocket speed isn't too high.
-                if(playerRocket.speedY <= playerRocket.topLandingSpeed)
-                    playerRocket.landed = true;
-                else
-                    playerRocket.crashed = true;
-            }
-            else
-                playerRocket.crashed = true;
-                
-            Framework.gameState = Framework.GameState.GAMEOVER;
-        }
+        System.out.println("Player rocket updated");
     }
     
     /**
@@ -149,7 +138,7 @@ public class Game {
      * @param mousePosition Current mouse position.
      * @param gameTime Game time in nanoseconds.
      */
-    public void DrawGameOver(Graphics2D g2d, Point mousePosition, long gameTime)
+   /* public void DrawGameOver(Graphics2D g2d, Point mousePosition, long gameTime)
     {
         Draw(g2d, mousePosition);
         
@@ -166,5 +155,5 @@ public class Game {
             g2d.drawString("You have crashed the rocket!", Framework.frameWidth / 2 - 95, Framework.frameHeight / 3);
             g2d.drawImage(redBorderImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
         }
-    }
+    }*/
 }

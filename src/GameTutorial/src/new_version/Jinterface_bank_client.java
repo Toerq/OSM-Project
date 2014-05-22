@@ -37,10 +37,11 @@ public class Jinterface_bank_client {
 	public void initMailbox(Jinterface_bank_client client) {
 		
 	}
-	public OtpErlangObject sendTCP(OtpErlangObject arg) {
+	public void sendTCP(OtpErlangObject arg) {
 		OtpOutputStream availableStream = new OtpOutputStream(arg);
 		byte[] data = arrayPrepend(availableStream);
 		try {
+			dos.write(data); /*
 			//System.out.println("Sending: " + Arrays.toString( data));
 			dos.write(data);
 			byte[] message = new byte[2048];
@@ -49,7 +50,24 @@ public class Jinterface_bank_client {
 
 			OtpErlangObject answer = (new OtpInputStream(message)).read_any();
 			//System.out.println("Answer: " + answer);
-			return answer;
+			return answer; */
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*} catch (OtpErlangDecodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null; */ 
+	}
+	
+	OtpErlangObject getAnswer() {
+		OtpErlangObject answer = null;
+		byte[] message = new byte[2048];
+		try {
+			fromServer.read(message);
+			answer = (new OtpInputStream(message)).read_any();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -57,12 +75,13 @@ public class Jinterface_bank_client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return answer;
 	}
-	
+		
 	public void ping() {
 		OtpErlangAtom ping = new OtpErlangAtom("ping");
-		OtpErlangObject pong = sendTCP(ping);
+		sendTCP(ping);
+		OtpErlangObject pong = getAnswer();
 	}
 	
 	public void join (OtpErlangPid pid) {
@@ -72,15 +91,17 @@ public class Jinterface_bank_client {
 		arg[0] = join;
 		arg[1] = pid;
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
-		OtpErlangObject answer = sendTCP(tuple);
-		System.out.println("Result:");
-		System.out.println(answer);
+		sendTCP(tuple);
+		//OtpErlangObject answer = getAnswer();
+		//System.out.println("Result:");
+		//System.out.println(answer);
 	}
 	
 	public void add() {
 		OtpErlangAtom add = new OtpErlangAtom("add_table");
-		OtpErlangObject answer = sendTCP(add);
-		System.out.println(answer);
+		sendTCP(add);
+		//OtpErlangObject answer = getAnswer();
+		//System.out.println(answer);
 	}
 	
 	public void add(String gameName, String gameType, int maxPlayers) {
@@ -91,8 +112,9 @@ public class Jinterface_bank_client {
 		OtpErlangObject[] arg = {add, name, type, max};
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
 
-		OtpErlangObject answer = sendTCP(tuple);
-		System.out.println(answer);
+		sendTCP(tuple);
+		//OtpErlangObject answer  = getAnswer();
+		//System.out.println(answer);
 	}
 	/*
 	public void add(String servername, int[] ip) {
@@ -115,7 +137,8 @@ public class Jinterface_bank_client {
 	public Object[][] available() {
 
 	    OtpErlangAtom availableAtom = new OtpErlangAtom("browse_tables");
-		OtpErlangObject answer = sendTCP(availableAtom);
+		sendTCP(availableAtom);
+		OtpErlangObject answer = getAnswer();
 
 	   OtpErlangList tables =  (OtpErlangList) answer;
 	   OtpErlangObject [][] tableList = new OtpErlangObject[tables.arity()][5];
@@ -142,8 +165,9 @@ public class Jinterface_bank_client {
 		argArray[3] = erlangY;
 		
 		OtpErlangTuple arg = new OtpErlangTuple(argArray);
-		OtpErlangObject answer = sendTCP(arg);
-		System.out.println(answer);
+		sendTCP(arg);
+		//OtpErlangObject answer = getAnswer();
+		//System.out.println(answer);
 	}
 	
 	private OtpErlangTuple destIpToErlang(int[] destIp) {
@@ -155,7 +179,45 @@ public class Jinterface_bank_client {
 		return new OtpErlangTuple(tmp);
 	}
 	
-	public void move(String name, String dir, int amount) {
+	public void doAction(String action) {
+		OtpErlangAtom doAction = new OtpErlangAtom("do_action");
+		OtpErlangAtom actionAtom = new OtpErlangAtom(action);
+		OtpErlangList options = new OtpErlangList();
+		OtpErlangObject[] actionArray = {actionAtom, options};
+		OtpErlangTuple actionTuple = new OtpErlangTuple(actionArray);
+		OtpErlangObject[] argArray = {doAction, actionTuple};
+		OtpErlangTuple argTuple = new OtpErlangTuple(argArray);
+		System.out.println("Doing action");
+		sendTCP(argTuple);
+		System.out.println("Action done");
+	}
+	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
+	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
+	public int[] getState(){
+		OtpErlangAtom getState = new OtpErlangAtom("get_state");
+		sendTCP(getState);
+		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
+		OtpErlangTuple state = (OtpErlangTuple) answer.elementAt(1);
+		System.out.println("State: " + state);
+		System.out.println("Player List :" + state.elementAt(1));
+		OtpErlangList playerList = (OtpErlangList) state.elementAt(1);
+		OtpErlangTuple player = (OtpErlangTuple) playerList.elementAt(0);
+		OtpErlangTuple position = (OtpErlangTuple) player.elementAt(1);
+		int x = 0;
+		int y = 0;
+		try {
+			x = ((OtpErlangLong)position.elementAt(0)).intValue();
+			y = ((OtpErlangLong)position.elementAt(1)).intValue();
+		} catch (OtpErlangRangeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		int[] pos = {x, y};
+		return pos;
+		
+	}
+	
+	/*public void move(String name, String dir, int amount) {
 		OtpErlangObject argArray[] = new OtpErlangObject[4];
 
 		
@@ -168,6 +230,7 @@ public class Jinterface_bank_client {
 		OtpErlangObject answer = sendTCP(arg);
 		System.out.println(answer);
 	}
+	*/
 /*
 	public ArrayList<Player> getAllPos() {
 		OtpErlangTuple arg = new OtpErlangTuple(new OtpErlangAtom("getAllPos"));
