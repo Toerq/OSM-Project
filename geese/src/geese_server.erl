@@ -1,4 +1,6 @@
-%%  c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(game_state), c(game_logic), c(action_db), c(geese_server), geese_server:start(3010).
+%% c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(game_state), c(game_logic), c(action_db), c(geese_server), c(geese_coordinator_backup), c(geese_sup), geese_server:start(3010).
+
+%% new: c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(game_state), c(game_logic), c(action_db), c(geese_server), c(geese_coordinator_backup), c(geese_sup), geese_sup:start_link(3010).
 
 % f(Socket), {ok, Socket} = gen_tcp:connect({127,0,0,1}, 3010, []).
 
@@ -63,6 +65,7 @@ stop() ->
 init([Port]) ->
     Coordinator = geese_coordinator:start_link(),
     Dispatcher = geese_dispatcher:start_link(Port, self()),
+    %%    _Coordinator_backup = geese_coordinator_backup:start_link(),
     io:format("~nprint från server~p~n, Coordinator pid: ~p~n", [self(), Coordinator]),
     {ok, #state{port = Port, coordinator = Coordinator, dispatcher = Dispatcher} }.
     

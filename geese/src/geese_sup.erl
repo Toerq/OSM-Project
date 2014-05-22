@@ -1,3 +1,5 @@
+%% c(geese_player), c(geese_coordinator), c(geese_player), c(geese_table), c(geese_dispatcher), c(game_state), c(game_logic), c(action_db), c(geese_server), c(geese_coordinator_backup), c(geese_sup), geese_sup:start_link(3010).
+
 -module(geese_sup).
 -behaviour(supervisor).
 
