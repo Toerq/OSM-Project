@@ -14,10 +14,7 @@
 init(Db_name) ->
     mnesia:create_schema([node()]),
     mnesia:start(),
-    mnesia:create_table(Db_name, 
-			[{ram_copies,[node()]},
-			 {attributes, 
-			  record_info(fields, action)}]),
+    mnesia:create_table(Db_name, [{ram_copies,[node()]}, {record_name, action}, {attributes, record_info(fields, action)}]),
     mnesia:wait_for_tables([Db_name], 1000),
     ok.
 
@@ -43,14 +40,13 @@ add(Db_name, Player_id, Action, Var_list) ->
 		    Entry = #action{player_id = Player_id, 
 				    action = Action, 
 				    varlist = Var_list},
-		    mnesia:write(Entry),
-                    ok;
+		    io:format("Action: ~w~n", [Entry]),
+		    mnesia:write(Db_name, Entry, write);
 		[E] ->
                     %% update action
                     E1 = E#action{action = Action, 
 				  varlist = Var_list},
-                    mnesia:write(E1),
-                    ok
+                    mnesia:write(E1)
 	    end
     end.
 

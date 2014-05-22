@@ -30,7 +30,9 @@ start(Db_name, State_sender, Tick_rate) ->
 -spec register_action(Action::tuple()) -> ok.
 
 register_action(Action) ->
-    action_db:do_call(Action).
+    E =  action_db:do_call(Action),
+    io:format("Do call: ~w~n", [E]),
+    E.
     
 %% @doc State will loop and read actions so it can update its State. Depending on what actions
 %% it will read. It will calculate a newstate and send it at a given tickrate.
@@ -41,7 +43,9 @@ register_action(Action) ->
 state(Tick, State_sender, Db_name, State) ->
     Time = erlang:now(),
     Actions = action_db:get_actions(Db_name),
+    io:format("Tick, Db name: ~w Actions: ~w ~n", [Db_name, Actions]),
     New_state = game_logic:do_actions(State, Actions),
+    remove_server_action(Db_name),
     State_sender ! {new_state, New_state},
     Sleep_time = ((1000000 div Tick) - 
 		     timer:now_diff(erlang:now(), Time))div 1000,  
@@ -69,3 +73,6 @@ state_sender(State) ->
             io:format("~w~n", [E]),
             state_sender(State)
     end.
+
+remove_server_action(Db_name) ->
+    action_db:do_call({action_remove, Db_name, server}).
