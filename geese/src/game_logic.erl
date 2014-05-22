@@ -24,7 +24,7 @@ make_new_state() ->
 do_actions(State, []) ->
     State;
 do_actions(State, [{Id, Action, Var_list} | T]) when Id =:= server ->
-    do_actions(do_server_action(State, {Action, Var_list}), T);
+     do_actions(do_server_action(State, {Action, Var_list}), T);
 do_actions({Server_settings, Player_list}, [A | T]) ->
     do_actions({Server_settings, do_actions_aux(Server_settings, Player_list, [], A)}, T).
 
