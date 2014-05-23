@@ -41,25 +41,12 @@ public class Jinterface_bank_client {
 		OtpOutputStream availableStream = new OtpOutputStream(arg);
 		byte[] data = arrayPrepend(availableStream);
 		try {
-			dos.write(data); /*
-			//System.out.println("Sending: " + Arrays.toString( data));
 			dos.write(data);
-			byte[] message = new byte[2048];
-			fromServer.read(message);
-			//System.out.println("Got back: " + Arrays.toString(message));
 
-			OtpErlangObject answer = (new OtpInputStream(message)).read_any();
-			//System.out.println("Answer: " + answer);
-			return answer; */
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*} catch (OtpErlangDecodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null; */ 
 	}
 	
 	OtpErlangObject getAnswer() {
@@ -84,6 +71,7 @@ public class Jinterface_bank_client {
 		OtpErlangObject pong = getAnswer();
 	}
 	
+	
 	public void join (OtpErlangPid pid) {
 		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
@@ -92,16 +80,11 @@ public class Jinterface_bank_client {
 		arg[1] = pid;
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
 		sendTCP(tuple);
-		//OtpErlangObject answer = getAnswer();
-		//System.out.println("Result:");
-		//System.out.println(answer);
 	}
 	
 	public void add() {
 		OtpErlangAtom add = new OtpErlangAtom("add_table");
 		sendTCP(add);
-		//OtpErlangObject answer = getAnswer();
-		//System.out.println(answer);
 	}
 	
 	public void add(String gameName, String gameType, int maxPlayers) {
@@ -113,8 +96,6 @@ public class Jinterface_bank_client {
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
 
 		sendTCP(tuple);
-		//OtpErlangObject answer  = getAnswer();
-		//System.out.println(answer);
 	}
 	/*
 	public void add(String servername, int[] ip) {
@@ -187,35 +168,47 @@ public class Jinterface_bank_client {
 		OtpErlangTuple actionTuple = new OtpErlangTuple(actionArray);
 		OtpErlangObject[] argArray = {doAction, actionTuple};
 		OtpErlangTuple argTuple = new OtpErlangTuple(argArray);
-		System.out.println("Doing action");
+	//	System.out.println("Doing action");
 		sendTCP(argTuple);
-		System.out.println("Action done");
+		//System.out.println("Action done");
 	}
 	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
 	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
-	public int[] getState(){
+	
+	public int[][] getState(){
 		OtpErlangAtom getState = new OtpErlangAtom("get_state");
 		sendTCP(getState);
 		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
 		OtpErlangTuple state = (OtpErlangTuple) answer.elementAt(1);
-		System.out.println("State: " + state);
-		System.out.println("Player List :" + state.elementAt(1));
-		OtpErlangList playerList = (OtpErlangList) state.elementAt(1);
-		OtpErlangTuple player = (OtpErlangTuple) playerList.elementAt(0);
-		OtpErlangTuple position = (OtpErlangTuple) player.elementAt(1);
-		int x = 0;
-		int y = 0;
+		//System.out.println("State: " + state);
+		//	System.out.println("Player List :" + state.elementAt(1));
+		OtpErlangList otpPlayerList = (OtpErlangList) state.elementAt(1);
+		OtpErlangObject[] playerList = otpPlayerList.elements();
+		OtpErlangTuple player; //= (OtpErlangTuple) playerList.elementAt(0);
+		OtpErlangTuple position; //= (OtpErlangTuple) player.elementAt(1);
+		//int x = 0;
+		//int y = 0;
+		int length = playerList.length;
+		int[][] players = new int[length][2];
 		try {
-			x = ((OtpErlangLong)position.elementAt(0)).intValue();
-			y = ((OtpErlangLong)position.elementAt(1)).intValue();
+			for(int i = 0; i < length; i++) {
+				player = (OtpErlangTuple) playerList[i];
+				position = (OtpErlangTuple) player.elementAt(1);
+				players[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
+				players[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
+			}
 		} catch (OtpErlangRangeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		int[] pos = {x, y};
-		return pos;
-		
+		//int[] pos = {x, y};
+		return players;
+
 	}
+	
+	//public int[] getPlayerList() {
+		
+	//}
 	
 	/*public void move(String name, String dir, int amount) {
 		OtpErlangObject argArray[] = new OtpErlangObject[4];

@@ -82,14 +82,14 @@ talk_state(State) ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
 		    io:format("~noutput from browse_tables: ~p~n", [Tables]),
-		    gen_tcp:send(Accept_socket, String1),
+		    gen_tcp:send(Accept_socket, term_to_binary(Tables)),
 		    talk_state(State);
 
 		browse_players -> 
 		    Players = geese_coordinator:browse_players(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Players])),
 		    io:format("jaasd"),
-		    gen_tcp:send(Accept_socket, String1),
+		    gen_tcp:send(Accept_socket, term_to_binary(Players)),
 		    talk_state(State);
 
 		join_table_debug ->
@@ -107,6 +107,13 @@ talk_state(State) ->
 		{join_table, Table_ref} ->
 		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
+
+		    Name = State#state.name,
+		    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
+		    io:format("Point1~n"),
+		    Call = {action_add, Db_name, server, add_player, [{Name, {15,15}, {0,0}, 100, Player_id}]},
+		    game_state:register_action(Call),
+
 		    game_state(New_state);
 
 		{join_table_java, Table_ref} ->
@@ -138,7 +145,7 @@ game_state(State) ->
     Player_id = State#state.player_id,
     receive 
 	{tcp, Accept_socket, Packet} ->
-	    io:format("<Game command -In->~n"),
+	    io:format("<Game command -In->~n term:~w~n", [binary_to_term(Packet)]),
 	    case binary_to_term(Packet) of
 		{do_action, {Action, Var_list}} ->
 		    Call = {action_add, Db_name, Player_id, Action, Var_list},

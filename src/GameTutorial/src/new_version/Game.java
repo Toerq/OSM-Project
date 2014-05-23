@@ -21,7 +21,10 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
-    private PlayerRocket playerRocket;
+   
+	public static int[][] players;
+	
+	private PlayerRocket playerRocket;
     
     /**
      * Landing area on which rocket will have to land.
@@ -41,21 +44,21 @@ public class Game {
 
     public Game()
     {
-    	 System.out.println("Game state = " + Framework.gameState);
+    	 //System.out.println("Game state = " + Framework.gameState);
         Framework.gameState = Framework.GameState.GAME_CONTENT_LOADING;
-        System.out.println("Game state = " + Framework.gameState);
+      //  System.out.println("Game state = " + Framework.gameState);
         Thread threadForInitGame = new Thread() {
             @Override
             public void run(){
                 // Sets variables and objects for the game.
-            	System.out.println("Initialize...");
+            	//System.out.println("Initialize...");
                 Initialize();
                 // Load game files (images, sounds, ...)
-                System.out.println("Loading conent...");
+               // System.out.println("Loading conent...");
                 LoadContent();
-                System.out.println("Game state = " + Framework.gameState);
+              //  System.out.println("Game state = " + Framework.gameState);
                 Framework.gameState = Framework.GameState.PLAYING;
-                System.out.println("Game state = " + Framework.gameState);
+               // System.out.println("Game state = " + Framework.gameState);
             }
         };
         threadForInitGame.start();
@@ -110,9 +113,9 @@ public class Game {
     public void UpdateGame(long gameTime, Point mousePosition)
     {
         // Move the rocket
-    	System.out.println("Updating game");
+    	//System.out.println("Updating game");
         playerRocket.Update();
-        System.out.println("Player rocket updated");
+        //System.out.println("Player rocket updated");
     }
     
     /**
