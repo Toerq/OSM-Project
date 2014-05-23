@@ -2,7 +2,9 @@ package new_version;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -58,7 +60,7 @@ public class PlayerRocket {
     
     private void Initialize()
     {
-       Game.players = Main.client.getState();
+     Main.client.getState();
        //x = pos[0];
        //y = pos[1];
     }
@@ -90,32 +92,39 @@ public class PlayerRocket {
     /**
      * Here we move the rocket.
      */
-    public void Update()
+    public void Update(Point mousePosition)
     {
-    		//System.out.println("Updating player rocket");
-    	if(Canvas.keyboardKeyState(KeyEvent.VK_W))
-    		Main.client.doAction("move_down");
-    
-    	else if (Canvas.keyboardKeyState(KeyEvent.VK_A))
-    		Main.client.doAction("move_left");
-    
-    	else if (Canvas.keyboardKeyState(KeyEvent.VK_D))
-    		Main.client.doAction("move_right");
 
-    	else if(Canvas.keyboardKeyState(KeyEvent.VK_S))
-    		Main.client.doAction("move_up");
-    	
-    	else
-    		Main.client.doAction("stop");
-    		
-        try {
-			Thread.sleep(5);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
+    	{
+    		System.out.println(mousePosition);
+    		Main.client.doAction("move_down");
+    		//Main.client.doAction("shoot, mousePosition")
+    		//System.out.println("Updating player rocket");
+    	}
+    		else if(Canvas.keyboardKeyState(KeyEvent.VK_W))
+    			Main.client.doAction("move_down");
+
+    		else if (Canvas.keyboardKeyState(KeyEvent.VK_A))
+    			Main.client.doAction("move_left");
+
+    		else if (Canvas.keyboardKeyState(KeyEvent.VK_D))
+    			Main.client.doAction("move_right");
+
+    		else if(Canvas.keyboardKeyState(KeyEvent.VK_S))
+    			Main.client.doAction("move_up");
+
+    		else
+    			Main.client.doAction("stop");
+
+    	try {
+    		Thread.sleep(5);
+    	} catch (InterruptedException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	}
         // Updates position
-    	Game.players = Main.client.getState();
+    	Main.client.getState();
     	//System.out.println("Updated with new state");
     	//x = xy[0];
     	//y = xy[1];
@@ -126,10 +135,11 @@ public class PlayerRocket {
     {
     	g2d.setColor(Color.white);
     	g2d.drawString("Rocket coordinates: " + x + " : " + y, 5, 15);
-    	int[][] players = Game.players;
+    	int[][] players = Game.playerPos;
     	for(int i = 0; i < players.length; i++ ) {   	
     		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
     	g2d.drawImage(rocketImg, players[i][0], players[i][1], null);
+    	g2d.drawString(Game.playerNames[i],players[i][0] , players[i][1] - 10);
     	}
     }
     
