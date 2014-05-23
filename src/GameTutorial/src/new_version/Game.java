@@ -21,8 +21,8 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
-   
-	public static int[][] players;
+   public static String[] playerNames;
+	public static int[][] playerPos;
 	
 	private PlayerRocket playerRocket;
     
@@ -114,7 +114,7 @@ public class Game {
     {
         // Move the rocket
     	//System.out.println("Updating game");
-        playerRocket.Update();
+        playerRocket.Update(mousePosition);
         //System.out.println("Player rocket updated");
     }
     
@@ -127,7 +127,6 @@ public class Game {
     public void Draw(Graphics2D g2d, Point mousePosition)
     {
         g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
-        
         landingArea.Draw(g2d);
         
         playerRocket.Draw(g2d);

@@ -160,6 +160,14 @@ public class Jinterface_bank_client {
 		return new OtpErlangTuple(tmp);
 	}
 	
+	public void setName(String name) {
+		OtpErlangAtom changeName = new OtpErlangAtom("change_name");
+		OtpErlangString newName = new OtpErlangString(name);
+		OtpErlangObject[] arg = {changeName, newName};
+		OtpErlangTuple tuple = new OtpErlangTuple(arg);
+		sendTCP(tuple);
+	}
+	
 	public void doAction(String action) {
 		OtpErlangAtom doAction = new OtpErlangAtom("do_action");
 		OtpErlangAtom actionAtom = new OtpErlangAtom(action);
@@ -175,7 +183,7 @@ public class Jinterface_bank_client {
 	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
 	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
 	
-	public int[][] getState(){
+	public void getState(){
 		OtpErlangAtom getState = new OtpErlangAtom("get_state");
 		sendTCP(getState);
 		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
@@ -190,10 +198,17 @@ public class Jinterface_bank_client {
 		//int y = 0;
 		int length = playerList.length;
 		int[][] players = new int[length][2];
+		String[] names = new String[length];
 		try {
 			for(int i = 0; i < length; i++) {
 				player = (OtpErlangTuple) playerList[i];
+				System.out.println("Index : " + i);
+				System.out.println(playerList);
+				System.out.println(player);
+				names[i] = ((OtpErlangString) player.elementAt(0)).toString();
 				position = (OtpErlangTuple) player.elementAt(1);
+				
+				//Game.playerNames[i] = name;
 				players[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
 				players[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
 			}
@@ -202,8 +217,8 @@ public class Jinterface_bank_client {
 			e.printStackTrace();
 		}
 		//int[] pos = {x, y};
-		return players;
-
+		Game.playerNames = names;
+		Game.playerPos = players;
 	}
 	
 	//public int[] getPlayerList() {
