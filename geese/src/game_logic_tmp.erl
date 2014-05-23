@@ -32,6 +32,11 @@ do_actions({Server_settings, Entity_lists}, Action_list) ->
 
 apply_actions(Server_settings, Entity_lists, []) ->
     {Server_settings, Entity_lists};
+apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= server ->
+    [Type, Argument] = Var_list,
+    {New_server_settings, New_player_list, New_bullet_list} = 
+	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
+    apply_actions(New_server_settings, {New_player_list, New_bullet_list});
 apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= fire ->
     [Type, Direction, Pos] = Var_list,
     New_bullet_list = [{Entity_id, Type, Pos, Direction} | Bullet_list],
@@ -40,6 +45,21 @@ apply_actions(Server_settings, {Player_list, Bullet_list}, [A | T]) ->
     apply_actions(Server_settings, 
 		  {apply_action(Server_settings, Player_list, A, []), Bullet_list}, 
 		  T).
+
+apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) ->
+    case Type of
+	add_player ->
+	    New_player_list = add_player(Argument, Player_list, []),
+	    {Server_settings, New_player_list, Bullet_list};
+	change_settings ->
+	    New_server_settings = change_settings(Server_settings, Argument),
+	    {New_server_settings, Player_list, Bullet_list};
+	remove_player ->
+	    New_player_list = remove_player(Argument, Player_list, []),
+	    {Server_settings, New_player_list, Bullet_list}
+    end.
+
+
 
 apply_action(_Server_settings, [], _A, Aux_list) ->
     Aux_list;
@@ -120,6 +140,66 @@ can_jump({X, Y}, [O | T]) ->
 ground_interval({{X_start, _Y_start}, {X_end, Y_end}}) ->
     {{X_start, X_end},Y_end}.
     
+
+
+limitor(X, Limit, Fric) ->
+    if X > Limit ->
+	    Limit;
+       X < -Limit ->
+	    -Limit;
+       X > 0 ->
+	    if (X - Fric) > 0 ->
+		    X - Fric;
+	       true ->
+		    0
+	    end;
+       true ->
+	    if (X + Fric) > 0 ->
+		    0;
+	       true ->
+		    X + Fric
+	    end
+    end.
+
+modulor(X, Mod) ->
+    if X > Mod ->
+ 	    X - Mod;
+       X < 0 ->
+ 	    Mod + X;
+       true ->
+ 	    X
+    end.
+
+
+add_player(Player, [], Aux_list) ->
+    [Player | Aux_list];
+add_player({Name, Pos, Vel, Hp, Id}, [{N, P, V, H, I} | T], Aux_list) when I =/= Id ->
+    add_player({Name, Pos, Vel, Hp, Id}, T, [{N, P, V, H, I} | Aux_list]);
+add_player(_ , Players, Aux_list) ->
+    lists:append([Players, Aux_list]).
+
+remove_player(_Player, [], Aux_list) ->
+    Aux_list;
+%%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
+remove_player({_Name, _Pos, _Vel, _Hp, Id}, [{_N, _P, _V, _H, I} | T], Aux_list) when I =:= Id ->
+    lists:append([T, Aux_list]);
+remove_player(Player, [P | T], Aux_list) ->
+    remove_player(Player, T, [P | Aux_list]).
+
+
+change_settings({M_f, G_f, A_f, B_j, G_l, V_l, L_l}, New_settings) ->
+    Old_settings = [M_f, G_f, A_f, B_j, G_l, V_l, L_l],
+    [N_m_f, N_g_f, N_a_f, N_b_j, N_g_l, N_v_l, N_l_l] = settings_update(Old_settings, New_settings, []),
+    {N_m_f, N_g_f, N_a_f, N_b_j, N_g_l, N_v_l, N_l_l}.
+
+settings_update([],[], Aux) ->
+    lists:reverse(Aux);
+settings_update([O | OT], [N | NT], Aux) when N =:= no_change ->
+    settings_update(OT, NT, [O | Aux]);
+settings_update([_O | OT], [N | NT], Aux) ->
+    settings_update(OT, NT, [N | Aux]).
+
+
 iterate_state(State) ->
     iterate_state_aux(State, []).
 
@@ -174,36 +254,3 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
     Player_list.
-
-
-
-
-
-
-limitor(X, Limit, Fric) ->
-    if X > Limit ->
-	    Limit;
-       X < -Limit ->
-	    -Limit;
-       X > 0 ->
-	    if (X - Fric) > 0 ->
-		    X - Fric;
-	       true ->
-		    0
-	    end;
-       true ->
-	    if (X + Fric) > 0 ->
-		    0;
-	       true ->
-		    X + Fric
-	    end
-    end.
-
-modulor(X, Mod) ->
-    if X > Mod ->
- 	    X - Mod;
-       X < 0 ->
- 	    Mod + X;
-       true ->
- 	    X
-    end.
