@@ -1,4 +1,5 @@
 -module(game_logic_tmp).
+-compile(export_all).
 -export([do_actions/2, make_new_state/0]).
 
 -define(PLAYERHEIGHT, 25).
@@ -36,7 +37,7 @@ apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, 
     [Type, Argument] = Var_list,
     {New_server_settings, New_player_list, New_bullet_list} = 
 	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
-    apply_actions(New_server_settings, {New_player_list, New_bullet_list});
+    apply_actions(New_server_settings, {New_player_list, New_bullet_list}, T);
 apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= fire ->
     [Type, Direction, Pos] = Var_list,
     New_bullet_list = [{Entity_id, Type, Pos, Direction} | Bullet_list],
@@ -253,4 +254,16 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
+    Line = make_line(Bullet),
+    
     Player_list.
+
+make_line({Entity_id, Type, Pos, Direction}) ->
+    {X1, Y1} = Pos,
+    {X2, Y2} = Direction,
+    if X2 - round(X1) =:= 0 ->
+	    Angle = inf;
+       true ->
+	    Angle = (Y2-Y1) / (X2-X1)
+    end,
+    {Pos, Angle}.
