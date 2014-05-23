@@ -142,24 +142,38 @@ iterate_player(Server_settings, Player) ->
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list), 
     {Name, New_pos, New_vel, New_hp, Id}.
 
-iterate_move(Vel, Pos, Hp, Level_List) ->
-    {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
-    tbi.
-
 get_borders([], Aux) ->
     Aux;
 get_borders([O| T], {Aux_v, Aux_h}) ->
-    tbi.
+    {{X_start,Y_start},{X_end, Y_end}} = O,
+    Left_v = {X_start, {Y_start, Y_end}},
+    Right_v = {X_end, {Y_start, Y_end}},
+    Top_h = {{X_start, X_end}, Y_end},
+    Bot_h = {{X_start, X_end}, Y_start},
+    get_borders(T, {[Left_v |[ Right_v| Aux_v]] , [Top_h |[Bot_h | Aux_h]]}).
 
+iterate_move(Vel, Pos, Hp, Level_List) ->
+    {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
+    {X_vel, Y_vel} = Vel,
+    {X, Y} = Pos,
+
+    %% TODO placeholder %%
+    %% %%
+    if Y+Y_vel =< 0 ->
+	    New_y = 0,
+	    New_y_vel = 0;
+       true ->
+	    New_y = Y+Y_vel,
+	    New_y_vel = Y_vel
+    end,
+    %% %%
+    %% %%
+
+    {{X_vel, New_y_vel},{X+X_vel, New_y}, Hp}.
+    
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
     Player_list.
-
-
-    
-    
-    
-
 
 
 
