@@ -42,7 +42,17 @@ remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_f
     
 
 init([]) ->
-    {ok, #coordinator_state{tables = []}}.
+    case geese_coordinator_backup:get_state() of
+	no_state_saved ->
+	    {ok, #coordinator_state{tables = []}};
+	State -> 
+	    io:format("~nRestarting coordinator with state~p~n", [State]),
+	    {ok, State}
+    end.
+	    
+
+back_up(State) ->
+    geese_coordinator_backup:back_up(State).
 
 %%används endast för debug
 get_table_ref(State) ->
@@ -66,9 +76,10 @@ handle_call({remove_player_from_table, Pid}, _From, State) ->
 	    {_, Table_name, Game_type, Connected_players, Max_players} = lists:keyfind(Table_ref, 1, Tables),
 	    New_table = {Table_ref, Table_name, Game_type, Connected_players - 1, Max_players},
 	    New_table_list = lists:keydelete(Table_ref, 1, Tables),
-	    NewState = State#coordinator_state{tables = [New_table | New_table_list]},
+	    New_state = State#coordinator_state{tables = [New_table | New_table_list]},
 	    Reply = gen_server:call(Table_ref, {remove_player, Pid}),
-	    {reply, Reply, NewState}
+	    back_up(New_state),
+	    {reply, Reply, New_state}
     end;
     
 
@@ -103,9 +114,10 @@ handle_call({join_table, Pid, Table_ref}, _From, State) ->
 			    New_player_list = lists:keydelete(Pid, 1, Players),
 			    New_player = {Pid, Player_name, Socket, Table_ref}, 
 			    New_table_list = lists:keydelete(Table_ref, 1, Tables),
-			    NewState = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
+			    New_state = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
 			    %% add succeeded
-			    {reply, Tuple, NewState}	
+			    back_up(New_state),
+			    {reply, Tuple, New_state}	
 		    end
 	    end
     end;
@@ -142,9 +154,10 @@ handle_call({join_table_debug, Pid, _Table_ref_use_this_later}, _From, State) ->
 			    New_player_list = lists:keydelete(Pid, 1, Players),
 			    New_player = {Pid, Player_name, Socket, Table_ref}, 
 			    New_table_list = lists:keydelete(Table_ref, 1, Tables),
-			    NewState = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
+			    New_state = State#coordinator_state{players = [New_player | New_player_list], tables = [NewTable | New_table_list]},
 			    %% add succeeded
-			    {reply, Tuple, NewState}	
+			    back_up(New_state),
+			    {reply, Tuple, New_state}	
 		    end
 	    end
     end;
@@ -154,8 +167,9 @@ handle_call({join_lobby, Pid, Name, Socket}, _From, State) ->
     case lists:keyfind(Pid, 1, Players) of
 	%%Spelaren fanns inte i listan
 	false ->
-	    NewState = State#coordinator_state{players = [{Pid, Name, Socket, not_in_any_table} | Players]},
-	    {reply, join_succeeded, NewState};
+	    New_state = State#coordinator_state{players = [{Pid, Name, Socket, not_in_any_table} | Players]},
+	    back_up(New_state),
+	    {reply, join_succeeded, New_state};
 	_Player -> 
 	    io:format("~nPlayer already exists!"),
 	    {reply, player_already_exists, State}
@@ -175,9 +189,10 @@ handle_cast({add_table, Name, Game_type, Max_players}, State) ->
     Tables = State#coordinator_state.tables,
     Table = {Table_pid, Name, Game_type, 0, Max_players},
     Tables =  State#coordinator_state.tables,
-						%    NewState = State#coordinator_state{tables = Table, test_table = Table_pid},
-    NewState = State#coordinator_state{tables = [Table | Tables], test_table = Table_pid},
-    {noreply, NewState};
+						%    New_state = State#coordinator_state{tables = Table, test_table = Table_pid},
+    New_state = State#coordinator_state{tables = [Table | Tables], test_table = Table_pid},
+    back_up(New_state),
+    {noreply, New_state};
 
 handle_cast({remove_table, Table_pid}, State) ->
     Tables = State#coordinator_state.tables,
@@ -186,14 +201,18 @@ handle_cast({remove_table, Table_pid}, State) ->
 	    {reply, no_such_table_exists, State};
 	_Table -> 
 	    NewTables = lists:keydelete(Table_pid, 1, Table_pid),
-	    NewState = State#coordinator_state{tables = NewTables},
+	    New_state = State#coordinator_state{tables = NewTables},
 	    gen_server:cast(Table_pid, exit),
-	    {reply, removal_succeeded, NewState}
+	    back_up(New_state),
+	    {reply, removal_succeeded, New_state}
     end.
 
 
 handle_info(_Info, State) ->
     {noreply, State}.
+
+stop() ->
+    gen_server:cast(?MODULE, stop).
 
 terminate(_Reason, _State) ->
     ok.
