@@ -32,7 +32,7 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
 	static byte [] ip = {127,0,0,1};
-	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3011);
+	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
 	JFrame f;
 	JScrollPane table;
 	String playerName;
@@ -262,4 +262,3 @@ public class Main implements ActionListener {
 		});
 	}
 }
-

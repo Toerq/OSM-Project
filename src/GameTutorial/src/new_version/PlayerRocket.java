@@ -58,9 +58,9 @@ public class PlayerRocket {
     
     private void Initialize()
     {
-       int[] pos = Main.client.getState();
-       x = pos[0];
-       y = pos[1];
+       Game.players = Main.client.getState();
+       //x = pos[0];
+       //y = pos[1];
     }
     
     private void LoadContent()
@@ -92,7 +92,7 @@ public class PlayerRocket {
      */
     public void Update()
     {
-    		System.out.println("Updating player rocket");
+    		//System.out.println("Updating player rocket");
     	if(Canvas.keyboardKeyState(KeyEvent.VK_W))
     		Main.client.doAction("move_down");
     
@@ -115,10 +115,10 @@ public class PlayerRocket {
 			e.printStackTrace();
 		}
         // Updates position
-    	int[] xy = Main.client.getState();
-    	System.out.println("Updated with new state");
-    	x = xy[0];
-    	y = xy[1];
+    	Game.players = Main.client.getState();
+    	//System.out.println("Updated with new state");
+    	//x = xy[0];
+    	//y = xy[1];
         
     }
     
@@ -126,7 +126,11 @@ public class PlayerRocket {
     {
     	g2d.setColor(Color.white);
     	g2d.drawString("Rocket coordinates: " + x + " : " + y, 5, 15);
-    	g2d.drawImage(rocketImg, x, y, null);
+    	int[][] players = Game.players;
+    	for(int i = 0; i < players.length; i++ ) {   	
+    		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
+    	g2d.drawImage(rocketImg, players[i][0], players[i][1], null);
+    	}
     }
     
 }
