@@ -55,7 +55,7 @@ public class LandingArea {
     {
         try
         {
-            URL landingAreaImgUrl = this.getClass().getResource("/moon_lander/resources/images/landing_area.png");
+            URL landingAreaImgUrl = this.getClass().getResource("resources/images/landing_area.png");
             landingAreaImg = ImageIO.read(landingAreaImgUrl);
             landingAreaImgWidth = landingAreaImg.getWidth();
         }

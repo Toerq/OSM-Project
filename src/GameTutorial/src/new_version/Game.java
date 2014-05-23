@@ -83,10 +83,10 @@ public class Game {
     {
         try
         {
-            URL backgroundImgUrl = this.getClass().getResource("/moon_lander/resources/images/background.jpg");
+            URL backgroundImgUrl = this.getClass().getResource("resources/images/background.jpg");
             backgroundImg = ImageIO.read(backgroundImgUrl);
             
-            URL redBorderImgUrl = this.getClass().getResource("/moon_lander/resources/images/red_border.png");
+            URL redBorderImgUrl = this.getClass().getResource("resources/images/red_border.png");
             redBorderImg = ImageIO.read(redBorderImgUrl);
         }
         catch (IOException ex) {

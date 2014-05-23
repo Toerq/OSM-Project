@@ -69,7 +69,7 @@ public class PlayerRocket {
     {
         try
         {
-            URL rocketImgUrl = this.getClass().getResource("/moon_lander/resources/images/rocket.png");
+            URL rocketImgUrl = this.getClass().getResource("resources/images/rocket.png");
             rocketImg = ImageIO.read(rocketImgUrl);
             rocketImgWidth = rocketImg.getWidth();
             rocketImgHeight = rocketImg.getHeight();
