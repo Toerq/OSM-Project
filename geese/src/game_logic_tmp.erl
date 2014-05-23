@@ -152,7 +152,7 @@ get_borders([O| T], {Aux_v, Aux_h}) ->
     Bot_h = {{X_start, X_end}, Y_start},
     get_borders(T, {[Left_v |[ Right_v| Aux_v]] , [Top_h |[Bot_h | Aux_h]]}).
 
-iterate_move(Vel, Pos, Hp, Level_List) ->
+iterate_move(Vel, Pos, Hp, Level_list) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     {X_vel, Y_vel} = Vel,
     {X, Y} = Pos,
