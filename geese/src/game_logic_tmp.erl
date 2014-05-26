@@ -237,7 +237,19 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     {X_vel, Y_vel} = Vel,
     {X, Y} = Pos,
-
+    Ideal_point = {X+X_vel, Y+Y_vel},
+    Line = make_line(Pos, Ideal_point),
+    Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
+    Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
+    {Border_hit, Point, Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    Short = shortest_distance(Pos, Ideal_point, Point),
+    if Short =:= Ideal_point ->
+            %% BRA inge krock
+            tbi;
+       true ->
+            tbi
+    end,
+    
     %% TODO placeholder %%
     %% %%
     if Y+Y_vel =< 0 ->
@@ -254,11 +266,168 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
-    Line = make_line(Bullet),
-    
+     {_Move_factor,			
+     _Gravity_factor,
+     _Air_friction,
+     _Base_jump_factor,
+     Grid_limit,
+     _Vel_limit,
+     Level_list} = Server_settings,
+    {_Entity_id, _Type, Pos, Direction} = Bullet,
+    Line = make_line(Pos, Direction),
+    {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
+    Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
+    Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
+    {_Border_hit, Point}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    %% TODO %%
+    %% From Line to Point damage the first player %%
+    %% %%
     Player_list.
 
-make_line({Entity_id, Type, Pos, Direction}) ->
+
+border_hit(Line, [], [], V_close, H_close) ->
+    {{X0,Y0}, _Angle, _Dir} = Line,
+    {V_border, V_point, ver} = V_close,
+    {H_border, H_point, hor} = H_close,
+    Short = shortest_distance({X0,Y0}, V_point, H_point),
+    if Short =:= V_point ->
+            V_close;
+       true ->
+            H_close
+    end;
+border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
+    Point = line_hit(Line, {{X_start, X_end}, Y}, hor),
+    case Point of
+        nope ->
+            border_hit(Line, [], H_list, V_close, H_close);
+        _Point ->
+            {{X0,Y0}, _Angle, _Dir} = Line,
+            {H_border, H_point, hor} = H_close,
+            Short = shortest_distance({X0, Y0}, Point, H_point),
+            if Short =:= Point ->
+                    border_hit(Line, [], H_list, V_close, {{{X_start,X_end},Y}, Short, hor});
+               true ->
+                    border_hit(Line, [], H_list, V_close, H_close)
+            end
+    end;
+border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
+    Point = line_hit(Line, {X, {Y_start,Y_end}}, ver),
+    case Point of
+        nope ->
+            border_hit(Line, V_list, H_list, V_close, H_close);
+        _Point ->
+            {{X0,Y0}, _Angle, _Dir} = Line,
+            {V_border, V_point, ver} = V_close,
+            Short = shortest_distance({X0, Y0}, Point, V_point),
+            if Short =:= Point ->
+                    border_hit(Line, V_list, H_list, {{X,{Y_start,Y_end}}, Point, ver}, H_close);
+               true ->
+                    border_hit(Line, V_list, H_list, V_close, H_close)
+            end
+    end.
+
+line_hit(Line, Border, Type) when Type =:= hor ->
+    {{X0,Y0}, Angle, Dir} = Line,
+    {{X1,X2}, Y1} = Border,
+    case Angle of 
+        0 ->
+            nope;
+        _A ->
+            if Angle =:= inf ->
+                    case Dir of 
+                        pos ->
+                            if Y0 > Y1 ->
+                                    nope;
+                               true ->
+                                    if X1 =< X0 andalso X2 >= X0 ->
+                                            {X0, Y1};
+                                       true ->
+                                            nope
+                                    end
+                            end;
+                        neg ->
+                            if Y0 < Y1 ->
+                                    nope;
+                               true ->
+                                    if X1 =< X0 andalso X2 >= X0 ->
+                                            {X0, Y1};
+                                       true ->
+                                            nope
+                                    end 
+                            end
+                    end;	         
+               true ->
+                    X = (Y1 - (Y0 - (Angle*X0)))/2,
+                    case Dir of 
+                        pos ->
+                            if X0 > X ->
+                                    nope;
+                               true ->
+                                    if X1 =< X andalso X2 >= X ->
+                                            {X, Y1};
+                                       true ->
+                                            nope
+                                    end
+                            end;
+                        neg ->
+                            if X0 < X ->
+                                    nope;
+                               true ->
+                                    if X1 =< X andalso X2 >= X ->
+                                            {X, Y1};
+                                       true ->
+                                            nope
+                                    end
+                            end         
+                    end	
+            end
+    end;
+line_hit(Line, Border, Type) when Type =:= ver ->
+    {{X0,Y0}, Angle, Dir} = Line,
+    {X1, {Y1, Y2}} = Border,
+    case Angle of 
+        inf ->
+            nope;
+        _A ->
+            case Dir of
+                pos ->
+                    if X0 > X1 ->
+                            nope;
+                       true ->
+                            Y = Y0 + (X1 - X0) * Angle,
+                            if Y1 =< Y andalso Y2 >= Y ->
+                                    {X1, Y};
+                               true ->
+                                    nope
+                            end 
+                    end;
+                neg ->
+                    if X0 < X1 ->
+                            nope;
+                       true ->
+                            Y = Y0 - (X0 - X1) * Angle,
+                            if Y1 =< Y andalso Y2 >= Y ->
+                                    {X1, Y};
+                               true ->
+                                    nope
+                            end 
+                    end       	    	
+            end
+    end.
+
+
+%% shorthest_distance(Start_point, Point1, Point2) -> Retunrs the closests point. Point1/Point2.
+shortest_distance({Start_x, Start_y}, {X1,Y1}, {X2, Y2}) ->
+    Distance1 = math:sqrt( (X1 - Start_x)*(X1 - Start_x) + (Y1 - Start_y)*(Y1 - Start_y)),
+    Distance2 = math:sqrt( (X2 - Start_x)*(X2 - Start_x) + (Y2 - Start_y)*(Y2 - Start_y)),
+    if Distance1 > Distance2 ->
+            {X2, Y2};
+       true ->
+            {X1, Y1}
+    end.
+
+
+make_line(Pos, Direction) ->
     {X1, Y1} = Pos,
     {X2, Y2} = Direction,
     if X2 - round(X1) =:= 0 ->
@@ -266,4 +435,13 @@ make_line({Entity_id, Type, Pos, Direction}) ->
        true ->
 	    Angle = (Y2-Y1) / (X2-X1)
     end,
-    {Pos, Angle}.
+    if Y2 >= Y1 andalso X2 >= X1 ->
+            Dir = pos;
+       Y2 >= Y1 andalso X2 =< X1 ->
+            Dir = neg;
+       Y2 =< Y1 andalso X2 =< X1 ->
+            Dir = neg;
+       true ->
+            Dir = pos
+    end,  
+    {Pos, Angle, Dir}.
