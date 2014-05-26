@@ -2,7 +2,7 @@
 -compile(export_all).
 -export([do_actions/2, make_new_state/0]).
 
--define(PLAYERHEIGHT, 25).
+-define(PLAYERHEIGHT, 30).
 -define(PLAYERWIDTH, 10).
 
 

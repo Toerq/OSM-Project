@@ -60,8 +60,18 @@ state(Tick, State_sender, Db_name, State) ->
     state(Tick, State_sender, Db_name, New_state).
 
 round_state({Player_list, Bullet_list, Level_list}) ->
-    {round_players(Player_list), round_bullets(Bullet_list), Level_list}.
+    {round_players(Player_list,[]), round_bullets(Bullet_list, []), Level_list}.
 
+round_players([], Aux) ->
+    Aux;
+round_players([P | Player_list], Aux) ->
+    {Name, {X, Y}, Vel, Hp, E_id} = P,
+    round_players(Player_list, [{Name, {round(X), round(Y)}, Vel, Hp, E_id} | Aux]).
+
+round_bullets([], Aux) ->
+    Aux;
+round_bullets([B | Bullet_list], Aux) ->
+    tbi.
 
 %% @doc Will loop and update and send out its State. 
 %% state_sender will loop a given State and update it when it 
