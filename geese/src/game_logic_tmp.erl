@@ -233,6 +233,11 @@ get_borders([O| T], {Aux_v, Aux_h}) ->
     Bot_h = {{X_start, X_end}, Y_start},
     get_borders(T, {[Left_v |[ Right_v| Aux_v]] , [Top_h |[Bot_h | Aux_h]]}).
 
+%% Vel = {4, -5}.
+%% Pos = {3,3}.
+%% Hp = 100.
+%% Level_list = [{{0,0},{10,10}}].
+
 iterate_move(Vel, Pos, Hp, Level_list) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     {X_vel, Y_vel} = Vel,
@@ -245,6 +250,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     Short = shortest_distance(Pos, Ideal_point, Point),
     if Short =:= Ideal_point ->
             %% BRA inge krock
+	    io:format("Fall1: Ingen krock"),
 	    {{X_vel, Y_vel},Ideal_point, Hp};
        true ->
             %% Krock, stuff
@@ -253,32 +259,36 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    %% your new pos will be Short() and you will lose your vertical vel,
 		    %% check from Short() to new pos with your remaining hor. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {X-X_short, 0},
+		    {New_x_vel, New_y_vel} = {X_vel - (X_short-X), 0},
 		    Ideal_point_2 = {X_short + New_x_vel, Y_short},
 		    Line_2 = make_line(Short, Ideal_point_2),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, Vertical_list, [], Dummy_value_v, Dummy_value_h),
 		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
+			    io:format("Fall2: Hor. Krock bara~n~w~n~w~n", [Short, Ideal_point_2]),
 			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
+			    io:format("Fall3: Hor. Krock sen Ver. krock"),
 			    {{0, 0},Short_2, Hp}
 		    end;
 		ver ->
 		    %% your new pos will be Short() and you will lose your hor vel,
 		    %% check from Short() to new pos with your remaining ver. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {0, Y-Y_short},
+		    {New_x_vel, New_y_vel} = {0, Y_vel - (Y_short-Y)},
 		    Ideal_point_2 = {X_short, Y_short+New_y_vel},
 		    Line_2 = make_line(Short, {X_short, Y_short+New_y_vel}),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, [], Horizontal_list, Dummy_value_v, Dummy_value_h),
 		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
+			    io:format("Fall4: Ver. Krock bara~n~w~n~w~n",[Short, Line_2]),
 			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
+			    io:format("Fall5: Verr. Krock sen Hor. krock"),
 			    {{0, 0},Short_2, Hp}
 		    end		    
 	    end
@@ -306,6 +316,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 
 
 border_hit(Line, [], [], V_close, H_close) ->
+    io:format("First~n"),
     {{X0,Y0}, _Angle, _Dir} = Line,
     {V_border, V_point, ver} = V_close,
     {H_border, H_point, hor} = H_close,
@@ -316,6 +327,7 @@ border_hit(Line, [], [], V_close, H_close) ->
             H_close
     end;
 border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
+    io:format("Second~n"),
     Point = line_hit(Line, {{X_start, X_end}, Y}, hor),
     case Point of
         nope ->
@@ -331,6 +343,7 @@ border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
             end
     end;
 border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
+    io:format("Third~n"),
     Point = line_hit(Line, {X, {Y_start,Y_end}}, ver),
     case Point of
         nope ->
@@ -377,7 +390,7 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                             end
                     end;	         
                true ->
-                    X = (Y1 - (Y0 - (Angle*X0)))/2,
+                    X = (Y1 - (Y0 - (Angle*X0)))/Angle,
                     case Dir of 
                         pos ->
                             if X0 > X ->
