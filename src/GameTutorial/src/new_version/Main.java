@@ -154,7 +154,7 @@ public class Main implements ActionListener {
 			long time = System.currentTimeMillis();
 			client.ping();
 			long diff = System.currentTimeMillis() - time;
-			pingButton.setLabel("Ping: " + diff + " ms");
+			pingButton.setText("Ping: " + diff + " ms");
 		}
 	}
 	

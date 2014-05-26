@@ -168,11 +168,21 @@ public class Jinterface_bank_client {
 		sendTCP(tuple);
 	}
 	
-	public void doAction(String action) {
+	public void doAction(String action, OtpErlangList argList) {
 		OtpErlangAtom doAction = new OtpErlangAtom("do_action");
 		OtpErlangAtom actionAtom = new OtpErlangAtom(action);
-		OtpErlangList options = new OtpErlangList();
-		OtpErlangObject[] actionArray = {actionAtom, options};
+		
+		//OtpErlangList optionList = new OtpErlangList(argList);
+		/*int size = argList.length;
+		OtpErlangObject[] options = new OtpErlangObject[size];
+
+		for (int i = 0; i < size; i++) {
+			options[i] = new OtpErlangAtom(argList[i]);
+		}
+		
+		OtpErlangList optionList = new OtpErlangList(options);
+		*/
+		OtpErlangObject[] actionArray = {actionAtom, argList};
 		OtpErlangTuple actionTuple = new OtpErlangTuple(actionArray);
 		OtpErlangObject[] argArray = {doAction, actionTuple};
 		OtpErlangTuple argTuple = new OtpErlangTuple(argArray);
@@ -180,9 +190,14 @@ public class Jinterface_bank_client {
 		sendTCP(argTuple);
 		//System.out.println("Action done");
 	}
+	
+	
 	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
 	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
 	
+	/*
+	 * Gammal (fungerande) version
+	 *
 	public void getState(){
 		OtpErlangAtom getState = new OtpErlangAtom("get_state");
 		sendTCP(getState);
@@ -220,6 +235,87 @@ public class Jinterface_bank_client {
 		Game.playerNames = names;
 		Game.playerPos = players;
 	}
+	*/
+
+	public OtpErlangTuple getState(){
+		OtpErlangAtom getState = new OtpErlangAtom("get_state");
+		sendTCP(getState);
+		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
+		OtpErlangTuple state = (OtpErlangTuple) answer.elementAt(1);
+		return state;
+	}
+	
+	public void updateLevelList (OtpErlangTuple state) {
+		OtpErlangList levelList = (OtpErlangList) state.elementAt(2);
+		OtpErlangObject[] levelArray = levelList.elements();
+		int size = levelArray.length;
+		int[][] boxes = new int[size][4];
+		OtpErlangTuple box;
+		for (int i = 0; i < size; i++) {
+			try {
+				box = (OtpErlangTuple) levelArray[i];
+				boxes[i][0] = ((OtpErlangLong)((OtpErlangTuple) box.elementAt(0)).elementAt(0)).intValue();
+				boxes[i][1] = ((OtpErlangLong)((OtpErlangTuple) box.elementAt(0)).elementAt(1)).intValue();
+				boxes[i][2] = ((OtpErlangLong)((OtpErlangTuple) box.elementAt(1)).elementAt(0)).intValue();
+				boxes[i][3] = ((OtpErlangLong)((OtpErlangTuple) box.elementAt(1)).elementAt(1)).intValue();
+			} catch (OtpErlangRangeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		//System.out.println()
+		Game.boxes = boxes;
+	}
+	
+	public void updatePlayerList(OtpErlangTuple state) {
+		System.out.println("State: " + state);
+		//System.out.println(state.elementAt(0));
+		OtpErlangList playerList = (OtpErlangList) state.elementAt(0);
+		System.out.println("Player List : " + playerList);
+		OtpErlangObject[] playerArray = playerList.elements();
+		int size = playerArray.length;
+		int[][] positions= new int[size][2];
+		String[] names = new String[size];
+		
+		OtpErlangTuple player; 
+		OtpErlangTuple position; 
+		for(int i = 0; i < size; i++) {
+			player = (OtpErlangTuple) playerArray[i];
+			//System.out.println("Index : " + i);
+			//System.out.println(playerArray);
+			//System.out.println(player);
+			names[i] = ((OtpErlangString) player.elementAt(0)).toString();
+			position = (OtpErlangTuple) player.elementAt(1);
+			try {
+				positions[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
+				positions[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
+			} catch (OtpErlangRangeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		Game.playerNames = names;
+		Game.playerPos = positions;
+	}
+	
+	public void updateBulletList(OtpErlangTuple state) {
+		OtpErlangList bulletList = (OtpErlangList) state.elementAt(2);
+		OtpErlangObject[] bulletArray = bulletList.elements();
+		int size = bulletArray.length;
+		for (int i = 0; i < size; i++) {
+			//Uppdatera statisk bullet list
+			;
+		}
+	}
+
+	
+	public void updateState() {
+		OtpErlangTuple state = getState();
+		updateLevelList(state);
+		updatePlayerList(state);
+		//updateBulletList(state);
+	}
+
 	
 	//public int[] getPlayerList() {
 		

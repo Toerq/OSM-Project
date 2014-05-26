@@ -13,6 +13,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
+import com.ericsson.otp.erlang.OtpErlangAtom;
+import com.ericsson.otp.erlang.OtpErlangInt;
+import com.ericsson.otp.erlang.OtpErlangList;
+import com.ericsson.otp.erlang.OtpErlangObject;
+import com.ericsson.otp.erlang.OtpErlangTuple;
+
 /**
  * The space rocket with which player will have to land.
  * 
@@ -41,11 +47,11 @@ public class PlayerRocket {
     /**
      * Width of rocket.
      */
-    public int rocketImgWidth;
+    public static int rocketImgWidth;
     /**
      * Height of rocket.
      */
-    public int rocketImgHeight;
+    public static int rocketImgHeight;
     
     
     public PlayerRocket()
@@ -64,82 +70,107 @@ public class PlayerRocket {
        //x = pos[0];
        //y = pos[1];
     }
-    
+
     private void LoadContent()
     {
-        try
-        {
-            URL rocketImgUrl = this.getClass().getResource("resources/images/rocket.png");
-            rocketImg = ImageIO.read(rocketImgUrl);
-            rocketImgWidth = rocketImg.getWidth();
-            rocketImgHeight = rocketImg.getHeight();
-            
-        }
-        catch (IOException ex) {
-            Logger.getLogger(PlayerRocket.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    	try
+    	{
+    		URL rocketImgUrl = this.getClass().getResource("resources/images/rocket.png");
+    		rocketImg = ImageIO.read(rocketImgUrl);
+    		rocketImgWidth = rocketImg.getWidth();
+    		rocketImgHeight = rocketImg.getHeight();
+
+    	}
+    	catch (IOException ex) {
+    		Logger.getLogger(PlayerRocket.class.getName()).log(Level.SEVERE, null, ex);
+    	}
     }
-    
+
     /**
      * Here we set up the rocket when we starting a new game.
      */
-/*    public void ResetPlayer()
+    /*    public void ResetPlayer()
     {
-   
+
     }
-   */ 
-    
+     */ 
+
     /**
      * Here we move the rocket.
      */
     public void Update(Point mousePosition)
     {
-
-    	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
+    	OtpErlangList argList;
+    	/*if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
     	{
-    		System.out.println(mousePosition);
-    		Main.client.doAction("move_down");
-    		//Main.client.doAction("shoot, mousePosition")
-    		//System.out.println("Updating player rocket");
+    		fire(mousePosition);
+    		//Main.client.doAction("move_down", argList);
     	}
-    		else if(Canvas.keyboardKeyState(KeyEvent.VK_W))
-    			Main.client.doAction("move_down");
+    	*/
+    	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_W)) {
+    		argList = new OtpErlangList();
+    		Main.client.doAction("move_down", argList);
+    	}*/
+    	
+    	if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
+    		argList = new OtpErlangList(new OtpErlangAtom("left"));
+    		Main.client.doAction("move", argList);
+    	}
 
-    		else if (Canvas.keyboardKeyState(KeyEvent.VK_A))
-    			Main.client.doAction("move_left");
+    	else if (Canvas.keyboardKeyState(KeyEvent.VK_D)) {
+    		argList = new OtpErlangList(new OtpErlangAtom("right"));
+    		Main.client.doAction("move", argList);
+    	}
+    	
+    	else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
+    		argList = new OtpErlangList(new OtpErlangAtom("normal"));
+    		Main.client.doAction("jump", argList);
+    	}
+    	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_S)) {
+    		argList = new OtpErlangList();
+    		Main.client.doAction("move_up", argList);
+    	}*/
 
-    		else if (Canvas.keyboardKeyState(KeyEvent.VK_D))
-    			Main.client.doAction("move_right");
-
-    		else if(Canvas.keyboardKeyState(KeyEvent.VK_S))
-    			Main.client.doAction("move_up");
-
-    		else
-    			Main.client.doAction("stop");
-
+    	else {
+    		argList = new OtpErlangList(new OtpErlangAtom("stop"));
+    		Main.client.doAction("move", argList);
+    	}
     	try {
     		Thread.sleep(5);
     	} catch (InterruptedException e) {
     		// TODO Auto-generated catch block
     		e.printStackTrace();
     	}
-        // Updates position
-    	Main.client.getState();
+    	// Updates position
+    	//Main.client.getState();
+    	Main.client.updateState();
     	//System.out.println("Updated with new state");
     	//x = xy[0];
     	//y = xy[1];
-        
+
     }
+
+
+	private void fire(Point mousePosition) {
+		OtpErlangList argList;
+		OtpErlangInt x = new OtpErlangInt(mousePosition.x);
+		OtpErlangInt y = new OtpErlangInt(mousePosition.y);
+		OtpErlangObject[] posArray = {x, y};
+		OtpErlangTuple posTuple = new OtpErlangTuple(posArray);
+		argList = new OtpErlangList(posTuple);
+		Main.client.doAction("fire", argList);
+	}
     
     public void Draw(Graphics2D g2d)
     {
     	g2d.setColor(Color.white);
     	g2d.drawString("Rocket coordinates: " + x + " : " + y, 5, 15);
     	int[][] players = Game.playerPos;
+    	int base = Game.height - rocketImgHeight;
     	for(int i = 0; i < players.length; i++ ) {   	
     		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
-    	g2d.drawImage(rocketImg, players[i][0], players[i][1], null);
-    	g2d.drawString(Game.playerNames[i],players[i][0] , players[i][1] - 10);
+    	g2d.drawImage(rocketImg, players[i][0], base - players[i][1], null);
+    	g2d.drawString(Game.playerNames[i],players[i][0] , base - 10 -players[i][1]);
     	}
     }
     
