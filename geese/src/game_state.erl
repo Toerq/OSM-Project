@@ -48,7 +48,8 @@ state(Tick, State_sender, Db_name, State) ->
     {Server_settings, {Player_list, _Bullet_list}} = New_state,
     {_mf, _gf, _af, _bjf, _gl, _vl, Level_list} = Server_settings,
     %%    remove_server_action(Db_name),
-    State_sender ! {new_state, {Player_list, Bullet_list, Level_list}},
+    State_lists = {Player_list, Bullet_list, Level_list},
+    State_sender ! {new_state, round_state(State_lists)},
     Sleep_time = ((1000000 div Tick) - 
 		     timer:now_diff(erlang:now(), Time))div 1000,  
     if Sleep_time > 0 ->
@@ -57,6 +58,10 @@ state(Tick, State_sender, Db_name, State) ->
 	    ok %% no sleep
     end,
     state(Tick, State_sender, Db_name, New_state).
+
+round_state({Player_list, Bullet_list, Level_list}) ->
+    {round_players(Player_list), round_bullets(Bullet_list), Level_list}.
+
 
 %% @doc Will loop and update and send out its State. 
 %% state_sender will loop a given State and update it when it 
