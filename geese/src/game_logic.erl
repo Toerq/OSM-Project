@@ -94,7 +94,9 @@ move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction) ->
 	right ->
 	    Dir_vel = Move_factor;
 	left ->
-	    Dir_vel = -Move_factor
+	    Dir_vel = -Move_factor;
+	stop ->
+	    Dir_vel = 0
     end,
     {X_vel, Y_vel} = Vel,
     New_x_vel = limitor(X_vel+Dir_vel, Vel_limit, Air_friction),
