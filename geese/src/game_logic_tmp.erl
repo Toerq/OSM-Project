@@ -23,17 +23,17 @@ make_new_state() ->
       15.0, 
       {500, 500}, 
       17.0, 
-      [{{0, 0},{500, 10}}, {{0, 0},{10, 500}}, {{490, 0},{500, 500}}]}, 
+      [{{0, 0},{500, 500}}]}, 
      {[],[]}}.
 
 %% do_actions(STATE, ACTIONLIST)
-
+%% {State, Bullet_list}
 do_actions({Server_settings, Entity_lists}, Action_list) ->
     iterate_state(apply_actions(Server_settings, Entity_lists, Action_list)).
 
 apply_actions(Server_settings, Entity_lists, []) ->
     {Server_settings, Entity_lists};
-apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= server ->
+apply_actions(Server_settings, {Player_list, Bullet_list}, [{_Entity_id, Action, Var_list} | T]) when Action =:= server ->
     [Type, Argument] = Var_list,
     {New_server_settings, New_player_list, New_bullet_list} = 
 	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
@@ -201,8 +201,8 @@ settings_update([_O | OT], [N | NT], Aux) ->
     settings_update(OT, NT, [N | Aux]).
 
 
-iterate_state(State) ->
-    iterate_state_aux(State, []).
+iterate_state({Server_settings, {Player_list, Bullet_list}}) ->
+    {iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, []), Bullet_list}.
 
 iterate_state_aux({Server_settings, {[], []}}, Aux_list) ->
     {Server_settings, {Aux_list,[]}};
@@ -217,8 +217,8 @@ iterate_player(Server_settings, Player) ->
      _Gravity_factor,
      _Air_friction,
      _Base_jump_factor,
-     Grid_limit,
-     Vel_limit,
+     _Grid_limit,
+     _Vel_limit,
      Level_list} = Server_settings,
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list), 
     {Name, New_pos, New_vel, New_hp, Id}.
@@ -241,28 +241,48 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     Line = make_line(Pos, Ideal_point),
     Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
     Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
-    {Border_hit, Point, Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    {_Border_hit, Point, Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
     Short = shortest_distance(Pos, Ideal_point, Point),
     if Short =:= Ideal_point ->
             %% BRA inge krock
-            tbi;
+	    {{X_vel, Y_vel},Ideal_point, Hp};
        true ->
-            tbi
-    end,
-    
-    %% TODO placeholder %%
-    %% %%
-    if Y+Y_vel =< 0 ->
-	    New_y = 0,
-	    New_y_vel = 0;
-       true ->
-	    New_y = Y+Y_vel,
-	    New_y_vel = Y_vel
-    end,
-    %% %%
-    %% %%
-
-    {{X_vel, New_y_vel},{X+X_vel, New_y}, Hp}.
+            %% Krock, stuff
+	    case Type of 
+		hor ->
+		    %% your new pos will be Short() and you will lose your vertical vel,
+		    %% check from Short() to new pos with your remaining hor. vel
+		    {X_short, Y_short} = Short,
+		    {New_x_vel, New_y_vel} = {X-X_short, 0},
+		    Ideal_point_2 = {X_short + New_x_vel, Y_short},
+		    Line_2 = make_line(Short, Ideal_point_2),
+		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, Vertical_list, [], Dummy_value_v, Dummy_value_h),
+		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
+		    if Short_2 =:= Ideal_point_2 ->
+			    %% BRA ingen krock
+			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+		       true ->
+			    %% BRA krock!
+			    {{0, 0},Short_2, Hp}
+		    end;
+		ver ->
+		    %% your new pos will be Short() and you will lose your hor vel,
+		    %% check from Short() to new pos with your remaining ver. vel
+		    {X_short, Y_short} = Short,
+		    {New_x_vel, New_y_vel} = {0, Y-Y_short},
+		    Ideal_point_2 = {X_short, Y_short+New_y_vel},
+		    Line_2 = make_line(Short, {X_short, Y_short+New_y_vel}),
+		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, [], Horizontal_list, Dummy_value_v, Dummy_value_h),
+		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
+		    if Short_2 =:= Ideal_point_2 ->
+			    %% BRA ingen krock
+			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+		       true ->
+			    %% BRA krock!
+			    {{0, 0},Short_2, Hp}
+		    end		    
+	    end
+    end.
     
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
@@ -270,7 +290,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      _Gravity_factor,
      _Air_friction,
      _Base_jump_factor,
-     Grid_limit,
+     _Grid_limit,
      _Vel_limit,
      Level_list} = Server_settings,
     {_Entity_id, _Type, Pos, Direction} = Bullet,

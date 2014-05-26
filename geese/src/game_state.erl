@@ -44,9 +44,11 @@ state(Tick, State_sender, Db_name, State) ->
     Time = erlang:now(),
     Actions = action_db:get_actions(Db_name),
     io:format("Tick, Db name: ~w Actions: ~w ~n", [Db_name, Actions]),
-    New_state = game_logic:do_actions(State, Actions),
-    remove_server_action(Db_name),
-    State_sender ! {new_state, New_state},
+    {New_state, Bullet_list} = game_logic:do_actions(State, Actions),
+    {Server_settings, {Player_list, _Bullet_list}} = New_state,
+    {_mf, _gf, _af, _bjf, _gl, _vl, Level_list} = Server_settings,
+    %%    remove_server_action(Db_name),
+    State_sender ! {new_state, {Player_list, Bullet_list, Level_list}},
     Sleep_time = ((1000000 div Tick) - 
 		     timer:now_diff(erlang:now(), Time))div 1000,  
     if Sleep_time > 0 ->
