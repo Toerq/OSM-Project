@@ -316,7 +316,6 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 
 
 border_hit(Line, [], [], V_close, H_close) ->
-    io:format("First~n"),
     {{X0,Y0}, _Angle, _Dir} = Line,
     {V_border, V_point, ver} = V_close,
     {H_border, H_point, hor} = H_close,
@@ -327,7 +326,6 @@ border_hit(Line, [], [], V_close, H_close) ->
             H_close
     end;
 border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
-    io:format("Second~n"),
     Point = line_hit(Line, {{X_start, X_end}, Y}, hor),
     case Point of
         nope ->
@@ -343,7 +341,6 @@ border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
             end
     end;
 border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
-    io:format("Third~n"),
     Point = line_hit(Line, {X, {Y_start,Y_end}}, ver),
     case Point of
         nope ->
@@ -365,6 +362,8 @@ line_hit(Line, Border, Type) when Type =:= hor ->
     case Angle of 
         0 ->
             nope;
+	0.0 ->
+	    nope;
         _A ->
             if Angle =:= inf ->
                     case Dir of 
@@ -373,7 +372,7 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                                     nope;
                                true ->
                                     if X1 =< X0 andalso X2 >= X0 ->
-                                            {X0, Y1};
+                                            {X0, Y1-1}; %% Fraud
                                        true ->
                                             nope
                                     end
@@ -383,41 +382,45 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                                     nope;
                                true ->
                                     if X1 =< X0 andalso X2 >= X0 ->
-                                            {X0, Y1};
+                                            {X0, Y1+1}; %% Fraud
                                        true ->
                                             nope
                                     end 
                             end
                     end;	         
                true ->
-		    if Angle =:= inf ->
-			    X = X0;
-		       true ->
-			    X = (Y1 - (Y0 - (Angle*X0)))/Angle
-		    end,
-                    case Dir of 
-                        pos ->
-                            if X0 > X ->
-                                    nope;
-                               true ->
-                                    if X1 =< X andalso X2 >= X ->
-                                            {X, Y1};
-                                       true ->
-                                            nope
-                                    end
-                            end;
-                        neg ->
-                            if X0 < X ->
-                                    nope;
-                               true ->
-                                    if X1 =< X andalso X2 >= X ->
-                                            {X, Y1};
-                                       true ->
-                                            nope
-                                    end
-                            end         
-                    end	
-            end
+		    X = (Y1 - (Y0 - (Angle*X0)))/Angle,
+		    case Dir of 
+			pos ->
+			    if X0 > X ->
+				    nope;
+			       true ->
+				    if X1 =< X andalso X2 >= X ->
+					    if Angle > 0 ->
+						    {X, Y1-1}; %% Fraud
+					       true ->
+						    {X, Y1+1} %% Fraud
+					    end;
+				       true ->
+					    nope
+				    end
+			    end;
+			neg ->
+			    if X0 < X ->
+				    nope;
+			       true ->
+				    if X1 =< X andalso X2 >= X ->
+					    if Angle > 0 ->
+						    {X, Y1-1}; %% Fraud
+					       true ->
+						    {X, Y1+1} %% Fraud
+					    end;
+				       true ->
+					    nope
+				    end
+			    end         
+		    end	
+	    end
     end;
 line_hit(Line, Border, Type) when Type =:= ver ->
     {{X0,Y0}, Angle, Dir} = Line,
