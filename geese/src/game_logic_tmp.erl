@@ -436,7 +436,7 @@ line_hit(Line, Border, Type) when Type =:= ver ->
                        true ->
                             Y = Y0 + (X1 - X0) * Angle,
                             if Y1 =< Y andalso Y2 >= Y ->
-                                    {X1, Y};
+                                    {X1-1, Y}; %% Fraud
                                true ->
                                     nope
                             end 
@@ -447,7 +447,7 @@ line_hit(Line, Border, Type) when Type =:= ver ->
                        true ->
                             Y = Y0 - (X0 - X1) * Angle,
                             if Y1 =< Y andalso Y2 >= Y ->
-                                    {X1, Y};
+                                    {X1+1, Y}; %% Fraud
                                true ->
                                     nope
                             end 
