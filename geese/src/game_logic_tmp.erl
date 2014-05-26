@@ -390,7 +390,11 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                             end
                     end;	         
                true ->
-                    X = (Y1 - (Y0 - (Angle*X0)))/Angle,
+		    if Angle =:= inf ->
+			    X = X0;
+		       true ->
+			    X = (Y1 - (Y0 - (Angle*X0)))/Angle
+		    end,
                     case Dir of 
                         pos ->
                             if X0 > X ->
