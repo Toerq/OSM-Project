@@ -295,6 +295,7 @@ public class Jinterface_bank_client {
 		int[][] positions= new int[size][2];
 		String[] names = new String[size];
 		
+		int[] hp = new int[size];
 		int[] id = new int[size];
 		OtpErlangPid idTmp;
 		OtpErlangTuple player; 
@@ -308,6 +309,7 @@ public class Jinterface_bank_client {
 			position = (OtpErlangTuple) player.elementAt(1);
 			idTmp = (OtpErlangPid) player.elementAt(4);
 			try {
+				hp[i] = ((OtpErlangLong)player.elementAt(3)).intValue();
 				positions[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
 				positions[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
 				id[i] = idTmp.id();
@@ -334,6 +336,7 @@ public class Jinterface_bank_client {
 				e.printStackTrace();
 			}
 		}
+		Game.playerHp = hp;
 		Game.playerId = id;
 		Game.playerNames = names;
 		Game.playerPos = positions;

@@ -31,8 +31,8 @@ import javax.swing.table.DefaultTableModel;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
-	//static byte [] ip = {(byte) 130, (byte) 243, (byte) 201, (byte) 240};
-	static byte [] ip = {127,0,0,1};
+	static byte [] ip = {(byte) 212, (byte) 25, (byte) 144, (byte) 113};
+	//static byte [] ip = {127,0,0,1};
 	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
 	JFrame f;
 	JScrollPane table;
@@ -75,7 +75,10 @@ public class Main implements ActionListener {
 		PingButtonHandler pingHandler = new PingButtonHandler();
 		pingButton.addActionListener(pingHandler);
 
-
+		changeNameButton = new JButton("Change Player Name");
+		ChangeNameButtonHandler changeNameHandler = new ChangeNameButtonHandler();
+		changeNameButton.addActionListener(changeNameHandler);
+		
 		JPanel panel = new JPanel();
 		panel.add(addTableButton);
 
@@ -95,7 +98,8 @@ public class Main implements ActionListener {
 						.addGroup(layout.createSequentialGroup()
 								.addComponent(addTableButton)
 								.addComponent(refreshButton)
-								.addComponent(pingButton)))
+								.addComponent(pingButton)
+								.addComponent(changeNameButton)))
 
 		);
 		layout.setVerticalGroup(
@@ -105,7 +109,8 @@ public class Main implements ActionListener {
 						.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
 								.addComponent(addTableButton)
 								.addComponent(refreshButton)
-								.addComponent(pingButton))
+								.addComponent(pingButton)
+								.addComponent(changeNameButton))
 		);
 
 		return container;
@@ -141,6 +146,24 @@ public class Main implements ActionListener {
 		}
 	}
 	
+	private class ChangeNameButtonHandler implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			JTextField field1 = new JTextField("");
+			JPanel panel = new JPanel(new GridLayout(0, 1));
+			panel.add(new JLabel("Name: "));
+			panel.add(field1);
+			int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			String name = field1.getText();
+			client.setName(name);
+			playerName = name;
+			f.setTitle("GEESE " + playerName);
+			f.getContentPane().removeAll();
+			f.setContentPane(setContentPanel());
+			f.validate();
+		}
+	}
 	private class RefreshButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			f.getContentPane().removeAll();

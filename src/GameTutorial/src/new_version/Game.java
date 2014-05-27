@@ -28,6 +28,7 @@ public class Game {
 	public static int[][] playerPos;
 	public static int[] playerId;
 	public static int[] playerVel;
+	public static int[] playerHp;
 	
 	public static Hashtable <Integer, BufferedImage[]> images = new Hashtable <Integer, BufferedImage[]>();
 	

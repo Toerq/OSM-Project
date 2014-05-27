@@ -162,18 +162,18 @@ public class PlayerRocket {
     public void Update(Point mousePosition)
     {
     	OtpErlangList argList;
-    	/*if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
+    	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
     	{
     		fire(mousePosition);
     		//Main.client.doAction("move_down", argList);
-    	}*/
+    	}
 
     	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_W)) {
     		argList = new OtpErlangList();
     		Main.client.doAction("move_down", argList);
     	}*/
 
-    		if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
+    	else if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
     		argList = new OtpErlangList(new OtpErlangAtom("left"));
     		Main.client.doAction("move", argList);
     	}
@@ -214,11 +214,13 @@ public class PlayerRocket {
 
 	private void fire(Point mousePosition) {
 		OtpErlangList argList;
+		OtpErlangInt type = new OtpErlangInt(25);
 		OtpErlangInt x = new OtpErlangInt(mousePosition.x);
-		OtpErlangInt y = new OtpErlangInt(mousePosition.y);
-		OtpErlangObject[] posArray = {x, y};
+		OtpErlangInt y = new OtpErlangInt(Game.height - mousePosition.y);
+		OtpErlangObject[] posArray = {x,  y};
 		OtpErlangTuple posTuple = new OtpErlangTuple(posArray);
-		argList = new OtpErlangList(posTuple);
+		OtpErlangObject[] argArray = {type, posTuple};
+		argList = new OtpErlangList(argArray);
 		Main.client.doAction("fire", argList);
 		
 	}
@@ -232,8 +234,8 @@ public class PlayerRocket {
     	for(int i = 0; i < players.length; i++ ) {   	
     		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
     		//g2d.drawImage(playerImgLeft[i], players[i][0], base - players[i][1], null);
-    		g2d.drawImage(Game.images.get(Game.playerId[i])[0], players[i][0], base - players[i][1], null);
-    		g2d.drawString(Game.playerNames[i],players[i][0] , base - 10 -players[i][1]);
+    		g2d.drawImage(Game.images.get(Game.playerId[i])[0], players[i][0] - 18, base - players[i][1], null);
+    		g2d.drawString(Game.playerNames[i] + " " + Game.playerHp[i], players[i][0] , base - 10 -players[i][1]);
     		g2d.drawLine(10, 10, 100, 100);
     	}
     }
