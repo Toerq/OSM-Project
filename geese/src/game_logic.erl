@@ -4,7 +4,15 @@
 
 -define(PLAYERHEIGHT, 70).
 -define(PLAYERWIDTH, 26).
+-define(PLAYERLEGSHEIGHT, 24).
+-define(PLAYERBODYHEIGHT, 26).
+-define(PLAYERHEADHEIGHT, 20).
+-define(PLAYERMIDDLEX, 15).
+-define(PLAYERMIDDLEY, 40).
 
+-define(DAMAGELEGS, 1).
+-define(DAMAGEBODY, 2).
+-define(DAMAGEHEAD, 4).
 
 %% STATE {SERVERSETTINGS, ENTITYLIST}
 %% SERVERSETINGS:
@@ -249,7 +257,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     Line = make_line(Pos, Ideal_point),
     Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
     Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
-    {_Border_hit, Point, Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    {_Border_hit, Point, Type} = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
     Short = shortest_distance(Pos, Ideal_point, Point),
     if Short =:= Ideal_point ->
             %% BRA inge krock
@@ -306,22 +314,119 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      _Grid_limit,
      _Vel_limit,
      Level_list} = Server_settings,
-    {_Entity_id, _Type, Pos, Direction} = Bullet,
-    Line = make_line(Pos, Direction),
+    {Entity_id, Type, Direction} = Bullet,
+    {Player, Rest_list} = get_player(Player_list, Entity_id, []),
+    {_Name, {X,Y}, _Vel, _Hp, _Id} = Player,
+    {X_m, Y_m} = {X+ ?PLAYERMIDDLEX ,Y+ ?PLAYERMIDDLEY},
+    Line = make_line({X_m, Y_m}, Direction),
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
     Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
     {_Border_hit, Point}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    {V_hit_box_list, H_hit_box_list} = get_hit_boxes(Rest_list, {[],[]}),
+    Hit = player_hit(Line, V_hit_box_list, H_hit_box_list, dummy, dummy),
     %% TODO %%
-    %% From Line to Point damage the first player %%
-    %% %%
-    Player_list.
+    %% * recoil
+    %% * return the bullet {owner, origin, destination} 
+    if Hit =:= dummy ->
+       %% no hit, only fire recoil
+       tbi,
+       Player_list;
+       true ->
+	    %%hit! fire recoil, hit recoil and damage!
+	    {Player_id, Point, Damage} = Hit,
+	    tbi,
+	    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
+	    {Name, Pos, Vel, Hp, Id} = Hit_player,
+	    [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_2]
+    end.
+
+
+get_player([], _Id, _Aux) ->
+    io:format("ERROR NO PLAYER FOR BULLET!!!~n"),
+    error_no_such_player; %% Error
+get_player([{Name, Pos, Vel, Hp, Id} | P_list], E_id, Aux) when E_id =:= Id ->
+    {{Name, Pos, Vel, Hp, Id}, lists:append([P_list, Aux])};
+get_player([P | P_list], Id, Aux) ->
+    get_player(P_list, Id, [P | Aux]).
+
+
+get_hit_boxes([], Aux) ->
+    Aux;
+get_hit_boxes([P | P_list], {V_aux, H_aux}) ->
+    {_Name, {X, Y}, _Vel, _Hp, Id} = P,
+    Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+    Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+    Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+    Right_body = {X+ ?PLAYERWIDTH,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+    Left_legs = {X ,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+    Right_legs = {X+ ?PLAYERWIDTH,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+    Bot_body = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERLEGSHEIGHT, Id, ?DAMAGEBODY},
+    Top_head = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERHEIGHT, Id, ?DAMAGEHEAD},
+    get_hit_boxes(P_list, {[Left_head|[Left_body|[Left_legs|[Right_head|[Right_body|[Right_legs|V_aux]]]]]], [Top_head|[Bot_body|H_aux]]}).
+
+player_hit(Line, [], [], V_close, H_close) ->
+    if V_close =:= dummy ->
+	    H_close;
+       true ->
+	    if H_close =:= dummy ->
+		    V_close;
+	       true ->
+		    {{X0,Y0}, _Angle, _Dir} = Line,
+		    {_P1_id, Point_1, _Damage_1} = V_close,
+		    {_P2_id, Point_2, _Damage_2} = H_close,
+		    Short = shortest_distance({X0,Y0}, Point_1, Point_2),
+		    if Short =:= Point_1 ->
+			    V_close;
+		       true ->
+			    H_close
+		    end
+	    end
+    end;
+player_hit(Line, [], [{{X_start, X_end}, Y, Id, Damage} | H_list], V_close, H_close) ->
+    Point = line_hit(Line, {{X_start, X_end}, Y}, hor, 0),
+    case Point of 
+	nope ->
+	    player_hit(Line, [], H_list, V_close, H_close);
+	_Point ->
+	    if H_close =:= dummy ->
+		    player_hit(Line, [], H_list, V_close, {Id, Point, Damage});
+	       true ->
+		    {{X0,Y0}, _Angle, _Dir} = Line,
+		    {_P2_id, Point_2, _Damage_2} = H_close,
+		    Short = shortest_distance({X0, Y0}, Point, Point_2),
+		    if Short =:= Point ->
+			    player_hit(Line, [], H_list, V_close, {Id, Point, Damage});
+		       true ->
+			    player_hit(Line, [], H_list, V_close, H_close)
+		    end
+	    end
+    end;
+player_hit(Line, [{X, {Y_start, Y_end}, Id, Damage} | V_list], H_list, V_close, H_close) ->
+    Point = line_hit(Line, {X, {Y_start, Y_end}}, ver, 0),
+    case Point of 
+	nope ->
+	    player_hit(Line, V_list, H_list, V_close, H_close);
+	_Point ->
+	    if V_close =:= dummy ->
+		    player_hit(Line, V_list, H_list, {Id, Point, Damage}, H_close);
+	       true ->
+		    {{X0,Y0}, _Angle, _Dir} = Line,
+		    {_P1_id, Point_1, _Damage_1} = V_close,
+		    Short = shortest_distance({X0, Y0}, Point, Point_1),
+		    if Short =:= Point ->
+			    player_hit(Line, V_list, H_list, {Id, Point, Damage}, H_close);
+		       true ->
+			    player_hit(Line, V_list, H_list, V_close, H_close)
+		    end
+	    end
+    end.
 
 
 border_hit(Line, [], [], V_close, H_close) ->
     {{X0,Y0}, _Angle, _Dir} = Line,
-    {V_border, V_point, ver} = V_close,
-    {H_border, H_point, hor} = H_close,
+    {_V_border, V_point, ver} = V_close,
+    {_H_border, H_point, hor} = H_close,
     Short = shortest_distance({X0,Y0}, V_point, H_point),
     if Short =:= V_point ->
             V_close;
@@ -329,13 +434,13 @@ border_hit(Line, [], [], V_close, H_close) ->
             H_close
     end;
 border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
-    Point = line_hit(Line, {{X_start, X_end}, Y}, hor),
+    Point = line_hit(Line, {{X_start, X_end}, Y}, hor, 1),
     case Point of
         nope ->
             border_hit(Line, [], H_list, V_close, H_close);
         _Point ->
             {{X0,Y0}, _Angle, _Dir} = Line,
-            {H_border, H_point, hor} = H_close,
+            {_H_border, H_point, hor} = H_close,
             Short = shortest_distance({X0, Y0}, Point, H_point),
             if Short =:= Point ->
                     border_hit(Line, [], H_list, V_close, {{{X_start,X_end},Y}, Short, hor});
@@ -344,13 +449,13 @@ border_hit(Line, [], [{{X_start, X_end}, Y} | H_list], V_close, H_close) ->
             end
     end;
 border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
-    Point = line_hit(Line, {X, {Y_start,Y_end}}, ver),
+    Point = line_hit(Line, {X, {Y_start,Y_end}}, ver, 1),
     case Point of
         nope ->
             border_hit(Line, V_list, H_list, V_close, H_close);
         _Point ->
             {{X0,Y0}, _Angle, _Dir} = Line,
-            {V_border, V_point, ver} = V_close,
+            {_V_border, V_point, ver} = V_close,
             Short = shortest_distance({X0, Y0}, Point, V_point),
             if Short =:= Point ->
                     border_hit(Line, V_list, H_list, {{X,{Y_start,Y_end}}, Point, ver}, H_close);
@@ -359,7 +464,7 @@ border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
             end
     end.
 
-line_hit(Line, Border, Type) when Type =:= hor ->
+line_hit(Line, Border, Type, Pad) when Type =:= hor ->
     {{X0,Y0}, Angle, Dir} = Line,
     {{X1,X2}, Y1} = Border,
     case Angle of 
@@ -375,7 +480,7 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                                     nope;
                                true ->
                                     if X1 =< X0 andalso X2 >= X0 ->
-                                            {X0, Y1-1}; %% Fraud
+                                            {X0, Y1-Pad}; %% Fraud
                                        true ->
                                             nope
                                     end
@@ -385,7 +490,7 @@ line_hit(Line, Border, Type) when Type =:= hor ->
                                     nope;
                                true ->
                                     if X1 =< X0 andalso X2 >= X0 ->
-                                            {X0, Y1+1}; %% Fraud
+                                            {X0, Y1+Pad}; %% Fraud
                                        true ->
                                             nope
                                     end 
@@ -400,9 +505,9 @@ line_hit(Line, Border, Type) when Type =:= hor ->
 			       true ->
 				    if X1 =< X andalso X2 >= X ->
 					    if Angle > 0 ->
-						    {X, Y1-1}; %% Fraud
+						    {X, Y1-Pad}; %% Fraud
 					       true ->
-						    {X, Y1+1} %% Fraud
+						    {X, Y1+Pad} %% Fraud
 					    end;
 				       true ->
 					    nope
@@ -414,9 +519,9 @@ line_hit(Line, Border, Type) when Type =:= hor ->
 			       true ->
 				    if X1 =< X andalso X2 >= X ->
 					    if Angle > 0 ->
-						    {X, Y1+1}; %% Fraud
+						    {X, Y1+Pad}; %% Fraud
 					       true ->
-						    {X, Y1-1} %% Fraud
+						    {X, Y1-Pad} %% Fraud
 					    end;
 				       true ->
 					    nope
@@ -425,7 +530,7 @@ line_hit(Line, Border, Type) when Type =:= hor ->
 		    end	
 	    end
     end;
-line_hit(Line, Border, Type) when Type =:= ver ->
+line_hit(Line, Border, Type,Pad) when Type =:= ver ->
     {{X0,Y0}, Angle, Dir} = Line,
     {X1, {Y1, Y2}} = Border,
     case Angle of 
@@ -439,7 +544,7 @@ line_hit(Line, Border, Type) when Type =:= ver ->
                        true ->
                             Y = Y0 + (X1 - X0) * Angle,
                             if Y1 =< Y andalso Y2 >= Y ->
-                                    {X1-1, Y}; %% Fraud
+                                    {X1-Pad, Y}; %% Fraud
                                true ->
                                     nope
                             end 
@@ -450,7 +555,7 @@ line_hit(Line, Border, Type) when Type =:= ver ->
                        true ->
                             Y = Y0 - (X0 - X1) * Angle,
                             if Y1 =< Y andalso Y2 >= Y ->
-                                    {X1+1, Y}; %% Fraud
+                                    {X1+Pad, Y}; %% Fraud
                                true ->
                                     nope
                             end 
