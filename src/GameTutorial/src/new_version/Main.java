@@ -31,6 +31,7 @@ import javax.swing.table.DefaultTableModel;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
+	//static byte [] ip = {(byte) 130, (byte) 243, (byte) 201, (byte) 240};
 	static byte [] ip = {127,0,0,1};
 	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
 	JFrame f;
@@ -43,6 +44,7 @@ public class Main implements ActionListener {
 
 	Main(String name) {
 		playerName = name;
+		client.setName(playerName);
 		f = new JFrame("GEESE - " + name);
 		f.setSize(800, 600);
 		f.setLocationRelativeTo(null);
@@ -152,7 +154,7 @@ public class Main implements ActionListener {
 			long time = System.currentTimeMillis();
 			client.ping();
 			long diff = System.currentTimeMillis() - time;
-			pingButton.setLabel("Ping: " + diff + " ms");
+			pingButton.setText("Ping: " + diff + " ms");
 		}
 	}
 	

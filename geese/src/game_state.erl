@@ -44,9 +44,12 @@ state(Tick, State_sender, Db_name, State) ->
     Time = erlang:now(),
     Actions = action_db:get_actions(Db_name),
     io:format("Tick, Db name: ~w Actions: ~w ~n", [Db_name, Actions]),
-    New_state = game_logic:do_actions(State, Actions),
-    remove_server_action(Db_name),
-    State_sender ! {new_state, New_state},
+    {New_state, Bullet_list} = game_logic:do_actions(State, Actions),
+    {Server_settings, {Player_list, _Bullet_list}} = New_state,
+    {_mf, _gf, _af, _bjf, _gl, _vl, Level_list} = Server_settings,
+    %%    remove_server_action(Db_name),
+    State_lists = {Player_list, Bullet_list, Level_list},
+    State_sender ! {new_state, round_state(State_lists)},
     Sleep_time = ((1000000 div Tick) - 
 		     timer:now_diff(erlang:now(), Time))div 1000,  
     if Sleep_time > 0 ->
@@ -55,6 +58,20 @@ state(Tick, State_sender, Db_name, State) ->
 	    ok %% no sleep
     end,
     state(Tick, State_sender, Db_name, New_state).
+
+round_state({Player_list, Bullet_list, Level_list}) ->
+    {round_players(Player_list,[]), round_bullets(Bullet_list, []), Level_list}.
+
+round_players([], Aux) ->
+    Aux;
+round_players([P | Player_list], Aux) ->
+    {Name, {X, Y}, Vel, Hp, E_id} = P,
+    round_players(Player_list, [{Name, {round(X), round(Y)}, Vel, Hp, E_id} | Aux]).
+
+round_bullets([], Aux) ->
+    Aux;
+round_bullets([B | Bullet_list], Aux) ->
+    tbi.
 
 %% @doc Will loop and update and send out its State. 
 %% state_sender will loop a given State and update it when it 

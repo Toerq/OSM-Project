@@ -21,8 +21,10 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
-   
-	public static int[][] players;
+	public static int height = 500;
+	public static int[][] boxes;
+	public static String[] playerNames;
+	public static int[][] playerPos;
 	
 	private PlayerRocket playerRocket;
     
@@ -74,6 +76,7 @@ public class Game {
     	playerRocket = new PlayerRocket();
     	System.out.println("Creating Landing Area...");
         landingArea  = new LandingArea();
+        Main.client.updateState();
     }
     
     /**
@@ -83,10 +86,10 @@ public class Game {
     {
         try
         {
-            URL backgroundImgUrl = this.getClass().getResource("/moon_lander/resources/images/background.jpg");
+            URL backgroundImgUrl = this.getClass().getResource("resources/images/background.jpg");
             backgroundImg = ImageIO.read(backgroundImgUrl);
             
-            URL redBorderImgUrl = this.getClass().getResource("/moon_lander/resources/images/red_border.png");
+            URL redBorderImgUrl = this.getClass().getResource("resources/images/red_border.png");
             redBorderImg = ImageIO.read(redBorderImgUrl);
         }
         catch (IOException ex) {
@@ -114,7 +117,7 @@ public class Game {
     {
         // Move the rocket
     	//System.out.println("Updating game");
-        playerRocket.Update();
+        playerRocket.Update(mousePosition);
         //System.out.println("Player rocket updated");
     }
     
@@ -126,10 +129,26 @@ public class Game {
      */
     public void Draw(Graphics2D g2d, Point mousePosition)
     {
-        g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
-        
-        landingArea.Draw(g2d);
-        
+      //  g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
+        //landingArea.Draw(g2d);
+        int x0, x1, y0, y1;
+        g2d.setColor(new Color(250,0,28));
+        for (int i = 0; i < boxes.length; i++){
+        	//g2d.drawRect(20,50, 100, 100);
+        	//g2d.drawRect(100,200, 100, 100);
+        	x0 = boxes[i][0];
+        	y0 = boxes[i][1];
+        	x1 = boxes[i][2];
+        	y1 = boxes[i][3];
+        	g2d.drawRect(100,200, 10, 30);
+        	System.out.println("x0: " + x0 + ", y0: " + y0 + ", x:1 " + x1 + ", y1 :" + y1);
+        	int R = (int) (Math.random() * (255));
+        	int G = (int) (Math.random() * (255));
+        	int B = (int) (Math.random() * (255));
+
+        	g2d.setColor(new Color(R,G,B));
+        	g2d.drawRect(x0, 500 - y1, x1 - x0, y1 - y0);
+        }
         playerRocket.Draw(g2d);
     }
     
