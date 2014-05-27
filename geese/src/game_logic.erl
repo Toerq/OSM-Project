@@ -322,7 +322,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
     Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
-    {_Border_hit, Border_point}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    {_Border_hit, Border_point, _Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
     {V_hit_box_list, H_hit_box_list} = get_hit_boxes(Rest_list, {[],[]}),
     Hit = player_hit(Line, V_hit_box_list, H_hit_box_list, dummy, dummy),
     %% TODO %%
@@ -333,9 +333,13 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 	    %% no player hit, only fire recoil
 	    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
 	    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
+	    io:format("NO HIT!!!"),
+	    %% no hit, only fire recoil
 	    Border_point,
 	    [{Name_2, Pos_2, {X_f - Air_friction , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2];
        true ->
+	    io:format("Good! HIT!!!"),
+	    %%hit! fire recoil, hit recoil and damage!
 	    {Player_id, Point, Damage} = Hit,
 	    Short = shortest_distance({X_m, Y_m}, Border_point, Point),
 	    if Short =:= Point ->
