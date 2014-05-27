@@ -47,8 +47,8 @@ apply_actions(Server_settings, {Player_list, Bullet_list}, [{_Entity_id, Action,
 	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
     apply_actions(New_server_settings, {New_player_list, New_bullet_list}, T);
 apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= fire ->
-    [Type, Direction, Pos] = Var_list,
-    New_bullet_list = [{Entity_id, Type, Pos, Direction} | Bullet_list],
+    [Type, Direction] = Var_list,
+    New_bullet_list = [{Entity_id, Type, Direction} | Bullet_list],
     apply_actions(Server_settings, {Player_list, New_bullet_list}, T);
 apply_actions(Server_settings, {Player_list, Bullet_list}, [A | T]) ->
     apply_actions(Server_settings, 
