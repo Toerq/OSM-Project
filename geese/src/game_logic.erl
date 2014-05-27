@@ -312,7 +312,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      Air_friction,
      _Base_jump_factor,
      _Grid_limit,
-     _Vel_limit,
+     Vel_limit,
      Level_list} = Server_settings,
     {Entity_id, Type, Direction} = Bullet,
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
@@ -336,7 +336,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 	    io:format("NO HIT!!!"),
 	    %% no hit, only fire recoil
 	    Border_point,
-	    [{Name_2, Pos_2, {X_f - Air_friction , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2];
+	    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2];
        true ->
 	    io:format("Good! HIT!!!"),
 	    %%hit! fire recoil, hit recoil and damage!
@@ -348,13 +348,14 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 		    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
 		    {Name, Pos, Vel, Hp, Id} = Hit_player,
 		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
-		    [{Name_2, Pos_2, {X_f - Air_friction,Y_f - Gravity_factor}, Hp_2, Id_2}|[{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]];
+		    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Id_2} 
+		     | [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]];
 	       true ->
 		    %% wall hit first, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
 		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
 		    Border_point,
-		    [{Name_2, Pos_2, {X_f - Air_friction , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2]
+		    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2]
 	    end
     end.
 
