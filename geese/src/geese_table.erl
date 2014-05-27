@@ -10,7 +10,9 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, checkout/2]).
+
+-compile(export_all).
+-export([start_link/1, start_link/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -32,18 +34,30 @@
 -define(SERVER, ?MODULE).
 -define(TICKRATE, 32).
 
-start_link() ->
-  gen_server:start_link(?MODULE, [], []).
+%% @doc Initiates a game table with the maximum amount of allowed players Max_players.
 
-checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
+%%TODO: Fixa -ifdef(debug)
+start_link(Max_players, debug) ->
+       gen_server:start_link({local, ?SERVER}, ?MODULE, [Max_players], []).
+    
+start_link(Max_players) ->
+    gen_server:start(?MODULE, [Max_players], []).
 
-init([]) ->
+%%TODO: fixa ifdef(debug)
+get_state() -> gen_server:call(?MODULE, get_state).
+get_players() -> gen_server:call(?MODULE, get_players).
+join_table(Pid, Player_name, Socket) -> gen_server:call(?MODULE, {join_table, Pid, Player_name, Socket}).
+remove_player(Pid) -> gen_server:call(?MODULE, {remove_player, Pid}).
+
+
+
+init([Max_players]) ->
     State_sender = spawn(fun() -> game_state:state_sender(game_logic:make_new_state()) end),
     %%Db_name = list_to_atom(erlang:ref_to_list(make_ref())),
     Db_name = action,
     Tick = ?TICKRATE,
     game_state:start(Db_name, State_sender, Tick),
-    {ok, #table_state{number_of_players = 0, max_players = 20, state_sender = State_sender, db_name = Db_name, players = []}}.
+    {ok, #table_state{number_of_players = 0, max_players = Max_players, state_sender = State_sender, db_name = Db_name, players = []}}.
 
 
 handle_call(get_state, _From, State) ->
@@ -52,18 +66,21 @@ handle_call(get_state, _From, State) ->
 	     State#table_state.max_players},
 	     State};
 
-handle_call({check_player, Player_pid}, _From, State) ->
-    Players = State#table_state.players,
-    case lists:keyfind(Player_pid, 1, Players) of
-	false ->
-	    {reply, player_not_in_table, State};
-	_E ->
-	    {reply, player_already_in_table, State}
-    end;
+%% Används inte
+%%handle_call({check_player, Player_pid}, _From, State) ->
+%%    Players = State#table_state.players,
+%%    case lists:keyfind(Player_pid, 1, Players) of
+%%	false ->
+%%	    {reply, player_not_in_table, State};
+%%	_E ->
+%%	    {reply, player_already_in_table, State}
+%%    end;
 
+%% @doc Returns all players in table with a list of tuples on the form: [{Pid0, Player_name0}, ..., {PidN, Player_nameN}
 handle_call(get_players, _From, State) ->
     {reply, State#table_state.players, State};
 
+%% @doc Returns a tuple which consists of the number of players in the table, the number of max allowed players and the number of available slots.
 handle_call(available_slots, _From, State) ->
     Number_of_players = State#table_state.number_of_players,    
     Max_players = State#table_state.max_players,
@@ -73,6 +90,8 @@ handle_call(available_slots, _From, State) ->
 handle_call(db_name, _From, State) ->
     {reply, State#table_state.db_name, State};
 
+%%Bör byta namn till add_player
+%% @doc Adds a new player to the table if Max players > Number of players
 handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
     Number_of_players = State#table_state.number_of_players,
     Max_players = State#table_state.max_players,
@@ -80,24 +99,19 @@ handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
 	    Players = State#table_state.players,
 	    case lists:keyfind(Pid, 1, Players) of
 		false ->
-	    New_number_of_players = Number_of_players + 1,
-	    
-	    NewState = State#table_state{players = [{Pid, Player_name} | Players], number_of_players = New_number_of_players},
+		    New_number_of_players = Number_of_players + 1,
+
+		    NewState = State#table_state{players = [{Pid, Player_name} | Players], number_of_players = New_number_of_players},
 		    State_sender = State#table_state.state_sender,
 		    Db_name = State#table_state.db_name,
 		    Return_tuple = {self(), State_sender, Db_name},
 
-	    {reply, Return_tuple, NewState};
+		    {reply, Return_tuple, NewState};
 	    	_E ->
 	    	    {reply, join_failed, State}
 	    end;
-       	    %Db_name = State#table_state.db_name,
-            %register_action(Db_name, %% ADD_PLAYER %%),
-	    
-	    
-	    %Players = State#table_state.players,
-	    
-       true -> 
+       true ->
+%%	    io:format("~ntoo many players, max_players: ~p, nmbr_of_players: ~p~n", [Max_players, Number_of_players]),
 	    {reply, join_failed, State}
     end;
 
@@ -122,22 +136,9 @@ handle_cast(exit, State) ->
 handle_cast(_Msg, State) ->
   {noreply, State}.
 
-%%--------------------------------------------------------------------
-%% Function: handle_info(Info, State) -> {noreply, State} |
-%%                                       {noreply, State, Timeout} |
-%%                                       {stop, Reason, State}
-%% Description: Handling all non call/cast messages
-%%--------------------------------------------------------------------
 handle_info(_Info, State) ->
   {noreply, State}.
 
-%%--------------------------------------------------------------------
-%% Function: terminate(Reason, State) -> void()
-%% Description: This function is called by a gen_server when it is about to
-%% terminate. It should be the opposite of Module:init/1 and do any necessary
-%% cleaning up. When it returns, the gen_server terminates with Reason.
-%% The return value is ignored.
-%%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
   ok.
 
