@@ -270,7 +270,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    %% your new pos will be Short() and you will lose your vertical vel,
 		    %% check from Short() to new pos with your remaining hor. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {X_vel - (X_short-X), 0},
+		    {New_x_vel, New_y_vel} = {X_vel - (X_short-X), 0.0},
 		    Ideal_point_2 = {X_short + New_x_vel, Y_short},
 		    Line_2 = make_line(Short, Ideal_point_2),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, Vertical_list, [], Dummy_value_v, Dummy_value_h),
@@ -282,13 +282,13 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall3: Hor. Krock sen Ver. krock"),
-			    {{0, 0},Short_2, Hp}
+			    {{0.0, 0.0},Short_2, Hp}
 		    end;
 		ver ->
 		    %% your new pos will be Short() and you will lose your hor vel,
 		    %% check from Short() to new pos with your remaining ver. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {0, Y_vel - (Y_short-Y)},
+		    {New_x_vel, New_y_vel} = {0.0, Y_vel - (Y_short-Y)},
 		    Ideal_point_2 = {X_short, Y_short+New_y_vel},
 		    Line_2 = make_line(Short, {X_short, Y_short+New_y_vel}),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, [], Horizontal_list, Dummy_value_v, Dummy_value_h),
@@ -300,7 +300,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall5: Verr. Krock sen Hor. krock"),
-			    {{0, 0},Short_2, Hp}
+			    {{0.0, 0.0},Short_2, Hp}
 		    end		    
 	    end
     end.
