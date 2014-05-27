@@ -1,29 +1,17 @@
-%%%-------------------------------------------------------------------
-%%% File    : eb_server.erl
-%%% Author  : Mitchell Hashimoto <mitchell.hashimoto@gmail.com>
-%%% Description : The ErlyBank account server.
-%%%
-%%% Created :  5 Sep 2008 by Mitchell Hashimoto <mitchell.hashimoto@gmail.com>
-%%%-------------------------------------------------------------------
 -module(geese_coordinator).
 
 -behaviour(gen_server).
 
-%% API
 -compile(export_all).
--export([start_link/0, checkout/2]).
+-export([start_link/0]).
 
-
-%% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3, test/0]).
 
 -record(coordinator_state,
-	{%% player = {Pid, Name, Socket}
+	{
 	  players = [],
 	  test_table,
-	  %%tables = [{table_ref, table_name, game_type, connected_players, max_players}
-						%	 tables = [],
 	  tables,
 	  test}
        ).
@@ -32,14 +20,15 @@
 
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
-checkout(Who, Book) -> gen_server:call(?MODULE, {checkout, Who, Book}).	
+
 join_lobby(Pid, Name, Socket) -> gen_server:call(?MODULE, {join_lobby, Pid, Name, Socket}).
 browse_tables() -> gen_server:call(?MODULE, browse_tables).
 join_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_id, Table_ref}).
 add_table(Name, Game_type, Max_players) -> gen_server:cast(?MODULE, {add_table, Name, Game_type, Max_players}).
 browse_players() -> gen_server:call(?MODULE, browse_players_on_server).
+get_state() -> gen_server:call(?MODULE, get_state).
 remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_from_table, Player_id}).
-    
+remove_table(Table_pid) -> gen_server:call(?MODULE, {remove_table, Table_pid}).
 
 init([]) ->
     case geese_coordinator_backup:get_state() of
@@ -48,7 +37,7 @@ init([]) ->
 	State -> 
 	    io:format("~nRestarting coordinator with state~p~n", [State]),
 	    {ok, State}
-    end.
+   end.
 	    
 
 back_up(State) ->
@@ -174,7 +163,10 @@ handle_call({join_lobby, Pid, Name, Socket}, _From, State) ->
 	    io:format("~nPlayer already exists!"),
 	    {reply, player_already_exists, State}
 
-    end.
+    end;
+
+handle_call(get_state, _From, State) ->
+    {reply, State, State}.
 
 
 test() ->
@@ -182,7 +174,14 @@ test() ->
 
 %%tables = [{table_pid, table_name, game_type, connected_players, max_players}
 handle_cast({add_table, Name, Game_type, Max_players}, State) ->
-    {ok, Table_pid} = geese_table:start_link(),
+ %%   case geese_table:start_link(Max_players) of
+%%	{ok, Table_pid} ->
+%%	    ok;
+%%	Ja ->
+%%	    io:format("~nqwert~p~n", [Ja]),
+%%	     Table_pid = asd
+%%end,
+{ok, Table_pid} = geese_table:start_link(Max_players),
     io:format("~ntable pid from add_table: ~p~n", [Table_pid]),
     {Players, Nmbr, Maxplyrs} = gen_server:call(Table_pid, get_state),
     io:format("~nPlayers: ~p, NmbrOfPlayers: ~p, Maxplayers: ~p~n", [Players, Nmbr, Maxplyrs]),
