@@ -322,16 +322,18 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
     Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
-    {_Border_hit, Point}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+    {_Border_hit, Border_point}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
     {V_hit_box_list, H_hit_box_list} = get_hit_boxes(Rest_list, {[],[]}),
     Hit = player_hit(Line, V_hit_box_list, H_hit_box_list, dummy, dummy),
     %% TODO %%
+    %% * hit border or player?
     %% * recoil
     %% * return the bullet {owner, origin, destination} 
     if Hit =:= dummy ->
-       %% no hit, only fire recoil
-       tbi,
-       Player_list;
+	    %% no hit, only fire recoil
+	    tbi,
+	    Border_point,
+	    Player_list;
        true ->
 	    %%hit! fire recoil, hit recoil and damage!
 	    {Player_id, Point, Damage} = Hit,
