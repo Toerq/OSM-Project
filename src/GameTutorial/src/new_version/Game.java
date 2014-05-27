@@ -140,6 +140,7 @@ public class Game {
         	y0 = boxes[i][1];
         	x1 = boxes[i][2];
         	y1 = boxes[i][3];
+        	g2d.drawRect(100,200, 10, 30);
         	System.out.println("x0: " + x0 + ", y0: " + y0 + ", x:1 " + x1 + ", y1 :" + y1);
         	int R = (int) (Math.random() * (255));
         	int G = (int) (Math.random() * (255));

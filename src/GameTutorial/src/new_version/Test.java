@@ -1,8 +1,7 @@
 package new_version;
 
 import com.ericsson.otp.erlang.OtpErlangAtom;
-import com.ericsson.otp.erlang.OtpErlangObject;
-import com.ericsson.otp.erlang.OtpErlangTuple;
+
 
 public class Test {
 	
