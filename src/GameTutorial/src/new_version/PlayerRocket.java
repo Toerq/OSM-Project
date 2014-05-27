@@ -2,6 +2,9 @@ package new_version;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -41,17 +44,19 @@ public class PlayerRocket {
     /**
      * Image of the rocket in air.
      */
-    private BufferedImage rocketImg;
+    private BufferedImage player;
+    public static BufferedImage[] playerImgRight;
+    public static BufferedImage[] playerImgLeft;
   
     
     /**
      * Width of rocket.
      */
-    public static int rocketImgWidth;
+    public static int playerImgWidth;
     /**
      * Height of rocket.
      */
-    public static int rocketImgHeight;
+    public static int playerImgHeight;
     
     
     public PlayerRocket()
@@ -71,14 +76,70 @@ public class PlayerRocket {
        //y = pos[1];
     }
 
+    private BufferedImage toCompatibleImage(BufferedImage image)
+    {
+    	//Get current GraphicsConfiguration
+        GraphicsConfiguration gfx_config
+                = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getDefaultScreenDevice()
+                .getDefaultConfiguration();
+
+        /*
+         * if image is already compatible and optimized for current system
+         * settings, simply return it
+         */
+        if (image.getColorModel().equals(gfx_config.getColorModel()))
+        {
+            image.setAccelerationPriority(1.0f);
+            return image;
+        }
+
+        // image is not optimized, so create a new image that is
+        BufferedImage new_image = gfx_config.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
+
+        // get the graphics context of the new image to draw the old image on
+        Graphics2D g2d = (Graphics2D) new_image.getGraphics();
+
+        // actually draw the image and dispose of context no longer needed
+        g2d.drawImage(image, 0, 0, null);
+        g2d.dispose();
+
+        new_image.setAccelerationPriority(1.0f);
+
+        // return the new optimized image
+        return new_image;
+    }
+    
     private void LoadContent()
     {
+    	/*GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice device = env.getDefaultScreenDevice();
+        GraphicsConfiguration config = device.getDefaultConfiguration();
+        //BufferedImage buffy = config.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
+    	*/
+    	playerImgLeft = new BufferedImage[6];
+    	playerImgRight = new BufferedImage[6];
+    	BufferedImage[] tmp = new BufferedImage[6];
     	try
     	{
-    		URL rocketImgUrl = this.getClass().getResource("resources/images/rocket.png");
-    		rocketImg = ImageIO.read(rocketImgUrl);
-    		rocketImgWidth = rocketImg.getWidth();
-    		rocketImgHeight = rocketImg.getHeight();
+    		//URL playerUrl= this.getClass().getResource("resources/images/player.png");
+    		//URL playerUrl= this.getClass().getResource("resources/images/player_" + 1 + ".png");
+    		//BufferedImage tmp =ImageIO.read(playerUrl);
+    		//player = toCompatibleImage(tmp);
+    		URL[] playerImgLeftUrl = new URL[6];
+    		URL[] playerImgRightUrl = new URL[6];
+    		for (int i = 0; i < 6; i++) {
+    		playerImgLeftUrl[i] = this.getClass().getResource("resources/images/player_" + (i+1) + "_rev.png");
+    		playerImgRightUrl[i] = this.getClass().getResource("resources/images/player_" + (i+1) + ".png");
+    		
+    		tmp[i] = ImageIO.read(playerImgLeftUrl[i]);
+    		playerImgLeft[i] = toCompatibleImage(tmp[i]);
+    		tmp[i] = ImageIO.read(playerImgRightUrl[i]);
+    		playerImgRight[i] = toCompatibleImage(tmp[i]);
+    		}
+    		playerImgWidth = playerImgLeft[0].getWidth();
+    		playerImgHeight = playerImgLeft[0].getHeight();
 
     	}
     	catch (IOException ex) {
@@ -105,14 +166,14 @@ public class PlayerRocket {
     	{
     		fire(mousePosition);
     		//Main.client.doAction("move_down", argList);
-    	}
-    	*/
+    	}*/
+
     	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_W)) {
     		argList = new OtpErlangList();
     		Main.client.doAction("move_down", argList);
     	}*/
-    	
-    	if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
+
+    		if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
     		argList = new OtpErlangList(new OtpErlangAtom("left"));
     		Main.client.doAction("move", argList);
     	}
@@ -159,6 +220,7 @@ public class PlayerRocket {
 		OtpErlangTuple posTuple = new OtpErlangTuple(posArray);
 		argList = new OtpErlangList(posTuple);
 		Main.client.doAction("fire", argList);
+		
 	}
     
     public void Draw(Graphics2D g2d)
@@ -166,11 +228,13 @@ public class PlayerRocket {
     	g2d.setColor(Color.white);
     	g2d.drawString("Rocket coordinates: " + x + " : " + y, 5, 15);
     	int[][] players = Game.playerPos;
-    	int base = Game.height - rocketImgHeight;
+    	int base = Game.height - playerImgHeight;
     	for(int i = 0; i < players.length; i++ ) {   	
     		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
-    	g2d.drawImage(rocketImg, players[i][0], base - players[i][1], null);
-    	g2d.drawString(Game.playerNames[i],players[i][0] , base - 10 -players[i][1]);
+    		//g2d.drawImage(playerImgLeft[i], players[i][0], base - players[i][1], null);
+    		g2d.drawImage(Game.images.get(Game.playerId[i])[0], players[i][0], base - players[i][1], null);
+    		g2d.drawString(Game.playerNames[i],players[i][0] , base - 10 -players[i][1]);
+    		g2d.drawLine(10, 10, 100, 100);
     	}
     }
     
