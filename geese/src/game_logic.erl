@@ -308,8 +308,8 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
      {_Move_factor,			
-     _Gravity_factor,
-     _Air_friction,
+     Gravity_factor,
+     Air_friction,
      _Base_jump_factor,
      _Grid_limit,
      _Vel_limit,
@@ -330,17 +330,28 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     %% * recoil
     %% * return the bullet {owner, origin, destination} 
     if Hit =:= dummy ->
-	    %% no hit, only fire recoil
-	    tbi,
+	    %% no player hit, only fire recoil
+	    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
+	    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
 	    Border_point,
-	    Player_list;
+	    [{Name_2, Pos_2, {X_f - Air_friction , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2];
        true ->
-	    %%hit! fire recoil, hit recoil and damage!
 	    {Player_id, Point, Damage} = Hit,
-	    tbi,
-	    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
-	    {Name, Pos, Vel, Hp, Id} = Hit_player,
-	    [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_2]
+	    Short = shortest_distance({X_m, Y_m}, Border_point, Point),
+	    if Short =:= Point ->
+		    %% player hit! fire recoil and damage!
+		    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
+		    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
+		    {Name, Pos, Vel, Hp, Id} = Hit_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
+		    [{Name_2, Pos_2, {X_f - Air_friction,Y_f - Gravity_factor}, Hp_2, Id_2}|[{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]];
+	       true ->
+		    %% wall hit first, only fire recoil
+		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
+		    Border_point,
+		    [{Name_2, Pos_2, {X_f - Air_friction , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2]
+	    end
     end.
 
 
