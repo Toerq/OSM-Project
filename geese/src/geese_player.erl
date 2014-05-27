@@ -111,7 +111,7 @@ talk_state(State) ->
 		    Name = State#state.name,
 		    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
 		    io:format("Point1~n"),
-		    Call = {action_add, Db_name, server, add_player, [{Name, {15,15}, {0,0}, 100, Player_id}]},
+		    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0,0}, 100, Player_id}]},
 		    game_state:register_action(Call),
 
 		    game_state(New_state);
@@ -137,7 +137,7 @@ talk_state(State) ->
     end.
 
 game_state(State) ->
-    io:format("<In game state>~n"),
+%%    io:format("<In game state>~n"),
     Accept_socket = State#state.accept_socket, 
     Db_name = State#state.db_name,  
     State_sender = State#state.state_sender,
@@ -145,7 +145,7 @@ game_state(State) ->
     Player_id = State#state.player_id,
     receive 
 	{tcp, Accept_socket, Packet} ->
-	    io:format("<Game command -In->~n term:~w~n", [binary_to_term(Packet)]),
+%%	    io:format("<Game command -In->~n term:~w~n", [binary_to_term(Packet)]),
 	    case binary_to_term(Packet) of
 		{do_action, {Action, Var_list}} ->
 		    Call = {action_add, Db_name, Player_id, Action, Var_list},
@@ -165,7 +165,7 @@ game_state(State) ->
  		    %% annat
 	    end;
 	{state, Game_state} ->
-	    io:format("<State command -Out->~n"),
+%%	    io:format("<State command -Out->~n"),
 	    %% tcp send Game state socket
 	    Bin = term_to_binary({state, Game_state}),
 	    gen_tcp:send(Accept_socket, Bin),

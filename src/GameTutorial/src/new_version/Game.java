@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -25,6 +26,10 @@ public class Game {
 	public static int[][] boxes;
 	public static String[] playerNames;
 	public static int[][] playerPos;
+	public static int[] playerId;
+	public static int[] playerVel;
+	
+	public static Hashtable <Integer, BufferedImage[]> images = new Hashtable <Integer, BufferedImage[]>();
 	
 	private PlayerRocket playerRocket;
     
@@ -149,6 +154,7 @@ public class Game {
         	g2d.setColor(new Color(R,G,B));
         	g2d.drawRect(x0, 500 - y1, x1 - x0, y1 - y0);
         }
+        System.out.println(images);
         playerRocket.Draw(g2d);
     }
     

@@ -1,5 +1,6 @@
 package new_version;
 
+import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,6 +10,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 import com.ericsson.otp.erlang.*; 
 
@@ -267,6 +270,21 @@ public class Jinterface_bank_client {
 		Game.boxes = boxes;
 	}
 	
+	public boolean containsArray(Hashtable<Integer, BufferedImage[]> table, BufferedImage[] imgs) {
+		int i = 0;
+		Enumeration<BufferedImage[]> elements = table.elements();
+		while(elements.hasMoreElements()) {
+			BufferedImage[] cmp =  elements.nextElement();
+			System.out.println(cmp);
+			if (Arrays.equals(imgs, cmp)) {
+				return true;
+			}
+			System.out.println("containsArray index: " + i);
+			i++;
+		}
+		return false;
+	}
+	
 	public void updatePlayerList(OtpErlangTuple state) {
 		System.out.println("State: " + state);
 		//System.out.println(state.elementAt(0));
@@ -277,6 +295,8 @@ public class Jinterface_bank_client {
 		int[][] positions= new int[size][2];
 		String[] names = new String[size];
 		
+		int[] id = new int[size];
+		OtpErlangPid idTmp;
 		OtpErlangTuple player; 
 		OtpErlangTuple position; 
 		for(int i = 0; i < size; i++) {
@@ -286,16 +306,38 @@ public class Jinterface_bank_client {
 			//System.out.println(player);
 			names[i] = ((OtpErlangString) player.elementAt(0)).toString();
 			position = (OtpErlangTuple) player.elementAt(1);
+			idTmp = (OtpErlangPid) player.elementAt(4);
 			try {
 				positions[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
 				positions[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
+				id[i] = idTmp.id();
+
+				if (!(Game.images.containsKey(id[i]))) {
+					int j = 0;
+					BufferedImage[] imgs = new BufferedImage[2];
+					do {
+						imgs[0] = PlayerRocket.playerImgLeft[j];
+						imgs[1] = PlayerRocket.playerImgRight[j];
+						j++;
+						System.out.println(j);
+					} while(containsArray(Game.images, imgs));
+
+					
+					/*while(Game.images.contains(PlayerRocket.playerImgLeft[j])) {
+						j++;
+					}*/
+					//BufferedImage[] imgs = {PlayerRocket.playerImgLeft[j], PlayerRocket.playerImgRight[j]};
+					Game.images.put(id[i], imgs);
+				}
 			} catch (OtpErlangRangeException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		Game.playerId = id;
 		Game.playerNames = names;
 		Game.playerPos = positions;
+		//Game.positions.put(id, );
 	}
 	
 	public void updateBulletList(OtpErlangTuple state) {
