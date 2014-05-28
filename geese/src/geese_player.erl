@@ -105,23 +105,29 @@ talk_state(State) ->
 		    game_state(New_state);
 
 		{join_table, Table_ref} ->
-		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
-		    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
-
-		    Name = State#state.name,
-		    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
-		    io:format("Point1~n"),
-		    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, Player_id}]},
-		    game_state:register_action(Call),
-
-		    game_state(New_state);
+		    Socket = State#state.accept_socket,
+		    case geese_coordinator:join_table(Player_id, Table_ref) of
+			{Table_pid, Game_pid, Db_name} ->
+			    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
+			    Name = State#state.name,
+			    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
+			    io:format("Point1~n"),
+			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, Player_id}]},
+			    game_state:register_action(Call),
+			    gen_tcp:send(Socket, term_to_binary(join_succeeded)),
+			    game_state(New_state);
+			join_failed ->
+			    gen_tcp:send(Socket, term_to_binary(join_failed)),
+			    talk_state(State)
+		    end;
+		
 
 		{join_table_java, Table_ref} ->
-		    {Table_pid, Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
+		    {Table_pid, _Game_pid, Db_name} = geese_coordinator:join_table(Player_id, Table_ref),
 		    talk_state(State);
 
 		join_table_debug ->
-		    {Table_pid, Game_pid, Db_name} = coordinator:join_table(Player_id, not_used),
+		    {Table_pid, _Game_pid, Db_name} = coordinator:join_table(Player_id, not_used),
 		    talk_state(State);
 
 		remove_player_from_table ->
