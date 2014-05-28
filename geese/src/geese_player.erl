@@ -45,6 +45,8 @@ init([Accept_socket]) ->
 
 						%talk_state() -> gen_server:cast(?MODULE, talk_state).
 
+
+%% @doc Recieves packages sent through the TCP-protocol as messages and handles them in a pre-defined way.
 talk_state(State) -> 
     io:format("<In talk state>~n"),
     Accept_socket = State#state.accept_socket,
