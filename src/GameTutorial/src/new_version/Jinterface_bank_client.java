@@ -269,6 +269,27 @@ public class Jinterface_bank_client {
 		//System.out.println()
 		Game.boxes = boxes;
 	}
+	public void updateBulletList(OtpErlangTuple state) {
+		OtpErlangList bulletList = (OtpErlangList) state.elementAt(1);
+		OtpErlangObject[] bulletArray = bulletList.elements();
+		int size = bulletArray.length;
+		int[][] bullets = new int[size][4];
+		OtpErlangTuple bullet;
+		for (int i = 0; i < size; i++) {
+			try {
+				bullet = (OtpErlangTuple) bulletArray[i];
+				bullets[i][0] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(1)).elementAt(0)).intValue();
+				bullets[i][1] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(1)).elementAt(1)).intValue();
+				bullets[i][2] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(2)).elementAt(0)).intValue();
+				bullets[i][3] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(2)).elementAt(1)).intValue();
+			} catch (OtpErlangRangeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		Game.bullets = bullets;
+	}
+	
 	
 	public boolean containsArray(Hashtable<Integer, BufferedImage[]> table, BufferedImage[] imgs) {
 		int i = 0;
@@ -291,27 +312,32 @@ public class Jinterface_bank_client {
 		OtpErlangList playerList = (OtpErlangList) state.elementAt(0);
 		System.out.println("Player List : " + playerList);
 		OtpErlangObject[] playerArray = playerList.elements();
+		
 		int size = playerArray.length;
 		int[][] positions= new int[size][2];
+		double[][] velocity = new double[size][2];
 		String[] names = new String[size];
-		
 		int[] hp = new int[size];
 		int[] id = new int[size];
+		
 		OtpErlangPid idTmp;
 		OtpErlangTuple player; 
-		OtpErlangTuple position; 
+		OtpErlangTuple position;
+		OtpErlangTuple vel;
+		
 		for(int i = 0; i < size; i++) {
 			player = (OtpErlangTuple) playerArray[i];
-			//System.out.println("Index : " + i);
-			//System.out.println(playerArray);
-			//System.out.println(player);
 			names[i] = ((OtpErlangString) player.elementAt(0)).toString();
 			position = (OtpErlangTuple) player.elementAt(1);
+			vel = (OtpErlangTuple) player.elementAt(2);
 			idTmp = (OtpErlangPid) player.elementAt(4);
+			
 			try {
 				hp[i] = ((OtpErlangLong)player.elementAt(3)).intValue();
 				positions[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
 				positions[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
+				//velocity[i][0] = ((OtpErlangDouble)vel.elementAt(0)).doubleValue();
+				//velocity[i][1] = ((OtpErlangDouble)vel.elementAt(1)).doubleValue();
 				id[i] = idTmp.id();
 
 				if (!(Game.images.containsKey(id[i]))) {
@@ -340,17 +366,8 @@ public class Jinterface_bank_client {
 		Game.playerId = id;
 		Game.playerNames = names;
 		Game.playerPos = positions;
+		//Game.playerVel = velocity;
 		//Game.positions.put(id, );
-	}
-	
-	public void updateBulletList(OtpErlangTuple state) {
-		OtpErlangList bulletList = (OtpErlangList) state.elementAt(2);
-		OtpErlangObject[] bulletArray = bulletList.elements();
-		int size = bulletArray.length;
-		for (int i = 0; i < size; i++) {
-			//Uppdatera statisk bullet list
-			;
-		}
 	}
 
 	
@@ -358,7 +375,7 @@ public class Jinterface_bank_client {
 		OtpErlangTuple state = getState();
 		updateLevelList(state);
 		updatePlayerList(state);
-		//updateBulletList(state);
+		updateBulletList(state);
 	}
 
 	

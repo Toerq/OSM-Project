@@ -31,8 +31,8 @@ import javax.swing.table.DefaultTableModel;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
-	static byte [] ip = {(byte) 212, (byte) 25, (byte) 144, (byte) 113};
-	//static byte [] ip = {127,0,0,1};
+	//static byte [] ip = {(byte) 212, (byte) 25, (byte) 144, (byte) 113};
+	static byte [] ip = {127,0,0,1};
 	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
 	JFrame f;
 	JScrollPane table;
@@ -40,7 +40,7 @@ public class Main implements ActionListener {
 	String[] columnNames = {"ID", "Name", "Game Type", "Connected Players/Max Players", ""};
 	Object[][] data;
 	Action join;
-	JButton addTableButton, refreshButton, pingButton, changeNameButton;
+	JButton connectButton, addTableButton, refreshButton, pingButton, changeNameButton;
 
 	Main(String name) {
 		playerName = name;
@@ -50,7 +50,7 @@ public class Main implements ActionListener {
 		f.setLocationRelativeTo(null);
 
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		initializeMenu(f);
+		//initializeMenu(f);
 
 
 		JPanel container = setContentPanel();
@@ -61,8 +61,18 @@ public class Main implements ActionListener {
 	}
 
 	private JPanel setContentPanel() {
+	//	if (Main.client != null) {
+		//client.setName(playerName);
 		table = createServerTable();
-
+	//	}
+		//else {
+		//	table = new JScrollPane();
+		//}
+		
+		connectButton = new JButton("Connect to IP");
+		ConnectButtonHandler connectHandler = new ConnectButtonHandler();
+		connectButton.addActionListener(connectHandler);
+		
 		addTableButton = new JButton("Add new table");
 		AddButtonHandler addHandler = new AddButtonHandler();
 		addTableButton.addActionListener(addHandler);
@@ -96,6 +106,7 @@ public class Main implements ActionListener {
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 						.addComponent(table)
 						.addGroup(layout.createSequentialGroup()
+								.addComponent(connectButton)
 								.addComponent(addTableButton)
 								.addComponent(refreshButton)
 								.addComponent(pingButton)
@@ -107,6 +118,7 @@ public class Main implements ActionListener {
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
 						.addComponent(table))
 						.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+								.addComponent(connectButton)
 								.addComponent(addTableButton)
 								.addComponent(refreshButton)
 								.addComponent(pingButton)
@@ -140,6 +152,25 @@ public class Main implements ActionListener {
 			int maxPlayers = Integer.parseInt(maxCombo.getSelectedItem().toString());
 
 			client.add(name, type, maxPlayers);
+			f.getContentPane().removeAll();
+			f.setContentPane(setContentPanel());
+			f.validate();
+		}
+	}
+	private class ConnectButtonHandler implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			JTextField field1 = new JTextField("");
+			JPanel panel = new JPanel(new GridLayout(0, 1));
+			panel.add(new JLabel("IP: "));
+			panel.add(field1);
+			int result = JOptionPane.showConfirmDialog(null, panel, "Test",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			String ipString = field1.getText();
+			Main.ip = Utility.stringToIp(ipString);
+			Main.client = new Jinterface_bank_client(Main.ip, 3010);
+			
+			
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();

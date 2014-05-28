@@ -22,13 +22,15 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
-	public static int height = 500;
+	public static int height = 560;
 	public static int[][] boxes;
 	public static String[] playerNames;
 	public static int[][] playerPos;
 	public static int[] playerId;
-	public static int[] playerVel;
+	public static double[][] playerVel;
 	public static int[] playerHp;
+	public static int[][] bullets;
+	//public static int R, G, B;
 	
 	public static Hashtable <Integer, BufferedImage[]> images = new Hashtable <Integer, BufferedImage[]>();
 	
@@ -78,6 +80,9 @@ public class Game {
      */
     private void Initialize()
     {
+    	//R= 50;
+    	//G = 50;
+    	//B = 50;
     	System.out.println("Creating Player Rocket...");
     	playerRocket = new PlayerRocket();
     	System.out.println("Creating Landing Area...");
@@ -147,18 +152,25 @@ public class Game {
         	x1 = boxes[i][2];
         	y1 = boxes[i][3];
         	g2d.drawRect(100,200, 10, 30);
-        	System.out.println("x0: " + x0 + ", y0: " + y0 + ", x:1 " + x1 + ", y1 :" + y1);
+        	//System.out.println("x0: " + x0 + ", y0: " + y0 + ", x:1 " + x1 + ", y1 :" + y1);
         	int R = (int) (Math.random() * (255));
         	int G = (int) (Math.random() * (255));
         	int B = (int) (Math.random() * (255));
+        	//B = B + 4;
+        	//G = (G + 4*(B/255)) % 255;
+        	//R = (R + 4*(G/255)) % 255;
+        	//B = B % 255;
 
         	g2d.setColor(new Color(R,G,B));
-        	g2d.drawRect(x0, 500 - y1, x1 - x0, y1 - y0);
+        	g2d.drawRect(x0, Game.height - y1, x1 - x0, y1 - y0);
+        }
+        for (int i = 0; i < bullets.length; i++) {
+        	g2d.drawLine(bullets[i][0], Game.height - bullets[i][1], bullets[i][2], Game.height - bullets[i][3]);
         }
         System.out.println(images);
         playerRocket.Draw(g2d);
     }
-    
+
     
     /**
      * Draw the game over screen.
