@@ -6,6 +6,8 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,17 +24,18 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
-	public static int height = 560;
+	public static int height = 680;
 	public static int[][] boxes;
 	public static String[] playerNames;
 	public static int[][] playerPos;
 	public static int[] playerId;
-	public static double[][] playerVel;
+	public static int[][] playerVel;
 	public static int[] playerHp;
-	public static int[][] bullets;
-	//public static int R, G, B;
-	
+	private ArrayList<Integer[]> bulletList;
+	public static Integer[][] bullets;
+	public static int[] playerPow;
 	public static Hashtable <Integer, BufferedImage[]> images = new Hashtable <Integer, BufferedImage[]>();
+	//public static int R, G, B;
 	
 	private PlayerRocket playerRocket;
     
@@ -83,6 +86,7 @@ public class Game {
     	//R= 50;
     	//G = 50;
     	//B = 50;
+    	bulletList = new ArrayList<Integer[]>();
     	System.out.println("Creating Player Rocket...");
     	playerRocket = new PlayerRocket();
     	System.out.println("Creating Landing Area...");
@@ -128,7 +132,15 @@ public class Game {
     {
         // Move the rocket
     	//System.out.println("Updating game");
-        playerRocket.Update(mousePosition);
+    	playerRocket.Update(mousePosition);
+    	for (int i = 0; i < bulletList.size(); i++) {
+    		if(bulletList.get(i)[4] == 0) {
+    			bulletList.remove(i);
+    		}
+    	}
+    	for (int i = 0; i < bullets.length; i ++) {
+    		bulletList.add(bullets[i]);
+    	}
         //System.out.println("Player rocket updated");
     }
     
@@ -164,10 +176,15 @@ public class Game {
         	g2d.setColor(new Color(R,G,B));
         	g2d.drawRect(x0, Game.height - y1, x1 - x0, y1 - y0);
         }
-        for (int i = 0; i < bullets.length; i++) {
-        	g2d.drawLine(bullets[i][0], Game.height - bullets[i][1], bullets[i][2], Game.height - bullets[i][3]);
+        System.out.print("Bullet list: ");
+        for (int i = 0; i < bulletList.size(); i++) {
+        	System.out.print(Arrays.toString(bulletList.get(i)));
+       
+        	g2d.drawLine(bulletList.get(i)[0], Game.height - bulletList.get(i)[1], bulletList.get(i)[2], Game.height - bulletList.get(i)[3]);
+        	bulletList.get(i)[4]--;
         }
-        System.out.println(images);
+     	//System.out.println();
+        //System.out.println(images);
         playerRocket.Draw(g2d);
     }
 

@@ -15,13 +15,13 @@ import java.util.Hashtable;
 
 import com.ericsson.otp.erlang.*; 
 
-public class Jinterface_bank_client {
+public class Jinterface_client {
 	private Socket socket; 
 	private OutputStream out;
 	private DataOutputStream dos;
 	private DataInputStream fromServer;
 	
-	public Jinterface_bank_client(byte[] host, int port) {
+	public Jinterface_client(byte[] host, int port) {
 		try {
 			this.socket = new Socket (InetAddress.getByAddress(host), port);
 			System.out.println("Connected to socket :" + socket);
@@ -37,7 +37,7 @@ public class Jinterface_bank_client {
 		}
 	}
 	
-	public void initMailbox(Jinterface_bank_client client) {
+	public void initMailbox(Jinterface_client client) {
 		
 	}
 	public void sendTCP(OtpErlangObject arg) {
@@ -64,7 +64,7 @@ public class Jinterface_bank_client {
 		} catch (OtpErlangDecodeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}	//public static int R, G, B;
 		return answer;
 	}
 		
@@ -75,7 +75,7 @@ public class Jinterface_bank_client {
 	}
 	
 	
-	public void join (OtpErlangPid pid) {
+	public boolean join (OtpErlangPid pid) {
 		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
 		OtpErlangObject[] arg = new OtpErlangObject[2];
@@ -83,6 +83,14 @@ public class Jinterface_bank_client {
 		arg[1] = pid;
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
 		sendTCP(tuple);
+		OtpErlangObject answer = getAnswer();
+		System.out.println(answer);
+		if (answer.toString().equals("join_succeeded")) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	
 	public void add() {
@@ -100,23 +108,6 @@ public class Jinterface_bank_client {
 
 		sendTCP(tuple);
 	}
-	/*
-	public void add(String servername, int[] ip) {
-		OtpErlangObject[] argArray = new OtpErlangObject[3];
-		OtpErlangObject add = new OtpErlangAtom("add");
-		argArray[0] = add;
-		OtpErlangObject sName = new OtpErlangAtom(servername);
-		argArray[1] = sName;
-		
-		OtpErlangTuple ipTuple = destIpToErlang(ip);
-		argArray[2] = ipTuple;
-		
-		OtpErlangTuple dataTuple = new OtpErlangTuple(argArray);
-		 OtpErlangObject answer = sendTCP(dataTuple);
-		 System.out.println(answer);
-	}
-
-*/
 	
 	public Object[][] available() {
 
@@ -198,47 +189,6 @@ public class Jinterface_bank_client {
 	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
 	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
 	
-	/*
-	 * Gammal (fungerande) version
-	 *
-	public void getState(){
-		OtpErlangAtom getState = new OtpErlangAtom("get_state");
-		sendTCP(getState);
-		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
-		OtpErlangTuple state = (OtpErlangTuple) answer.elementAt(1);
-		//System.out.println("State: " + state);
-		//	System.out.println("Player List :" + state.elementAt(1));
-		OtpErlangList otpPlayerList = (OtpErlangList) state.elementAt(1);
-		OtpErlangObject[] playerList = otpPlayerList.elements();
-		OtpErlangTuple player; //= (OtpErlangTuple) playerList.elementAt(0);
-		OtpErlangTuple position; //= (OtpErlangTuple) player.elementAt(1);
-		//int x = 0;
-		//int y = 0;
-		int length = playerList.length;
-		int[][] players = new int[length][2];
-		String[] names = new String[length];
-		try {
-			for(int i = 0; i < length; i++) {
-				player = (OtpErlangTuple) playerList[i];
-				System.out.println("Index : " + i);
-				System.out.println(playerList);
-				System.out.println(player);
-				names[i] = ((OtpErlangString) player.elementAt(0)).toString();
-				position = (OtpErlangTuple) player.elementAt(1);
-				
-				//Game.playerNames[i] = name;
-				players[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
-				players[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
-			}
-		} catch (OtpErlangRangeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		//int[] pos = {x, y};
-		Game.playerNames = names;
-		Game.playerPos = players;
-	}
-	*/
 
 	public OtpErlangTuple getState(){
 		OtpErlangAtom getState = new OtpErlangAtom("get_state");
@@ -273,8 +223,9 @@ public class Jinterface_bank_client {
 		OtpErlangList bulletList = (OtpErlangList) state.elementAt(1);
 		OtpErlangObject[] bulletArray = bulletList.elements();
 		int size = bulletArray.length;
-		int[][] bullets = new int[size][4];
+		Integer[][] bullets = new Integer[size][5];
 		OtpErlangTuple bullet;
+		int bulletLifeTime = 10;
 		for (int i = 0; i < size; i++) {
 			try {
 				bullet = (OtpErlangTuple) bulletArray[i];
@@ -282,10 +233,14 @@ public class Jinterface_bank_client {
 				bullets[i][1] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(1)).elementAt(1)).intValue();
 				bullets[i][2] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(2)).elementAt(0)).intValue();
 				bullets[i][3] = ((OtpErlangLong)((OtpErlangTuple) bullet.elementAt(2)).elementAt(1)).intValue();
+				bullets[i][4] = bulletLifeTime;
 			} catch (OtpErlangRangeException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		if(bullets.length > 0) {
+			System.out.println("GOT BULLETS!!!");
 		}
 		Game.bullets = bullets;
 	}
@@ -315,29 +270,32 @@ public class Jinterface_bank_client {
 		
 		int size = playerArray.length;
 		int[][] positions= new int[size][2];
-		double[][] velocity = new double[size][2];
+		int[][] velocity = new int[size][2];
 		String[] names = new String[size];
 		int[] hp = new int[size];
 		int[] id = new int[size];
+		int[] power = new int[size];
 		
 		OtpErlangPid idTmp;
 		OtpErlangTuple player; 
 		OtpErlangTuple position;
 		OtpErlangTuple vel;
+		//OtpErlangInt power;
 		
 		for(int i = 0; i < size; i++) {
 			player = (OtpErlangTuple) playerArray[i];
 			names[i] = ((OtpErlangString) player.elementAt(0)).toString();
 			position = (OtpErlangTuple) player.elementAt(1);
 			vel = (OtpErlangTuple) player.elementAt(2);
-			idTmp = (OtpErlangPid) player.elementAt(4);
+			idTmp = (OtpErlangPid) player.elementAt(5);
 			
 			try {
 				hp[i] = ((OtpErlangLong)player.elementAt(3)).intValue();
+				power[i] = ((OtpErlangLong)player.elementAt(4)).intValue();
 				positions[i][0] = ((OtpErlangLong)position.elementAt(0)).intValue();
 				positions[i][1] = ((OtpErlangLong)position.elementAt(1)).intValue();
-				//velocity[i][0] = ((OtpErlangDouble)vel.elementAt(0)).doubleValue();
-				//velocity[i][1] = ((OtpErlangDouble)vel.elementAt(1)).doubleValue();
+				velocity[i][0] = ((OtpErlangLong)vel.elementAt(0)).intValue();
+				velocity[i][1] = ((OtpErlangLong)vel.elementAt(1)).intValue();
 				id[i] = idTmp.id();
 
 				if (!(Game.images.containsKey(id[i]))) {
@@ -366,7 +324,8 @@ public class Jinterface_bank_client {
 		Game.playerId = id;
 		Game.playerNames = names;
 		Game.playerPos = positions;
-		//Game.playerVel = velocity;
+		Game.playerPow = power;
+		Game.playerVel = velocity;
 		//Game.positions.put(id, );
 	}
 
@@ -378,84 +337,7 @@ public class Jinterface_bank_client {
 		updateBulletList(state);
 	}
 
-	
-	//public int[] getPlayerList() {
-		
-	//}
-	
-	/*public void move(String name, String dir, int amount) {
-		OtpErlangObject argArray[] = new OtpErlangObject[4];
 
-		
-		argArray[0] = new OtpErlangAtom("move");
-		argArray[1] = new OtpErlangAtom(name);
-		argArray[2] = new OtpErlangAtom(dir);
-		argArray[3] = new OtpErlangInt(amount);
-		
-		OtpErlangTuple arg = new OtpErlangTuple(argArray);
-		OtpErlangObject answer = sendTCP(arg);
-		System.out.println(answer);
-	}
-	*/
-/*
-	public ArrayList<Player> getAllPos() {
-		OtpErlangTuple arg = new OtpErlangTuple(new OtpErlangAtom("getAllPos"));
-		OtpErlangObject answer = sendTCP(arg);
-		System.out.println("recieved from getAllPos: " + answer);
-		OtpErlangList erlangPlayerList = (OtpErlangList) ((OtpErlangTuple) answer).elementAt(1);
-        ArrayList<Player> playerList = new ArrayList<Player>();
-        for(OtpErlangObject erlangPlayer : erlangPlayerList) {
-        	int x = 0;
-        	int y = 0;
-        	System.out.println("print av erlangPlayer: " + erlangPlayer);
-        	String playerName =  ((OtpErlangTuple) erlangPlayer).elementAt(1).toString();
-        	try {
-				x = ((OtpErlangLong) ((OtpErlangTuple) erlangPlayer).elementAt(2)).intValue();
-				y = ((OtpErlangLong) ((OtpErlangTuple) erlangPlayer).elementAt(3)).intValue();
-			} catch (OtpErlangRangeException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        	System.out.println("X: " + x);
-        	playerList.add(new Player(x, y, playerName));
-        }
-
-        return playerList;
-	}
-*/
-	/* public void updatePos(String playerName, PlayerRocket player) {
-				OtpErlangObject argArray[] = new OtpErlangObject[2];
-				OtpErlangAtom erlName = new OtpErlangAtom(playerName);
-				
-				argArray[0] = new OtpErlangAtom("getPos");
-				argArray[1] = erlName;
-				OtpErlangTuple arg = new OtpErlangTuple(argArray);
-				System.out.println("arg: " + arg);
-
-				OtpErlangTuple answer = (OtpErlangTuple) sendTCP(arg);
-				OtpErlangTuple coordinates = (OtpErlangTuple) answer.elementAt(1);
-				int x;
-				int y;
-				try {
-					x =  ((OtpErlangLong) coordinates.elementAt(0)).intValue();
-					y =  ((OtpErlangLong) coordinates.elementAt(1)).intValue();
-					player.setCoordinates(x, y);
-					System.out.println(x);
-					System.out.println(y);
-				} catch (OtpErlangRangeException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-	*/
-	public void restart(String name, int x, int y) {
-		OtpErlangAtom remove = new OtpErlangAtom("removePlayer");
-		OtpErlangAtom playerName = new OtpErlangAtom(name);
-		OtpErlangObject[] arg = {remove, playerName};
-		OtpErlangTuple tuple = new OtpErlangTuple(arg);
-		sendTCP(tuple);
-		addPlayer(name, x, y);
-	}
 	
 	private void close() throws IOException {
 		this.out.close();

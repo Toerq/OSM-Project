@@ -10,7 +10,7 @@ public class Test {
 		
 		byte[] ip = {127,0,0,1};
 		//byte[] ip = {(byte) 212, 25,(byte) 151, (byte) 178};
-		Jinterface_bank_client client = new Jinterface_bank_client(ip, 3011);
+		Jinterface_client client = new Jinterface_client(ip, 3011);
 		
 		OtpErlangAtom addTable = new OtpErlangAtom("add_table");
 		client.sendTCP(addTable);

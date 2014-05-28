@@ -31,9 +31,11 @@ import javax.swing.table.DefaultTableModel;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
-	//static byte [] ip = {(byte) 212, (byte) 25, (byte) 144, (byte) 113};
+	//static byte [] ip = {(byte) 109, (byte) 58, (byte) 144, (byte) 233};
 	static byte [] ip = {127,0,0,1};
-	public static Jinterface_bank_client client = new Jinterface_bank_client(ip, 3010);
+	public static Jinterface_client client = new Jinterface_client(ip, 3010);
+	//static byte [] ip = null;
+	//public static Jinterface_client client = null;
 	JFrame f;
 	JScrollPane table;
 	String playerName;
@@ -46,7 +48,7 @@ public class Main implements ActionListener {
 		playerName = name;
 		client.setName(playerName);
 		f = new JFrame("GEESE - " + name);
-		f.setSize(800, 600);
+		f.setSize(1280, 720);
 		f.setLocationRelativeTo(null);
 
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,10 +63,11 @@ public class Main implements ActionListener {
 	}
 
 	private JPanel setContentPanel() {
-	//	if (Main.client != null) {
+		//if (Main.client != null) {
 		//client.setName(playerName);
 		table = createServerTable();
-	//	}
+		//table.validate();
+		//}
 		//else {
 		//	table = new JScrollPane();
 		//}
@@ -132,7 +135,7 @@ public class Main implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 
 			String[] types = {"Type 1", "Type 2", "Type 3", "Type 4", "Type 5"};
-			String[] max = {"6", "8", "10", "12", "14"};
+			String[] max = {"2", "3", "4", "5", "6", "7" , "8", "9",  "10", "11", "12",};
 			JComboBox typeCombo = new JComboBox(types);
 			JComboBox maxCombo = new JComboBox(max);
 
@@ -168,7 +171,7 @@ public class Main implements ActionListener {
 
 			String ipString = field1.getText();
 			Main.ip = Utility.stringToIp(ipString);
-			Main.client = new Jinterface_bank_client(Main.ip, 3010);
+			Main.client = new Jinterface_client(Main.ip, 3010);
 			
 			
 			f.getContentPane().removeAll();
@@ -243,11 +246,14 @@ public class Main implements ActionListener {
 				//JTable table = (JTable)e.getSource();
 				int modelRow = Integer.valueOf( e.getActionCommand() );
 
-				client.join(pids[modelRow]);
+				boolean join_succeeded = client.join(pids[modelRow]);
+				System.out.println("join: " + join_succeeded);
+				if (join_succeeded) {
 				Framework framework = new Framework();
 				f.setContentPane(framework);
 				f.validate();
 				System.out.println(framework.requestFocusInWindow());
+				}
 			}
 		};
 
