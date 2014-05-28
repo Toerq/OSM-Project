@@ -19,11 +19,4 @@ init(Port) ->
 	   {geese_dispatcher,
 	    {geese_dispatcher, start_link, [Port]},
 	    permanent, 1000, worker, [geese_dispatcher]},
-	   {geese_player_sup,
-	    {geese_player_sup, start_link, []},
-	    permanent, 1000, supervisor, [geese_player_sup]},
-	   {geese_table_sup,
-	    {geese_table_sup, start_link, []},
-	    permanent, 1000, supervisor, [geese_table_sup]}
-
 	  ]}}.
