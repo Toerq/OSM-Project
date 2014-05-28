@@ -18,5 +18,5 @@ init(Port) ->
 	    permanent, 1000, worker, [geese_coordinator]},
 	   {geese_dispatcher,
 	    {geese_dispatcher, start_link, [Port]},
-	    permanent, 1000, worker, [geese_dispatcher]},
+	    permanent, 1000, worker, [geese_dispatcher]}
 	  ]}}.
