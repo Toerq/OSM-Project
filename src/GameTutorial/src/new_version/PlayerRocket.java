@@ -233,8 +233,12 @@ public class PlayerRocket {
     	int base = Game.height - playerImgHeight;
     	for(int i = 0; i < players.length; i++ ) {   	
     		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
-    		//g2d.drawImage(playerImgLeft[i], players[i][0], base - players[i][1], null);
+    	//	if (Double.compare(Game.playerVel[i][0], 0.0) < 0) {
     		g2d.drawImage(Game.images.get(Game.playerId[i])[0], players[i][0] - 18, base - players[i][1], null);
+    	//	}
+    	//	else {
+    	//		g2d.drawImage(Game.images.get(Game.playerId[i])[1], players[i][0] - 18, base - players[i][1], null);
+    	//	}
     		g2d.drawString(Game.playerNames[i] + " " + Game.playerHp[i], players[i][0] , base - 10 -players[i][1]);
     		g2d.drawLine(10, 10, 100, 100);
     	}

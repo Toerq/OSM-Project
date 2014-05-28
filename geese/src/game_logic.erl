@@ -104,7 +104,7 @@ move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction) ->
 	left ->
 	    Dir_vel = -Move_factor;
 	stop ->
-	    Dir_vel = 0
+	    Dir_vel = 0.0
     end,
     {X_vel, Y_vel} = Vel,
     New_x_vel = limitor(X_vel+Dir_vel, Vel_limit, Air_friction),
@@ -213,14 +213,16 @@ settings_update([_O | OT], [N | NT], Aux) ->
 
 
 iterate_state({Server_settings, {Player_list, Bullet_list}}) ->
-    {iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, []), Bullet_list}.
+    {State, Bullet_info_list} = iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, [], []),
+    {State, Bullet_info_list}.
 
-iterate_state_aux({Server_settings, {[], []}}, Aux_list) ->
-    {Server_settings, {Aux_list,[]}};
-iterate_state_aux({Server_settings, {[P | Player_list], []}}, Aux_list) ->
-    iterate_state_aux({Server_settings, {Player_list, []}}, [iterate_player(Server_settings, P) | Aux_list]);
-iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list) ->
-    iterate_state_aux({Server_settings, {iterate_bullet(Server_settings, Player_list, B), Bullet_list}}, Aux_list).
+iterate_state_aux({Server_settings, {[], []}}, Aux_list, Bullet_info_list) ->
+    {{Server_settings, {Aux_list,[]}}, Bullet_info_list};
+iterate_state_aux({Server_settings, {[P | Player_list], []}}, Aux_list, Bullet_info_list) ->
+    iterate_state_aux({Server_settings, {Player_list, []}}, [iterate_player(Server_settings, P) | Aux_list], Bullet_info_list);
+iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list, Bullet_info_list) ->
+    {New_player_list, Bullet_info} = iterate_bullet(Server_settings, Player_list, B),
+    iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, [Bullet_info |Bullet_info_list]).
 
 iterate_player(Server_settings, Player) ->    
     {Name, Pos, Vel, Hp, Id} = Player,
@@ -262,7 +264,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     if Short =:= Ideal_point ->
             %% BRA inge krock
 	    %% io:format("Fall1: Ingen krock"),
-	    {{X_vel, Y_vel},Ideal_point, Hp};
+	    {{X_vel, Y_vel},Ideal_point, Hp}; 
        true ->
             %% Krock, stuff
 	    case Type of 
@@ -278,7 +280,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
 			    %% io:format("Fall2: Hor. Krock bara~n~w~n~w~n", [Short, Ideal_point_2]),
-			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+			    {{X_vel, 0.0},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall3: Hor. Krock sen Ver. krock"),
@@ -296,7 +298,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
 			    %% io:format("Fall4: Ver. Krock bara~n~w~n~w~n",[Short, Line_2]),
-			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+			    {{0.0, Y_vel},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall5: Verr. Krock sen Hor. krock"),
@@ -336,7 +338,8 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 	    io:format("NO HIT!!!"),
 	    %% no hit, only fire recoil
 	    Border_point,
-	    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2];
+	    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2], 
+	     {Entity_id, {X_m, Y_m}, Border_point}};
        true ->
 	    io:format("Good! HIT!!!"),
 	    %%hit! fire recoil, hit recoil and damage!
@@ -348,14 +351,15 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 		    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
 		    {Name, Pos, Vel, Hp, Id} = Hit_player,
 		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
-		    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Id_2} 
-		     | [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]];
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Id_2} 
+		      | [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 	       true ->
 		    %% wall hit first, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
 		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
 		    Border_point,
-		    [{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2]
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2],
+		     {Entity_id, {X_m, Y_m}, Border_point}}
 	    end
     end.
 
