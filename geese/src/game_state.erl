@@ -71,7 +71,8 @@ round_players([P | Player_list], Aux) ->
 round_bullets([], Aux) ->
     Aux;
 round_bullets([B | Bullet_list], Aux) ->
-    tbi.
+    {Id, {X0, Y0}, {X1,Y1}},
+    round_bullets(Bullet_list, [{Id, {round(X0), round(Y0)}, {round(X1), round(Y1)}} | Aux]). 
 
 %% @doc Will loop and update and send out its State. 
 %% state_sender will loop a given State and update it when it 
