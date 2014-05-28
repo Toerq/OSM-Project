@@ -213,11 +213,11 @@ settings_update([_O | OT], [N | NT], Aux) ->
 
 
 iterate_state({Server_settings, {Player_list, Bullet_list}}) ->
-    {State, Bullet_list} = iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, [], []),
-    {State, Bullet_list}.
+    {State, Bullet_info_list} = iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, [], []),
+    {State, Bullet_info_list}.
 
 iterate_state_aux({Server_settings, {[], []}}, Aux_list, Bullet_info_list) ->
-    {{Server_settings, {Aux_list,[]}},Bullet_info_list};
+    {{Server_settings, {Aux_list,[]}}, Bullet_info_list};
 iterate_state_aux({Server_settings, {[P | Player_list], []}}, Aux_list, Bullet_info_list) ->
     iterate_state_aux({Server_settings, {Player_list, []}}, [iterate_player(Server_settings, P) | Aux_list], Bullet_info_list);
 iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list, Bullet_info_list) ->
