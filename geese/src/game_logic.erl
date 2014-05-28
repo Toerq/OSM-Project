@@ -72,25 +72,25 @@ apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) -
 
 apply_action(_Server_settings, [], _A, Aux_list) ->
     Aux_list;
-apply_action(Server_settings, [{Name, Pos, Vel, Hp, E_id} | T], {Entity_id, Action, Var_list}, Aux_list) when E_id =:= Entity_id ->
+apply_action(Server_settings, [{Name, Pos, Vel, Hp, Power, E_id} | T], {Entity_id, Action, Var_list}, Aux_list) when E_id =:= Entity_id ->
     lists:append([[apply_action_aux(Server_settings, 
-				    {Name, Pos, Vel, Hp, E_id}, 
+				    {Name, Pos, Vel, Hp, Power, E_id}, 
 				    Action, 
 				    Var_list) | T], Aux_list]);
 apply_action(Server_settings, [E | T], A, Aux_list) ->
     apply_action(Server_settings, T, A, [E | Aux_list]).
 
-apply_action_aux(Server_settings, {Name, Pos, Vel, Hp, E_id}, Action, Var_list) ->
+apply_action_aux(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Action, Var_list) ->
     case Action of
 	move ->
 	    [Direction] = Var_list,
-	    move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction);
+	    move(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Direction);
 	jump ->
 	    [Type] = Var_list,
-	    jump(Server_settings, {Name, Pos, Vel, Hp, E_id}, Type)
+	    jump(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Type)
     end.
 
-move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction) ->
+move(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Direction) ->
     {Move_factor,
      Gravity_factor,
      Air_friction,
@@ -108,9 +108,9 @@ move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction) ->
     end,
     {X_vel, Y_vel} = Vel,
     New_x_vel = limitor(X_vel+Dir_vel, Vel_limit, Air_friction),
-    {Name, Pos, {New_x_vel, Y_vel-Gravity_factor}, Hp, E_id}.
+    {Name, Pos, {New_x_vel, Y_vel-Gravity_factor}, Hp, Power, E_id}.
 
-jump(Server_settings, {Name, Pos, Vel, Hp, E_id}, Type) ->
+jump(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Type) ->
     {_Move_factor,
      Gravity_factor,
      Air_friction,
@@ -129,9 +129,9 @@ jump(Server_settings, {Name, Pos, Vel, Hp, E_id}, Type) ->
 		strong ->
 		    Jump_vel = Base_jump_factor*3
 	    end,
-	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel+Jump_vel-Gravity_factor}, Hp, E_id};
+	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel+Jump_vel-Gravity_factor}, Hp, Power, E_id};
 	false ->
-	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel-Gravity_factor}, Hp, E_id}
+	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel-Gravity_factor}, Hp, Power, E_id}
     end.
 
 can_jump(_Pos, []) ->
@@ -185,15 +185,15 @@ modulor(X, Mod) ->
 
 add_player(Player, [], Aux_list) ->
     [Player | Aux_list];
-add_player({Name, Pos, Vel, Hp, Id}, [{N, P, V, H, I} | T], Aux_list) when I =/= Id ->
-    add_player({Name, Pos, Vel, Hp, Id}, T, [{N, P, V, H, I} | Aux_list]);
+add_player({Name, Pos, Vel, Hp, Power, Id}, [{N, P, V, H, PW, I} | T], Aux_list) when I =/= Id ->
+    add_player({Name, Pos, Vel, Hp, Power, Id}, T, [{N, P, V, H, PW, I} | Aux_list]);
 add_player(_ , Players, Aux_list) ->
     lists:append([Players, Aux_list]).
 
 remove_player(_Player, [], Aux_list) ->
     Aux_list;
 %%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
-remove_player({_Name, _Pos, _Vel, _Hp, Id}, [{_N, _P, _V, _H, I} | T], Aux_list) when I =:= Id ->
+remove_player({_Name, _Pos, _Vel, _Hp, _Power, Id}, [{_N, _P, _V, _H, I} | T], Aux_list) when I =:= Id ->
     lists:append([T, Aux_list]);
 remove_player(Player, [P | T], Aux_list) ->
     remove_player(Player, T, [P | Aux_list]).
@@ -225,7 +225,7 @@ iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list,
     iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, [Bullet_info |Bullet_info_list]).
 
 iterate_player(Server_settings, Player) ->    
-    {Name, Pos, Vel, Hp, Id} = Player,
+    {Name, Pos, Vel, Hp, Power, Id} = Player,
     {_Move_factor,
      _Gravity_factor,
      _Air_friction,
@@ -234,7 +234,7 @@ iterate_player(Server_settings, Player) ->
      _Vel_limit,
      Level_list} = Server_settings,
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list), 
-    {Name, New_pos, New_vel, New_hp, Id}.
+    {Name, New_pos, New_vel, New_hp, Power, Id}.
 
 get_borders([], Aux) ->
     Aux;
@@ -318,7 +318,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      Level_list} = Server_settings,
     {Entity_id, Type, Direction} = Bullet,
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
-    {_Name, {X,Y}, _Vel, _Hp, _Id} = Player,
+    {_Name, {X,Y}, _Vel, _Hp, _Power, _Id} = Player,
     {X_m, Y_m} = {X+ ?PLAYERMIDDLEX ,Y+ ?PLAYERMIDDLEY},
     Line = make_line({X_m, Y_m}, Direction),
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
@@ -334,11 +334,11 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     if Hit =:= dummy ->
 	    %% no player hit, only fire recoil
 	    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-	    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
+	    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
 	    io:format("NO HIT!!!"),
 	    %% no hit, only fire recoil
 	    Border_point,
-	    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2], 
+	    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} | Rest_list_2], 
 	     {Entity_id, {X_m, Y_m}, Border_point}};
        true ->
 	    io:format("Good! HIT!!!"),
@@ -349,16 +349,16 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 		    %% player hit! fire recoil and damage!
 		    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
 		    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
-		    {Name, Pos, Vel, Hp, Id} = Hit_player,
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Id_2} 
-		      | [{Name, Pos, Vel, Hp - Type*Damage, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
+		    {Name, Pos, Vel, Hp, Power, Id} = Hit_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} 
+		      | [{Name, Pos, Vel, Hp - Type*Damage, Power, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 	       true ->
 		    %% wall hit first, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Id_2} = Fire_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
 		    Border_point,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Id_2} | Rest_list_2],
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} | Rest_list_2],
 		     {Entity_id, {X_m, Y_m}, Border_point}}
 	    end
     end.
@@ -367,8 +367,8 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 get_player([], _Id, _Aux) ->
     io:format("ERROR NO PLAYER FOR BULLET!!!~n"),
     error_no_such_player; %% Error
-get_player([{Name, Pos, Vel, Hp, Id} | P_list], E_id, Aux) when E_id =:= Id ->
-    {{Name, Pos, Vel, Hp, Id}, lists:append([P_list, Aux])};
+get_player([{Name, Pos, Vel, Hp, Power, Id} | P_list], E_id, Aux) when E_id =:= Id ->
+    {{Name, Pos, Vel, Hp, Power, Id}, lists:append([P_list, Aux])};
 get_player([P | P_list], Id, Aux) ->
     get_player(P_list, Id, [P | Aux]).
 
@@ -376,7 +376,7 @@ get_player([P | P_list], Id, Aux) ->
 get_hit_boxes([], Aux) ->
     Aux;
 get_hit_boxes([P | P_list], {V_aux, H_aux}) ->
-    {_Name, {X, Y}, _Vel, _Hp, Id} = P,
+    {_Name, {X, Y}, _Vel, _Hp, _Power, Id} = P,
     Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
     Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
     Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
@@ -615,3 +615,8 @@ make_line(Pos, Direction) ->
             Dir = pos
     end,  
     {Pos, Angle, Dir}.
+
+
+new_power(Power, Vel)->
+    {X, Y} = Vel,
+    limitor(Power + abs(X) + abs(Y), 100, 0).
