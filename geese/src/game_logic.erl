@@ -104,7 +104,7 @@ move(Server_settings, {Name, Pos, Vel, Hp, E_id}, Direction) ->
 	left ->
 	    Dir_vel = -Move_factor;
 	stop ->
-	    Dir_vel = 0
+	    Dir_vel = 0.0
     end,
     {X_vel, Y_vel} = Vel,
     New_x_vel = limitor(X_vel+Dir_vel, Vel_limit, Air_friction),
@@ -264,7 +264,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     if Short =:= Ideal_point ->
             %% BRA inge krock
 	    %% io:format("Fall1: Ingen krock"),
-	    {{X_vel, Y_vel},Ideal_point, Hp};
+	    {{X_vel, Y_vel},Ideal_point, Hp}; 
        true ->
             %% Krock, stuff
 	    case Type of 
@@ -280,7 +280,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
 			    %% io:format("Fall2: Hor. Krock bara~n~w~n~w~n", [Short, Ideal_point_2]),
-			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+			    {{X_vel, 0.0},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall3: Hor. Krock sen Ver. krock"),
@@ -298,7 +298,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
 			    %% io:format("Fall4: Ver. Krock bara~n~w~n~w~n",[Short, Line_2]),
-			    {{New_x_vel, New_y_vel},Ideal_point_2, Hp};
+			    {{0.0, Y_vel},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
 			    %% io:format("Fall5: Verr. Krock sen Hor. krock"),
