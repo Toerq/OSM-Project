@@ -45,7 +45,7 @@ public class Framework extends Canvas {
      * FPS - Frames per second
      * How many times per second the game should update?
      */
-    private final int GAME_FPS = 16;
+    private final int GAME_FPS = 60;
     /**
      * Pause between updates. It is in nanoseconds.
      */

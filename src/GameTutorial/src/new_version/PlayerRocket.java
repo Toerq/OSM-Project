@@ -110,33 +110,37 @@ public class PlayerRocket {
         // return the new optimized image
         return new_image;
     }
-    
+
     private void LoadContent()
     {
     	/*GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice device = env.getDefaultScreenDevice();
         GraphicsConfiguration config = device.getDefaultConfiguration();
         //BufferedImage buffy = config.createCompatibleImage(width, height, Transparency.TRANSLUCENT);
-    	*/
-    	playerImgLeft = new BufferedImage[6];
-    	playerImgRight = new BufferedImage[6];
-    	BufferedImage[] tmp = new BufferedImage[6];
+    	 */
+    	playerImgLeft = new BufferedImage[12];
+    	playerImgRight = new BufferedImage[12];
+    	BufferedImage tmp;
+    	//BufferedImage[] tmp = new BufferedImage[12];
     	try
     	{
     		//URL playerUrl= this.getClass().getResource("resources/images/player.png");
     		//URL playerUrl= this.getClass().getResource("resources/images/player_" + 1 + ".png");
     		//BufferedImage tmp =ImageIO.read(playerUrl);
     		//player = toCompatibleImage(tmp);
-    		URL[] playerImgLeftUrl = new URL[6];
-    		URL[] playerImgRightUrl = new URL[6];
-    		for (int i = 0; i < 6; i++) {
-    		playerImgLeftUrl[i] = this.getClass().getResource("resources/images/player_" + (i+1) + "_rev.png");
-    		playerImgRightUrl[i] = this.getClass().getResource("resources/images/player_" + (i+1) + ".png");
-    		
-    		tmp[i] = ImageIO.read(playerImgLeftUrl[i]);
-    		playerImgLeft[i] = toCompatibleImage(tmp[i]);
-    		tmp[i] = ImageIO.read(playerImgRightUrl[i]);
-    		playerImgRight[i] = toCompatibleImage(tmp[i]);
+    		URL[] playerImgLeftUrl = new URL[12];
+    		URL[] playerImgRightUrl = new URL[12];
+    		for (int i = 0; i < 12; i++) {
+    			playerImgLeftUrl[i] = this.getClass().getResource("resources/new_images/player_" + (i+1) + "_rev.png");
+    			playerImgRightUrl[i] = this.getClass().getResource("resources/new_images/player_" + (i+1) + ".png");
+
+    			//playerImgLeftUrl[i] = this.getClass().getResource("resources/new_images/player_1.png");
+    			//playerImgRightUrl[i] = this.getClass().getResource("resources/new_images/player_1.png");
+
+    			tmp = ImageIO.read(playerImgLeftUrl[i]);
+    			playerImgLeft[i] = toCompatibleImage(tmp);
+    			tmp = ImageIO.read(playerImgRightUrl[i]);
+    			playerImgRight[i] = toCompatibleImage(tmp);
     		}
     		playerImgWidth = playerImgLeft[0].getWidth();
     		playerImgHeight = playerImgLeft[0].getHeight();
@@ -182,7 +186,7 @@ public class PlayerRocket {
     		argList = new OtpErlangList(new OtpErlangAtom("right"));
     		Main.client.doAction("move", argList);
     	}
-    	
+
     	else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
     		argList = new OtpErlangList(new OtpErlangAtom("normal"));
     		Main.client.doAction("jump", argList);
@@ -212,19 +216,19 @@ public class PlayerRocket {
     }
 
 
-	private void fire(Point mousePosition) {
-		OtpErlangList argList;
-		OtpErlangInt type = new OtpErlangInt(25);
-		OtpErlangInt x = new OtpErlangInt(mousePosition.x);
-		OtpErlangInt y = new OtpErlangInt(Game.height - mousePosition.y);
-		OtpErlangObject[] posArray = {x,  y};
-		OtpErlangTuple posTuple = new OtpErlangTuple(posArray);
-		OtpErlangObject[] argArray = {type, posTuple};
-		argList = new OtpErlangList(argArray);
-		Main.client.doAction("fire", argList);
-		
-	}
-    
+    private void fire(Point mousePosition) {
+    	OtpErlangList argList;
+    	OtpErlangInt type = new OtpErlangInt(25);
+    	OtpErlangInt x = new OtpErlangInt(mousePosition.x);
+    	OtpErlangInt y = new OtpErlangInt(Game.height - mousePosition.y);
+    	OtpErlangObject[] posArray = {x,  y};
+    	OtpErlangTuple posTuple = new OtpErlangTuple(posArray);
+    	OtpErlangObject[] argArray = {type, posTuple};
+    	argList = new OtpErlangList(argArray);
+    	Main.client.doAction("fire", argList);
+
+    }
+
     public void Draw(Graphics2D g2d)
     {
     	g2d.setColor(Color.white);
@@ -232,16 +236,27 @@ public class PlayerRocket {
     	int[][] players = Game.playerPos;
     	int base = Game.height - playerImgHeight;
     	for(int i = 0; i < players.length; i++ ) {   	
-    		System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
-    	//	if (Double.compare(Game.playerVel[i][0], 0.0) < 0) {
-    		g2d.drawImage(Game.images.get(Game.playerId[i])[0], players[i][0] - 18, base - players[i][1], null);
-    	//	}
-    	//	else {
-    	//		g2d.drawImage(Game.images.get(Game.playerId[i])[1], players[i][0] - 18, base - players[i][1], null);
-    	//	}
-    		g2d.drawString(Game.playerNames[i] + " " + Game.playerHp[i], players[i][0] , base - 10 -players[i][1]);
-    		g2d.drawLine(10, 10, 100, 100);
+    		//System.out.println("Player " + i + " : (" + players[i][0] + ", " + players[i][1] + ")");
+    		int x = players[i][0] - 18;
+    		int y = base - players[i][1];
+    		if (Game.playerVel[i][0] < 0 ) {
+    			g2d.drawImage(Game.images.get(Game.playerId[i])[0], x, y, null);
+    		}
+    		else {
+    			g2d.drawImage(Game.images.get(Game.playerId[i])[1], players[i][0] - 18, base - players[i][1], null);
+    		}
+    		//g2d.setColor(Color.white);
+  
+    		g2d.drawString(Game.playerNames[i], x -6 , y - 22);
+    		//g2d.drawRect(100, 100, 100, 100);
+    		g2d.setColor(Color.red);
+    		g2d.drawRect(x - 6, y - 16, 50, 4);
+    		g2d.fillRect(x - 6, y - 16, (int) (Game.playerHp[i])/2, 5);
+    		g2d.setColor(Color.white);
+    		g2d.drawRect(x - 6, y - 9, 50, 4);
+    		g2d.fillRect(x - 6, y - 9, (int) (Game.playerPow[i])/2, 5);
+    		//g2d.drawLine(10, 10, 100, 100);
     	}
     }
-    
+
 }
