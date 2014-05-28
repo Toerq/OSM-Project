@@ -65,8 +65,8 @@ round_state({Player_list, Bullet_list, Level_list}) ->
 round_players([], Aux) ->
     Aux;
 round_players([P | Player_list], Aux) ->
-    {Name, {X, Y}, Vel, Hp, E_id} = P,
-    round_players(Player_list, [{Name, {round(X), round(Y)}, Vel, Hp, E_id} | Aux]).
+    {Name, {X, Y}, Vel, Hp, Power, E_id} = P,
+    round_players(Player_list, [{Name, {round(X), round(Y)}, Vel, Hp, Power, E_id} | Aux]).
 
 round_bullets([], Aux) ->
     Aux;
