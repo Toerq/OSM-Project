@@ -360,10 +360,10 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 			    %% player hit! fire recoil and damage!
 			    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
 			    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
-			    {Name, Pos, Vel, Hp, Power, Id} = Hit_player,
+			    {Name_1, Pos_1, Vel_1, Hp_1, Power_1, Id_1} = Hit_player,
 			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
 			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, Id_2} 
-			      | [{Name, Pos, Vel, Hp - Type*Damage, Power, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
+			      | [{Name_1, Pos_1, Vel_1, Hp_1 - Type*Damage, Power_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 		       true ->
 			    %% wall hit first, only fire recoil
 			    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
