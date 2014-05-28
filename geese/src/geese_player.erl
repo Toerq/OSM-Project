@@ -78,6 +78,10 @@ talk_state(State) ->
 		    gen_tcp:send(Accept_socket, term_to_binary(pong)),
 		    talk_state(State);
 
+		my_id ->
+		    gen_tcp:send(Accept_socket, term_to_binary(State#state.player_id)),
+		    talk_state(State);
+
 		browse_tables ->
 		    Tables = geese_coordinator:browse_tables(),
 		    String1 = lists:flatten(io_lib:format("~p~n", [Tables])),
