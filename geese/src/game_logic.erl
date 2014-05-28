@@ -222,7 +222,11 @@ iterate_state_aux({Server_settings, {[P | Player_list], []}}, Aux_list, Bullet_i
     iterate_state_aux({Server_settings, {Player_list, []}}, [iterate_player(Server_settings, P) | Aux_list], Bullet_info_list);
 iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list, Bullet_info_list) ->
     {New_player_list, Bullet_info} = iterate_bullet(Server_settings, Player_list, B),
-    iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, [Bullet_info |Bullet_info_list]).
+    if Bullet_info =:= nope ->
+	    iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, Bullet_info_list);
+       true ->
+	    iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, [Bullet_info |Bullet_info_list])
+    end.
 
 iterate_player(Server_settings, Player) ->    
     {Name, Pos, Vel, Hp, Power, Id} = Player,
@@ -233,8 +237,9 @@ iterate_player(Server_settings, Player) ->
      _Grid_limit,
      _Vel_limit,
      Level_list} = Server_settings,
-    {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list), 
-    {Name, New_pos, New_vel, New_hp, Power, Id}.
+    {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list),
+    New_power = new_power(Power, New_vel),
+    {Name, New_pos, New_vel, New_hp, New_power, Id}.
 
 get_borders([], Aux) ->
     Aux;
@@ -272,7 +277,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    %% your new pos will be Short() and you will lose your vertical vel,
 		    %% check from Short() to new pos with your remaining hor. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {X_vel - (X_short-X), 0.0},
+		    {New_x_vel, _New_y_vel} = {X_vel - (X_short-X), 0.0},
 		    Ideal_point_2 = {X_short + New_x_vel, Y_short},
 		    Line_2 = make_line(Short, Ideal_point_2),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, Vertical_list, [], Dummy_value_v, Dummy_value_h),
@@ -290,7 +295,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    %% your new pos will be Short() and you will lose your hor vel,
 		    %% check from Short() to new pos with your remaining ver. vel
 		    {X_short, Y_short} = Short,
-		    {New_x_vel, New_y_vel} = {0.0, Y_vel - (Y_short-Y)},
+		    {_New_x_vel, New_y_vel} = {0.0, Y_vel - (Y_short-Y)},
 		    Ideal_point_2 = {X_short, Y_short+New_y_vel},
 		    Line_2 = make_line(Short, {X_short, Y_short+New_y_vel}),
 		    {_Border_hit_2, Point_2, _Type_2}  = border_hit(Line_2, [], Horizontal_list, Dummy_value_v, Dummy_value_h),
@@ -309,7 +314,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     
 
 iterate_bullet(Server_settings, Player_list, Bullet) ->
-     {_Move_factor,			
+    {_Move_factor,			
      Gravity_factor,
      Air_friction,
      _Base_jump_factor,
@@ -318,50 +323,58 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      Level_list} = Server_settings,
     {Entity_id, Type, Direction} = Bullet,
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
-    {_Name, {X,Y}, _Vel, _Hp, _Power, _Id} = Player,
-    {X_m, Y_m} = {X+ ?PLAYERMIDDLEX ,Y+ ?PLAYERMIDDLEY},
-    Line = make_line({X_m, Y_m}, Direction),
-    {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
-    Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
-    Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
-    {_Border_hit, Border_point, _Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
-    {V_hit_box_list, H_hit_box_list} = get_hit_boxes(Rest_list, {[],[]}),
-    Hit = player_hit(Line, V_hit_box_list, H_hit_box_list, dummy, dummy),
-    %% TODO %%
-    %% * hit border or player?
-    %% * recoil
-    %% * return the bullet {owner, origin, destination} 
-    if Hit =:= dummy ->
-	    %% no player hit, only fire recoil
-	    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-	    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
-	    io:format("NO HIT!!!"),
-	    %% no hit, only fire recoil
-	    Border_point,
-	    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} | Rest_list_2], 
-	     {Entity_id, {X_m, Y_m}, Border_point}};
+    {Name, {X,Y}, Vel, Hp, Power, Id} = Player,
+    {X_vel, Y_vel} = Vel,
+    if Power =/= 100 ->
+	    %% NOT ENOUGH POWER!!!
+	    {[{Name, {X,Y}, {limitor(X_vel, Vel_limit, Air_friction), Y_vel - Gravity_factor}, Hp, Power, Id} | Rest_list], nope};
        true ->
-	    io:format("Good! HIT!!!"),
-	    %%hit! fire recoil, hit recoil and damage!
-	    {Player_id, Point, Damage} = Hit,
-	    Short = shortest_distance({X_m, Y_m}, Border_point, Point),
-	    if Short =:= Point ->
-		    %% player hit! fire recoil and damage!
-		    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
-		    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
-		    {Name, Pos, Vel, Hp, Power, Id} = Hit_player,
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} 
-		      | [{Name, Pos, Vel, Hp - Type*Damage, Power, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
-	       true ->
-		    %% wall hit first, only fire recoil
+	    %% FIRE!!!
+	    {X_m, Y_m} = {X+ ?PLAYERMIDDLEX ,Y+ ?PLAYERMIDDLEY},
+	    Line = make_line({X_m, Y_m}, Direction),
+	    {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
+	    Dummy_value_v = {{-99999,{-99999,-99999}},{-99999,-99999}, ver},
+	    Dummy_value_h = {{{-99999,-99999},-99999},{-99999,-99999}, hor},
+	    {_Border_hit, Border_point, _Type}  = border_hit(Line, Vertical_list, Horizontal_list, Dummy_value_v, Dummy_value_h),
+	    {V_hit_box_list, H_hit_box_list} = get_hit_boxes(Rest_list, {[],[]}),
+	    Hit = player_hit(Line, V_hit_box_list, H_hit_box_list, dummy, dummy),
+	    %% TODO %%
+	    %% * hit border or player?
+	    %% * recoil
+	    %% * return the bullet {owner, origin, destination} 
+	    if Hit =:= dummy ->
+		    %% no player hit, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Id_2} = Fire_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
+		    io:format("NO HIT!!!"),
+		    %% no hit, only fire recoil
 		    Border_point,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Power_2, Id_2} | Rest_list_2],
-		     {Entity_id, {X_m, Y_m}, Border_point}}
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, 0, Id_2} | Rest_list_2], 
+		     {Entity_id, {X_m, Y_m}, Border_point}};
+	       true ->
+		    io:format("Good! HIT!!!"),
+		    %%hit! fire recoil, hit recoil and damage!
+		    {Player_id, Point, Damage} = Hit,
+		    Short = shortest_distance({X_m, Y_m}, Border_point, Point),
+		    if Short =:= Point ->
+			    %% player hit! fire recoil and damage!
+			    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
+			    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
+			    {Name, Pos, Vel, Hp, Power, Id} = Hit_player,
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, Id_2} 
+			      | [{Name, Pos, Vel, Hp - Type*Damage, Power, Id} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
+		       true ->
+			    %% wall hit first, only fire recoil
+			    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
+			    Border_point,
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, 0, Id_2} | Rest_list_2],
+			     {Entity_id, {X_m, Y_m}, Border_point}}
+		    end
 	    end
     end.
+    
 
 
 get_player([], _Id, _Aux) ->
@@ -619,4 +632,4 @@ make_line(Pos, Direction) ->
 
 new_power(Power, Vel)->
     {X, Y} = Vel,
-    limitor(Power + abs(X) + abs(Y), 100, 0).
+    limitor(round(Power + abs(X) + abs(Y)), 100, 0).
