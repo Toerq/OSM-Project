@@ -2,13 +2,13 @@
 -compile(export_all).
 -export([do_actions/2, make_new_state/0]).
 
--define(PLAYERHEIGHT, 70).
--define(PLAYERWIDTH, 26).
--define(PLAYERLEGSHEIGHT, 24).
--define(PLAYERBODYHEIGHT, 26).
--define(PLAYERHEADHEIGHT, 20).
--define(PLAYERMIDDLEX, 15).
--define(PLAYERMIDDLEY, 40).
+-define(PLAYERHEIGHT, 35).
+-define(PLAYERWIDTH, 13).
+-define(PLAYERLEGSHEIGHT, 12).
+-define(PLAYERBODYHEIGHT, 13).
+-define(PLAYERHEADHEIGHT, 10).
+-define(PLAYERMIDDLEX, 7).
+-define(PLAYERMIDDLEY, 20).
 
 -define(DAMAGELEGS, 1).
 -define(DAMAGEBODY, 2).
