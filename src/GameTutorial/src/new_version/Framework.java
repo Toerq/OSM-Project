@@ -45,7 +45,7 @@ public class Framework extends Canvas {
      * FPS - Frames per second
      * How many times per second the game should update?
      */
-    private final int GAME_FPS = 60;
+    private final int GAME_FPS = 29;
     /**
      * Pause between updates. It is in nanoseconds.
      */
@@ -223,9 +223,10 @@ public class Framework extends Canvas {
             case MAIN_MENU:
                 g2d.drawImage(moonLanderMenuImg, 0, 0, frameWidth, frameHeight, null);
                 g2d.setColor(Color.white);
-                g2d.drawString("Use w a d keys to controle the rocket.", frameWidth / 2 - 117, frameHeight / 2);
-                g2d.drawString("Press any key to start the game.", frameWidth / 2 - 100, frameHeight / 2 + 30);
-                g2d.drawString("WWW.GAMETUTORIAL.NET", 7, frameHeight - 5);
+                g2d.drawString("Use w a d keys to controle your player and press space to jump.", frameWidth / 2 - 117, frameHeight / 2);
+                g2d.drawString("Aim with your mouse and press left mouse button to fire your weapon.", frameWidth / 2 - 117, frameHeight / 2 + 30);
+                g2d.drawString("Press any key to start the game.", frameWidth / 2 - 117, frameHeight / 2 + 60);
+                //g2d.drawString("WWW.GAMETUTORIAL.NET", 7, frameHeight - 5);
             break;
             case OPTIONS:
                 //...

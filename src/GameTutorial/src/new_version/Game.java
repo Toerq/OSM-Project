@@ -24,7 +24,11 @@ public class Game {
     /**
      * The space rocket with which player will have to land.
      */
+	public static int myId;
+	public static int[] myPos;
+	public static long ping;
 	public static int height = 680;
+	public static int width = 1280;
 	public static int[][] boxes;
 	public static String[] playerNames;
 	public static int[][] playerPos;

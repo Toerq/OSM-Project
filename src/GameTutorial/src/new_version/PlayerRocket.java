@@ -232,7 +232,22 @@ public class PlayerRocket {
     public void Draw(Graphics2D g2d)
     {
     	g2d.setColor(Color.white);
-    	g2d.drawString("Rocket coordinates: " + x + " : " + y, 5, 15);
+    	g2d.drawString("Ping: " , 5, 15);
+    	g2d.drawString(Long.toString(Game.ping) , 50, 15);
+    	g2d.drawString("ms" , 65, 15);
+    	
+    	g2d.drawString("My Position: " , 5, 30);
+    	g2d.drawString(Game.myPos[0] + ", " + Game.myPos[1] , 100, 30);
+    	
+    	g2d.drawString("Players" , Game.width - 200, 15);
+    	g2d.drawString("Kills" , Game.width - 125, 15);
+    	g2d.drawString("Deaths" , Game.width - 85, 15);
+    	for(int i = 0; i < Game.playerNames.length; i ++) {
+    		g2d.drawString(Game.playerNames[i] , Game.width - 200, 30 + i*15);
+    		g2d.drawString("0" , Game.width - 125, 30 + i*15);
+    		g2d.drawString("0" , Game.width - 85, 30 + i*15);
+    	}
+    	
     	int[][] players = Game.playerPos;
     	int base = Game.height - playerImgHeight;
     	for(int i = 0; i < players.length; i++ ) {   	

@@ -47,6 +47,7 @@ public class Main implements ActionListener {
 	Main(String name) {
 		playerName = name;
 		client.setName(playerName);
+		client.getMyId();
 		f = new JFrame("GEESE - " + name);
 		f.setSize(1280, 720);
 		f.setLocationRelativeTo(null);

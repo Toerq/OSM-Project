@@ -73,8 +73,16 @@ public class Jinterface_client {
 		sendTCP(ping);
 		OtpErlangObject pong = getAnswer();
 	}
-	
-	
+
+	public void getMyId() {
+		OtpErlangAtom getId = new OtpErlangAtom("my_id");
+		System.out.println(getId);
+		sendTCP(getId);
+		OtpErlangObject id = getAnswer();
+		System.out.println(id);
+		Game.myId = ((OtpErlangPid)id).id();
+	}
+
 	public boolean join (OtpErlangPid pid) {
 		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
@@ -297,6 +305,9 @@ public class Jinterface_client {
 				velocity[i][0] = ((OtpErlangLong)vel.elementAt(0)).intValue();
 				velocity[i][1] = ((OtpErlangLong)vel.elementAt(1)).intValue();
 				id[i] = idTmp.id();
+				if (id[i] == Game.myId) {
+					Game.myPos = positions[i];
+				}
 
 				if (!(Game.images.containsKey(id[i]))) {
 					int j = 0;
@@ -331,7 +342,10 @@ public class Jinterface_client {
 
 	
 	public void updateState() {
+		long time = System.currentTimeMillis();
 		OtpErlangTuple state = getState();
+		long diff = System.currentTimeMillis() - time;
+		Game.ping = diff;
 		updateLevelList(state);
 		updatePlayerList(state);
 		updateBulletList(state);
