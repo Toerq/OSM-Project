@@ -44,8 +44,8 @@ public class PlayerRocket {
     /**
      * Image of the rocket in air.
      */
-    private int shootingRadius = 250;
-    private int[] myCenter = new int[2];
+   // private int shootingRadius = 250;
+    //private int[] myCenter = new int[2];
     //private BufferedImage player;
     public static BufferedImage[] playerImgRight;
     public static BufferedImage[] playerImgLeft;
@@ -169,9 +169,10 @@ public class PlayerRocket {
     public void Update(Point mousePosition)
     {
     	OtpErlangList argList;
+    	
     	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
     	{
-    		if(mousePosition.distance((double) myCenter[0], (double) myCenter[1]) < (double) shootingRadius){
+    		if(mousePosition.distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
     			fire(mousePosition);	
     		}	
     	}
@@ -203,8 +204,8 @@ public class PlayerRocket {
     	}
     	// Updates position
     	Main.client.updateState();
-    	myCenter[0] = Game.myPos[0] + 6;
-    	myCenter[1] = Game.height - Game.myPos[1] - 17;
+    	Game.myCenter[0] = Game.myPos[0] + 6;
+    	Game.myCenter[1] = Game.height - Game.myPos[1] - 17;
 
     }
 
@@ -271,7 +272,7 @@ public class PlayerRocket {
     		g2d.fillRect(x - 6, y - 9, (int) (Game.playerPow[i])/2, 5);
     		//g2d.drawLine(10, 10, 100, 100);
     	}
-    	drawCircle(g2d, myCenter[0], myCenter[1], shootingRadius);
+    	drawCircle(g2d, Game.myCenter[0], Game.myCenter[1], Game.shootingRadius);
     }
 
 }

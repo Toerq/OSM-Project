@@ -1,8 +1,10 @@
 package new_version;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -70,6 +72,8 @@ public class Framework extends Canvas {
     // The actual game
     private Game game;
     
+    private Cursor aimCursor;
+    private Cursor noAimCursor;
     
     /**
      * Image for menu.
@@ -82,6 +86,27 @@ public class Framework extends Canvas {
         super();
         
         gameState = GameState.VISUALIZING;
+        
+        // If you will draw your own mouse cursor or if you just want that mouse cursor disapear, 
+        // insert "true" into if condition and mouse cursor will be removed.
+        if(true)
+        {
+        	URL aimCursorUrl = this.getClass().getResource("resources/new_images/aim.png");
+        	URL noAimCursorUrl = this.getClass().getResource("resources/new_images/noaim.png");
+            BufferedImage aimCursorImg = null;
+            BufferedImage noAimCursorImg = null;
+			try {
+				aimCursorImg = ImageIO.read(aimCursorUrl);
+				noAimCursorImg = ImageIO.read(noAimCursorUrl);
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            aimCursor = Toolkit.getDefaultToolkit().createCustomCursor(aimCursorImg, new Point(0, 0), null);
+            noAimCursor = Toolkit.getDefaultToolkit().createCustomCursor(noAimCursorImg, new Point(0, 0), null);
+            this.setCursor(noAimCursor);
+        }
         
         //We start game in new thread.
         Thread gameThread = new Thread() {
@@ -142,7 +167,12 @@ public class Framework extends Canvas {
                 	//System.out.println();
                 	//System.out.println("Game loop: In playing state");
                     gameTime += System.nanoTime() - lastTime;
-                    
+                    if(mousePosition().distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
+        				this.setCursor(aimCursor);
+            		}
+                    else {
+                    	this.setCursor(noAimCursor);
+                    }
                     game.UpdateGame(gameTime, mousePosition());
                     
                     lastTime = System.nanoTime();

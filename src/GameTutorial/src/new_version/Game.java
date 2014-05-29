@@ -26,6 +26,8 @@ public class Game {
      */
 	public static int myId;
 	public static int[] myPos;
+	public static int shootingRadius = 250;
+	public static int[] myCenter = new int[2];
 	public static long ping;
 	public static int height = 680;
 	public static int width = 1280;

@@ -11,6 +11,10 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
+
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 /**
@@ -26,8 +30,7 @@ public abstract class Canvas extends JPanel implements KeyListener, MouseListene
     
     // Mouse states - Here are stored states for mouse keys - is it down or not.
     private static boolean[] mouseState = new boolean[3];
-        
-    
+
     public Canvas()
     {
         // We use double buffer to draw on the screen.
@@ -35,21 +38,14 @@ public abstract class Canvas extends JPanel implements KeyListener, MouseListene
         this.setFocusable(true);
         this.setBackground(Color.black);
         
-        // If you will draw your own mouse cursor or if you just want that mouse cursor disapear, 
-        // insert "true" into if condition and mouse cursor will be removed.
-        if(false)
-        {
-            BufferedImage blankCursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-            Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(blankCursorImg, new Point(0, 0), null);
-            this.setCursor(blankCursor);
-        }
+
+ 
         
         // Adds the keyboard listener to JPanel to receive key events from this component.
         this.addKeyListener(this);
         // Adds the mouse listener to JPanel to receive mouse events from this component.
         this.addMouseListener(this);
     }
-    
     
     // This method is overridden in Framework.java and is used for drawing to the screen.
     public abstract void Draw(Graphics2D g2d);
