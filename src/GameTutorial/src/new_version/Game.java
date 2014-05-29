@@ -180,9 +180,9 @@ public class Game {
         	g2d.setColor(new Color(R,G,B));
         	g2d.drawRect(x0, Game.height - y1, x1 - x0, y1 - y0);
         }
-        System.out.print("Bullet list: ");
+        //System.out.print("Bullet list: ");
         for (int i = 0; i < bulletList.size(); i++) {
-        	System.out.print(Arrays.toString(bulletList.get(i)));
+        	//System.out.print(Arrays.toString(bulletList.get(i)));
        
         	g2d.drawLine(bulletList.get(i)[0], Game.height - bulletList.get(i)[1], bulletList.get(i)[2], Game.height - bulletList.get(i)[3]);
         	bulletList.get(i)[4]--;

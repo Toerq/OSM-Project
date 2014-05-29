@@ -111,7 +111,7 @@ public class Framework extends Canvas {
     {
         try
         {
-            URL moonLanderMenuImgUrl = this.getClass().getResource("resources/images/menu.jpg");
+            URL moonLanderMenuImgUrl = this.getClass().getResource("resources/new_images/startscreen.png");
             System.out.println("Path:  " + this.getClass().getResource(""));
             System.out.println("Url: " + moonLanderMenuImgUrl);
             moonLanderMenuImg = ImageIO.read(moonLanderMenuImgUrl);
@@ -222,11 +222,6 @@ public class Framework extends Canvas {
             break;
             case MAIN_MENU:
                 g2d.drawImage(moonLanderMenuImg, 0, 0, frameWidth, frameHeight, null);
-                g2d.setColor(Color.white);
-                g2d.drawString("Use w a d keys to controle your player and press space to jump.", frameWidth / 2 - 117, frameHeight / 2);
-                g2d.drawString("Aim with your mouse and press left mouse button to fire your weapon.", frameWidth / 2 - 117, frameHeight / 2 + 30);
-                g2d.drawString("Press any key to start the game.", frameWidth / 2 - 117, frameHeight / 2 + 60);
-                //g2d.drawString("WWW.GAMETUTORIAL.NET", 7, frameHeight - 5);
             break;
             case OPTIONS:
                 //...

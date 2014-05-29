@@ -248,7 +248,7 @@ public class Jinterface_client {
 			}
 		}
 		if(bullets.length > 0) {
-			System.out.println("GOT BULLETS!!!");
+			//System.out.println("GOT BULLETS!!!");
 		}
 		Game.bullets = bullets;
 	}
@@ -273,7 +273,7 @@ public class Jinterface_client {
 		System.out.println("State: " + state);
 		//System.out.println(state.elementAt(0));
 		OtpErlangList playerList = (OtpErlangList) state.elementAt(0);
-		System.out.println("Player List : " + playerList);
+		//System.out.println("Player List : " + playerList);
 		OtpErlangObject[] playerArray = playerList.elements();
 		
 		int size = playerArray.length;
