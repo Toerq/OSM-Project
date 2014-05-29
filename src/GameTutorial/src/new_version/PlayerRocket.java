@@ -44,7 +44,9 @@ public class PlayerRocket {
     /**
      * Image of the rocket in air.
      */
-    private BufferedImage player;
+    private int shootingRadius = 250;
+    private int[] myCenter = new int[2];
+    //private BufferedImage player;
     public static BufferedImage[] playerImgRight;
     public static BufferedImage[] playerImgLeft;
   
@@ -71,7 +73,8 @@ public class PlayerRocket {
     
     private void Initialize()
     {
-     Main.client.getState();
+    	Main.client.getState();
+    	//myCenter[0] = 
        //x = pos[0];
        //y = pos[1];
     }
@@ -168,15 +171,16 @@ public class PlayerRocket {
     	OtpErlangList argList;
     	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
     	{
-    		fire(mousePosition);
-    		//Main.client.doAction("move_down", argList);
+    		if(mousePosition.distance((double) myCenter[0], (double) myCenter[1]) < (double) shootingRadius){
+    			fire(mousePosition);	
+    		}	
     	}
 
-    	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_W)) {
-    		argList = new OtpErlangList();
-    		Main.client.doAction("move_down", argList);
-    	}*/
-
+    	else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
+    		argList = new OtpErlangList(new OtpErlangAtom("normal"));
+    		Main.client.doAction("jump", argList);
+    	}
+    	
     	else if (Canvas.keyboardKeyState(KeyEvent.VK_A)) {
     		argList = new OtpErlangList(new OtpErlangAtom("left"));
     		Main.client.doAction("move", argList);
@@ -186,15 +190,6 @@ public class PlayerRocket {
     		argList = new OtpErlangList(new OtpErlangAtom("right"));
     		Main.client.doAction("move", argList);
     	}
-
-    	else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
-    		argList = new OtpErlangList(new OtpErlangAtom("normal"));
-    		Main.client.doAction("jump", argList);
-    	}
-    	/*else if(Canvas.keyboardKeyState(KeyEvent.VK_S)) {
-    		argList = new OtpErlangList();
-    		Main.client.doAction("move_up", argList);
-    	}*/
 
     	else {
     		argList = new OtpErlangList(new OtpErlangAtom("stop"));
@@ -207,11 +202,9 @@ public class PlayerRocket {
     		e.printStackTrace();
     	}
     	// Updates position
-    	//Main.client.getState();
     	Main.client.updateState();
-    	//System.out.println("Updated with new state");
-    	//x = xy[0];
-    	//y = xy[1];
+    	myCenter[0] = Game.myPos[0] + 6;
+    	myCenter[1] = Game.height - Game.myPos[1] - 17;
 
     }
 
@@ -229,6 +222,12 @@ public class PlayerRocket {
 
     }
 
+ // Convenience method to draw from center with radius
+    public void drawCircle(Graphics2D cg, int xCenter, int yCenter, int r) {
+    cg.drawOval(xCenter-r, yCenter-r, 2*r, 2*r);
+    }//end drawCircle
+    
+    
     public void Draw(Graphics2D g2d)
     {
     	g2d.setColor(Color.white);
@@ -272,6 +271,7 @@ public class PlayerRocket {
     		g2d.fillRect(x - 6, y - 9, (int) (Game.playerPow[i])/2, 5);
     		//g2d.drawLine(10, 10, 100, 100);
     	}
+    	drawCircle(g2d, myCenter[0], myCenter[1], shootingRadius);
     }
 
 }

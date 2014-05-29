@@ -176,7 +176,6 @@ public class Game {
         	//G = (G + 4*(B/255)) % 255;
         	//R = (R + 4*(G/255)) % 255;
         	//B = B % 255;
-
         	g2d.setColor(new Color(R,G,B));
         	g2d.drawRect(x0, Game.height - y1, x1 - x0, y1 - y0);
         }
