@@ -301,9 +301,10 @@ public class Framework extends Canvas {
         try
         {
             Point mp = this.getMousePosition();
-            
-            if(mp != null)
-                return this.getMousePosition();
+            if(mp != null) {
+            	mp = new Point(this.getMousePosition().x + 13, this.getMousePosition().y + 13);
+                return mp;
+            }
             else
                 return new Point(0, 0);
         }

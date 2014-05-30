@@ -169,7 +169,6 @@ public class PlayerRocket {
     public void Update(Point mousePosition)
     {
     	OtpErlangList argList;
-    	
     	if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
     	{
     		if(mousePosition.distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
