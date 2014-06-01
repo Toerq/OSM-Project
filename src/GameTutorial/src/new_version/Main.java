@@ -1,15 +1,10 @@
 package new_version;
 
 import java.awt.Color;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.GroupLayout;
@@ -64,41 +59,22 @@ public class Main implements ActionListener {
 	}
 
 	private JPanel setContentPanel() {
-		//if (Main.client != null) {
-		//client.setName(playerName);
 		table = createServerTable();
-		//table.validate();
-		//}
-		//else {
-		//	table = new JScrollPane();
-		//}
-		
-		connectButton = new JButton("Connect to IP");
-		ConnectButtonHandler connectHandler = new ConnectButtonHandler();
-		connectButton.addActionListener(connectHandler);
-		
-		addTableButton = new JButton("Add new table");
-		AddButtonHandler addHandler = new AddButtonHandler();
-		addTableButton.addActionListener(addHandler);
 
-		refreshButton = new JButton("Refresh");
-		RefreshButtonHandler rfHandler = new RefreshButtonHandler();
-		refreshButton.addActionListener(rfHandler);
+		createButtons();
 
-		pingButton = new JButton("Ping ?? ms");
-		PingButtonHandler pingHandler = new PingButtonHandler();
-		pingButton.addActionListener(pingHandler);
-
-		changeNameButton = new JButton("Change Player Name");
-		ChangeNameButtonHandler changeNameHandler = new ChangeNameButtonHandler();
-		changeNameButton.addActionListener(changeNameHandler);
-		
 		JPanel panel = new JPanel();
 		panel.add(addTableButton);
 
 		JPanel container = (JPanel) f.getContentPane();
+		setLayout(container);
+
+		return container;
+	}
+
+	private void setLayout(JPanel container) {
 		GroupLayout layout = new GroupLayout(container);
-		container.setLayout(layout);
+
 
 		layout.setAutoCreateGaps(true);
 		layout.setAutoCreateContainerGaps(true);
@@ -116,7 +92,7 @@ public class Main implements ActionListener {
 								.addComponent(pingButton)
 								.addComponent(changeNameButton)))
 
-		);
+				);
 		layout.setVerticalGroup(
 				layout.createSequentialGroup()
 				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -127,15 +103,36 @@ public class Main implements ActionListener {
 								.addComponent(refreshButton)
 								.addComponent(pingButton)
 								.addComponent(changeNameButton))
-		);
+				);
+		container.setLayout(layout);
+	}
 
-		return container;
+	private void createButtons() {
+		connectButton = new JButton("Connect to IP");
+		ConnectButtonHandler connectHandler = new ConnectButtonHandler();
+		connectButton.addActionListener(connectHandler);
+
+		addTableButton = new JButton("Add new table");
+		AddButtonHandler addHandler = new AddButtonHandler();
+		addTableButton.addActionListener(addHandler);
+
+		refreshButton = new JButton("Refresh");
+		RefreshButtonHandler rfHandler = new RefreshButtonHandler();
+		refreshButton.addActionListener(rfHandler);
+
+		pingButton = new JButton("Ping ?? ms");
+		PingButtonHandler pingHandler = new PingButtonHandler();
+		pingButton.addActionListener(pingHandler);
+
+		changeNameButton = new JButton("Change Player Name");
+		ChangeNameButtonHandler changeNameHandler = new ChangeNameButtonHandler();
+		changeNameButton.addActionListener(changeNameHandler);
 	}
 
 	private class AddButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 
-			String[] types = {"Type 1", "Type 2", "Type 3", "Type 4", "Type 5"};
+			String[] types = {"Pixel Wars", "Type 1", "Type 2", "Type 3", "Type 4", "Type 5"};
 			String[] max = {"2", "3", "4", "5", "6", "7" , "8", "9",  "10", "11", "12",};
 			JComboBox typeCombo = new JComboBox(types);
 			JComboBox maxCombo = new JComboBox(max);
@@ -173,14 +170,14 @@ public class Main implements ActionListener {
 			String ipString = field1.getText();
 			Main.ip = Utility.stringToIp(ipString);
 			Main.client = new Jinterface_client(Main.ip, 3010);
-			
-			
+
+
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();
 		}
 	}
-	
+
 	private class ChangeNameButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			JTextField field1 = new JTextField("");
@@ -206,7 +203,7 @@ public class Main implements ActionListener {
 			f.validate();
 		}
 	}
-	
+
 	private class PingButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			long time = System.currentTimeMillis();
@@ -215,7 +212,7 @@ public class Main implements ActionListener {
 			pingButton.setText("Ping: " + diff + " ms");
 		}
 	}
-	
+
 	private JScrollPane createServerTable() {
 		Object[][] tmp = client.available();
 		final OtpErlangPid[] pids = new OtpErlangPid[tmp.length];
@@ -250,10 +247,10 @@ public class Main implements ActionListener {
 				boolean join_succeeded = client.join(pids[modelRow]);
 				System.out.println("join: " + join_succeeded);
 				if (join_succeeded) {
-				Framework framework = new Framework();
-				f.setContentPane(framework);
-				f.validate();
-				System.out.println(framework.requestFocusInWindow());
+					Framework framework = new Framework();
+					f.setContentPane(framework);
+					f.validate();
+					System.out.println(framework.requestFocusInWindow());
 				}
 			}
 		};
@@ -311,7 +308,7 @@ public class Main implements ActionListener {
 
 		f.setJMenuBar(jmb);
 	}
-	
+
 	public void actionPerformed(ActionEvent ae) {
 		String comStr = ae.getActionCommand();
 		System.out.println(comStr + " Selected");
@@ -319,8 +316,8 @@ public class Main implements ActionListener {
 	public static void main(String args[]) {
 		SwingUtilities.invokeLater(new Runnable () {
 			@Override	
-				public void run() {
-		new Main("player1");
+			public void run() {
+				new Main("player1");
 			}
 		});
 	}

@@ -37,10 +37,7 @@ public abstract class Canvas extends JPanel implements KeyListener, MouseListene
         this.setDoubleBuffered(true);
         this.setFocusable(true);
         this.setBackground(Color.black);
-        
 
- 
-        
         // Adds the keyboard listener to JPanel to receive key events from this component.
         this.addKeyListener(this);
         // Adds the mouse listener to JPanel to receive mouse events from this component.
