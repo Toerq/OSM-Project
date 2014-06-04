@@ -382,19 +382,19 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
                                     %% dead
                                     New_kills_2 = Kills_2 + 1,
                                     New_deaths_1 = Deaths_1 + 1,
-                                    New_pos_1 = {-5,-5};
+                                    New_vel_1 = {0,0};
                                true ->
                                     %% not dead
                                     %% no_change
                                     New_kills_2 = Kills_2,
                                     New_deaths_1 = Deaths_1,
-                                    New_pos_1 = Pos_1
+                                    New_vel_1 = Vel_1
                             end,
                             New_score_1 = {Kills_1, New_deaths_1},
                             New_score_2 = {New_kills_2, Deaths_2},
                             %%
 			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, New_score_2, Id_2} 
-			      | [{Name_1, New_pos_1, Vel_1, New_hp_1, Power_1, New_score_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
+			      | [{Name_1, Pos_1, New_vel_1, New_hp_1, Power_1, New_score_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 		       true ->
 			    %% wall hit first, only fire recoil
 			    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
@@ -420,16 +420,23 @@ get_player([P | P_list], Id, Aux) ->
 get_hit_boxes([], Aux) ->
     Aux;
 get_hit_boxes([P | P_list], {V_aux, H_aux}) ->
-    {_Name, {X, Y}, _Vel, _Hp, _Power, Id} = P,
-    Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
-    Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
-    Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
-    Right_body = {X+ ?PLAYERWIDTH,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
-    Left_legs = {X ,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
-    Right_legs = {X+ ?PLAYERWIDTH,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
-    Bot_body = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERLEGSHEIGHT, Id, ?DAMAGEBODY},
-    Top_head = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERHEIGHT, Id, ?DAMAGEHEAD},
-    get_hit_boxes(P_list, {[Left_head|[Left_body|[Left_legs|[Right_head|[Right_body|[Right_legs|V_aux]]]]]], [Top_head|[Bot_body|H_aux]]}).
+    {_Name, {X, Y}, _Vel, Hp, _Power, _Score, Id} = P,
+    %% If hp < 1, no hitboxes!!!
+    if Hp > 0 ->
+            %% get hitboxes!!!
+            Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+            Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+            Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+            Right_body = {X+ ?PLAYERWIDTH,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+            Left_legs = {X ,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+            Right_legs = {X+ ?PLAYERWIDTH,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+            Bot_body = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERLEGSHEIGHT, Id, ?DAMAGEBODY},
+            Top_head = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERHEIGHT, Id, ?DAMAGEHEAD},
+            get_hit_boxes(P_list, {[Left_head|[Left_body|[Left_legs|[Right_head|[Right_body|[Right_legs|V_aux]]]]]], [Top_head|[Bot_body|H_aux]]});
+       true ->
+            %% no hitbpxes #ghost
+            get_hit_boxes(P_list, {V_aux, H_aux})
+    end.
 
 player_hit(Line, [], [], V_close, H_close) ->
     if V_close =:= dummy ->
