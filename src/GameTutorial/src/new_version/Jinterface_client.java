@@ -5,8 +5,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Enumeration;
+
+import javax.swing.JOptionPane;
 
 import com.ericsson.otp.erlang.*; 
 
@@ -17,17 +22,25 @@ public class Jinterface_client {
 	private DataInputStream fromServer;
 
 	public Jinterface_client(byte[] host, int port) {
-		try {
-			this.socket = new Socket (InetAddress.getByAddress(host), port);
+		try {			
+			//this.socket = new Socket (InetAddress.getByAddress(host), port);
+			
+			this.socket = new Socket();
+			socket.connect(new InetSocketAddress(InetAddress.getByAddress(host), port), 1000);
+			
 			System.out.println("Connected to socket :" + socket);
 			this.out = socket.getOutputStream();
 			this.dos = new DataOutputStream(out);
 			this.fromServer = new DataInputStream(socket.getInputStream());
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
+			Main.ip = null;
+			JOptionPane.showMessageDialog(null, "Could not connect");
 			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			Main.ip = null;
+			JOptionPane.showMessageDialog(null, "Could not connect");
 			e.printStackTrace();
 		}
 	}
@@ -91,7 +104,6 @@ public class Jinterface_client {
 		}
 	}
 
-
 	public void add(String gameName, String gameType, int maxPlayers) {
 		OtpErlangAtom add = new OtpErlangAtom("add_table");
 		OtpErlangAtom name = new OtpErlangAtom(gameName);
@@ -127,7 +139,15 @@ public class Jinterface_client {
 		OtpErlangTuple tuple = new OtpErlangTuple(arg);
 		sendTCP(tuple);
 	}
-
+	
+	// server action, remove_player (from table), anything
+	public void removePlayer () {
+		System.out.println("Jinterface_client; removePlayer()");
+		OtpErlangObject[] argArray = {new OtpErlangAtom("remove_player"), new OtpErlangAtom("argument")};
+		OtpErlangList argList = new OtpErlangList(argArray);
+		doAction("server", argList);
+	}
+	
 	public void doAction(String action, OtpErlangList argList) {
 		OtpErlangAtom doAction = new OtpErlangAtom("do_action");
 		OtpErlangAtom actionAtom = new OtpErlangAtom(action);
@@ -206,34 +226,58 @@ public class Jinterface_client {
 		System.out.println("State: " + state);
 		OtpErlangList playerList = (OtpErlangList) state.elementAt(0);
 		OtpErlangObject[] playerArray = playerList.elements();
-
 		int size = playerArray.length;
+		int[] id = new int[size];
 		System.out.println();
+		
 		for(int i = 0; i < size; i++) {
-			updatePlayer(playerArray, i);
+			updatePlayer(playerArray, i, id);
+		}
+		
+		System.out.println("ID ARRAY: " + Arrays.toString(id));
+		
+		Enumeration<Integer> enumKey = Game.players.keys();
+		while(enumKey.hasMoreElements()) {
+		    Integer key = enumKey.nextElement();
+		    if(!(contains(id,key))) {
+		    	System.out.println(Arrays.asList(id).toString());
+		    	System.out.println("REMOVING PLAYER WITH ID: " + key);
+		    	Game.players.remove(key);
+		    }
 		}
 	}
+	
+	public static boolean contains(final int[] id, final Integer key) {
+	    for ( final int e : id )
+	        if ( e == key || key != null && key.equals( e ) )
+	            return true;
+	    return false;
+	}
 
-	private void updatePlayer(OtpErlangObject[] playerArray, int i) {
+	private void updatePlayer(OtpErlangObject[] playerArray, int i, int[] idArray) {
 		try {
 			OtpErlangTuple player = (OtpErlangTuple) playerArray[i];
-			int id = ((OtpErlangPid) player.elementAt(5)).id();
+			int id = ((OtpErlangPid) player.elementAt(6)).id();
+			idArray[i] = id;
 			String name = ((OtpErlangString) player.elementAt(0)).toString();
 			int x = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(1)).elementAt(0)).intValue();
 			int y = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(1)).elementAt(1)).intValue();
 			int xVelocity = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(2)).elementAt(0)).intValue();
 			int hp = ((OtpErlangLong)player.elementAt(3)).intValue();
 			int power = ((OtpErlangLong)player.elementAt(4)).intValue();
-
-
+			int kills = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(0)).intValue();
+			int deaths = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(1)).intValue();
+			
+			System.out.println(name + " - Kills: " + kills + ", Deaths: " + deaths);
+			
 			if(!(Game.players.containsKey(id))){
 				Game.players.put(id, new Player(id, name));
 			}
 			if(id == Game.myId) {
 				Game.myPos[0] = x;
 				Game.myPos[1] = y;
-				Game.myCenter[0] = x + 6;
-				Game.myCenter[1] = Game.height - y - 17;
+				//Game.myCenter[0] = x + 6;
+				//Game.myCenter[1] = Game.height - y - 17;
 			}
 
 			Game.players.get(id).setPos(x, y);
@@ -241,15 +285,10 @@ public class Jinterface_client {
 			Game.players.get(id).setVel(xVelocity);
 			Game.players.get(id).setHP(hp);
 			Game.players.get(id).setPower(power);
-			Game.players.get(id).setDeaths(0);
 
-			/*
-			 * Ska fyllas i med riktig statistik längre fram men
-			 * vi lägger in knäppa värden så länge bara för att kunna kontrollera att
-			 * spelarlistan sorteras korrekt
-			 */
-			Game.players.get(id).setKills(i);
-
+			Game.players.get(id).setKills(kills);
+			Game.players.get(id).setDeaths(deaths);
+			
 		} catch (OtpErlangRangeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

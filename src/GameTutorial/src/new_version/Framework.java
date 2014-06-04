@@ -92,20 +92,20 @@ public class Framework extends Canvas {
 		if(true)
 		{
 			URL aimCursorUrl = this.getClass().getResource("/new_images/aim.png");
-			URL noAimCursorUrl = this.getClass().getResource("/new_images/noaim.png");
+			//URL noAimCursorUrl = this.getClass().getResource("/new_images/noaim.png");
 			BufferedImage aimCursorImg = null;
-			BufferedImage noAimCursorImg = null;
+			//BufferedImage noAimCursorImg = null;
 			try {
 				aimCursorImg = ImageIO.read(aimCursorUrl);
-				noAimCursorImg = ImageIO.read(noAimCursorUrl);
+				//noAimCursorImg = ImageIO.read(noAimCursorUrl);
 
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			aimCursor = Toolkit.getDefaultToolkit().createCustomCursor(aimCursorImg, new Point(0, 0), null);
-			noAimCursor = Toolkit.getDefaultToolkit().createCustomCursor(noAimCursorImg, new Point(0, 0), null);
-			this.setCursor(noAimCursor);
+			//noAimCursor = Toolkit.getDefaultToolkit().createCustomCursor(noAimCursorImg, new Point(0, 0), null);
+			this.setCursor(aimCursor);
 		}
 
 		//We start game in new thread.
@@ -163,7 +163,7 @@ public class Framework extends Canvas {
 			{
 			case PLAYING:
 				gameTime += System.nanoTime() - lastTime;
-				setCursor();
+				//setCursor();
 				game.UpdateGame(gameTime, mousePosition());
 
 				lastTime = System.nanoTime();
@@ -226,7 +226,7 @@ public class Framework extends Canvas {
 		}
 	}
 
-
+/*
 	private void setCursor() {
 		if(mousePosition().distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
 			this.setCursor(aimCursor);
@@ -235,7 +235,7 @@ public class Framework extends Canvas {
 			this.setCursor(noAimCursor);
 		}
 	}
-
+*/
 	/**
 	 * Draw the game to the screen. It is called through repaint() method in GameLoop() method.
 	 */

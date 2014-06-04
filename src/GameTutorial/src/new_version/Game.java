@@ -35,7 +35,7 @@ public class Game {
 	public static int myId;
 	public static int[] myPos = new int[2];
 	public static int shootingRadius = 250;
-	public static int[] myCenter = new int[2];
+	//public static int[] myCenter = new int[2];
 	public static long ping;
 
 	public static BufferedImage[][] playerImages = new BufferedImage[12][2];
@@ -74,7 +74,6 @@ public class Game {
 	private void Initialize()
 	{
 		bulletList = new ArrayList<Integer[]>();
-		System.out.println("Creating Player...");
 		Main.client.updateState();
 	}
 
@@ -149,13 +148,25 @@ public class Game {
 		OtpErlangList argList;
 		if(Canvas.mouseButtonState(MouseEvent.BUTTON1))
 		{
-			if(mousePosition.distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
+			//if(mousePosition.distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
 				fire(mousePosition);	
-			}	
+			//}	
+		}
+		
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_Q)) {
+			Main.client.removePlayer();
 		}
 
 		else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
 			argList = new OtpErlangList(new OtpErlangAtom("normal"));
+			Main.client.doAction("jump", argList);
+		}
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_N)) {
+			argList = new OtpErlangList(new OtpErlangAtom("weak"));
+			Main.client.doAction("jump", argList);
+		}
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_M)) {
+			argList = new OtpErlangList(new OtpErlangAtom("strong"));
 			Main.client.doAction("jump", argList);
 		}
 
@@ -167,6 +178,12 @@ public class Game {
 		else if (Canvas.keyboardKeyState(KeyEvent.VK_D)) {
 			argList = new OtpErlangList(new OtpErlangAtom("right"));
 			Main.client.doAction("move", argList);
+		}
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_R)) {
+			OtpErlangObject[] argArray = {new OtpErlangAtom("respawn_player"), new OtpErlangAtom("argument")};
+			argList = new OtpErlangList(argArray);
+			Main.client.doAction("server", argList);
+			
 		}
 
 		else {

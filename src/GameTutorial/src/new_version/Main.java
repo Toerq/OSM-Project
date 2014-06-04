@@ -4,7 +4,11 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.GroupLayout;
@@ -27,10 +31,10 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
 	//static byte [] ip = {(byte) 130, (byte) 238, (byte) 93, (byte) 252};
-	static byte [] ip = {127,0,0,1};
-	public static Jinterface_client client = new Jinterface_client(ip, 3010);
+	static byte [] ip = null;
+	//public static Jinterface_client client = new Jinterface_client(ip, 3010);
 	//static byte [] ip = null;
-	//public static Jinterface_client client = null;
+	public static Jinterface_client client = null;
 	JFrame f;
 	JScrollPane table;
 	String playerName;
@@ -41,25 +45,34 @@ public class Main implements ActionListener {
 
 	Main(String name) {
 		playerName = name;
-		client.setName(playerName);
-		client.getMyId();
+		//client.setName(playerName);
+		//client.getMyId();
 		f = new JFrame("GEESE - " + name);
 		f.setSize(1280, 720);
 		f.setLocationRelativeTo(null);
-
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		// JFrame.EXIT_ON_CLOSE = 3
+		f.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		//initializeMenu(f);
 
-
+		table = new JScrollPane();
 		JPanel container = setContentPanel();
 		f.setContentPane(container);  
-
+		
+		f.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+            	
+            	Main.client.removePlayer();
+                //System.out.println("Replace sysout with your method call");
+                ((JFrame)(e.getComponent())).dispose();
+            }
+        });
 
 		f.setVisible(true);
-	}
+	} 
 
 	private JPanel setContentPanel() {
-		table = createServerTable();
 
 		createButtons();
 
@@ -67,18 +80,49 @@ public class Main implements ActionListener {
 		panel.add(addTableButton);
 
 		JPanel container = (JPanel) f.getContentPane();
-		setLayout(container);
+		
+		if(Main.ip == null) {
+			System.out.println("IP == NULL");
+			setSimpleLayout(container);
+		} else {
+			System.out.println("IP != NULL");
+			setCompleteLayout(container);
+		}
 
 		return container;
 	}
 
-	private void setLayout(JPanel container) {
+	private void setSimpleLayout(JPanel container) {
 		GroupLayout layout = new GroupLayout(container);
-
 
 		layout.setAutoCreateGaps(true);
 		layout.setAutoCreateContainerGaps(true);
 
+		layout.setHorizontalGroup(
+				layout.createSequentialGroup()
+
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(table)
+						.addGroup(layout.createSequentialGroup()
+								.addComponent(connectButton)
+								.addComponent(changeNameButton)))
+				);
+		layout.setVerticalGroup(
+				layout.createSequentialGroup()
+				.addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+						.addComponent(table))
+						.addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+								.addComponent(connectButton)
+								.addComponent(changeNameButton))
+				);
+		container.setLayout(layout);
+	}
+	
+	private void setCompleteLayout(JPanel container) {
+		GroupLayout layout = new GroupLayout(container);
+
+		layout.setAutoCreateGaps(true);
+		layout.setAutoCreateContainerGaps(true);
 
 		layout.setHorizontalGroup(
 				layout.createSequentialGroup()
@@ -137,7 +181,7 @@ public class Main implements ActionListener {
 			JComboBox typeCombo = new JComboBox(types);
 			JComboBox maxCombo = new JComboBox(max);
 
-			JTextField field1 = new JTextField("");
+			JTextField field1 = new JTextField("My Table");
 			JPanel panel = new JPanel(new GridLayout(0, 1));
 			panel.add(new JLabel("Name: "));
 			panel.add(field1);
@@ -153,6 +197,7 @@ public class Main implements ActionListener {
 			int maxPlayers = Integer.parseInt(maxCombo.getSelectedItem().toString());
 
 			client.add(name, type, maxPlayers);
+			table = createServerTable();
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();
@@ -160,18 +205,34 @@ public class Main implements ActionListener {
 	}
 	private class ConnectButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			JTextField field1 = new JTextField("");
+			JTextField field1 = new JTextField("127.0.0.1");
+			JTextField field2 = new JTextField("3010");
 			JPanel panel = new JPanel(new GridLayout(0, 1));
 			panel.add(new JLabel("IP: "));
 			panel.add(field1);
+			panel.add(new JLabel("Port: "));
+			panel.add(field2);
+			
 			int result = JOptionPane.showConfirmDialog(null, panel, "Test",
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 			String ipString = field1.getText();
+			String portString = field2.getText();
 			Main.ip = Utility.stringToIp(ipString);
-			Main.client = new Jinterface_client(Main.ip, 3010);
+			Main.client = new Jinterface_client(Main.ip, Integer.parseInt(portString));
+			//System.out.println("After connect: " + client + " - current IP: " + Arrays.toString(Main.ip));
+			if(ip != null) {
+				Main.client.setName(playerName);
+				Main.client.getMyId();
+			
+				table = createServerTable();
 
-
+				f.setTitle("GEESE - " + playerName + " - Connected to: " + Arrays.toString(ip));
+			} else {
+				f.setTitle("GEESE - " + playerName);
+				table = new JScrollPane();
+			}
+			
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();
@@ -188,9 +249,15 @@ public class Main implements ActionListener {
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 			String name = field1.getText();
-			client.setName(name);
 			playerName = name;
-			f.setTitle("GEESE " + playerName);
+			
+			if(Main.ip != null) {
+				client.setName(name);
+				f.setTitle("GEESE - " + playerName + " - Connected to: " + Arrays.toString(ip));
+			} else {
+				f.setTitle("GEESE - " + playerName);
+			}
+			
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();
@@ -198,6 +265,7 @@ public class Main implements ActionListener {
 	}
 	private class RefreshButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
+			table = createServerTable();
 			f.getContentPane().removeAll();
 			f.setContentPane(setContentPanel());
 			f.validate();
@@ -214,12 +282,14 @@ public class Main implements ActionListener {
 	}
 
 	private JScrollPane createServerTable() {
+		System.out.println("In createServerTable");
 		Object[][] tmp = client.available();
 		final OtpErlangPid[] pids = new OtpErlangPid[tmp.length];
 		data = new Object[tmp.length][5];
 		for(int i = 0; i < tmp.length; i++) {
 			for (int j = 0; j < 3; j++) {
 				data[i][j] = tmp[i][j].toString();
+				System.out.println("Tables: " + data[i][j]);
 			}
 			data[i][3] = (Object) (tmp[i][3].toString() + "/" + tmp[i][4].toString());
 			pids[i] = (OtpErlangPid) tmp[i][0];
