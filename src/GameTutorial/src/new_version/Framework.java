@@ -47,7 +47,7 @@ public class Framework extends Canvas {
 	 * FPS - Frames per second
 	 * How many times per second the game should update?
 	 */
-	private final int GAME_FPS = 29;
+	private final int GAME_FPS = 24;
 	/**
 	 * Pause between updates. It is in nanoseconds.
 	 */
@@ -91,8 +91,8 @@ public class Framework extends Canvas {
 		// insert "true" into if condition and mouse cursor will be removed.
 		if(true)
 		{
-			URL aimCursorUrl = this.getClass().getResource("resources/new_images/aim.png");
-			URL noAimCursorUrl = this.getClass().getResource("resources/new_images/noaim.png");
+			URL aimCursorUrl = this.getClass().getResource("/new_images/aim.png");
+			URL noAimCursorUrl = this.getClass().getResource("/new_images/noaim.png");
 			BufferedImage aimCursorImg = null;
 			BufferedImage noAimCursorImg = null;
 			try {
@@ -136,7 +136,7 @@ public class Framework extends Canvas {
 	{
 		try
 		{
-			URL startScreenUrl = this.getClass().getResource("resources/new_images/startscreen.png");
+			URL startScreenUrl = this.getClass().getResource("/new_images/startscreen.png");
 			startScreen = ImageIO.read(startScreenUrl);
 		}
 		catch (IOException ex) {

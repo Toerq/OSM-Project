@@ -90,8 +90,8 @@ public class Game {
 			BufferedImage tmp;
 
 			for (int i = 0; i < 12; i++) {
-				playerImgLeftUrl[i] = this.getClass().getResource("resources/new_images/player_" + (i+1) + "_rev.png");
-				playerImgRightUrl[i] = this.getClass().getResource("resources/new_images/player_" + (i+1) + ".png");
+				playerImgLeftUrl[i] = this.getClass().getResource("/new_images/player_" + (i+1) + "_rev.png");
+				playerImgRightUrl[i] = this.getClass().getResource("/new_images/player_" + (i+1) + ".png");
 				tmp = ImageIO.read(playerImgLeftUrl[i]);
 				Game.playerImages[i][0] = Utility.toCompatibleImage(tmp);
 				tmp = ImageIO.read(playerImgRightUrl[i]);
@@ -257,27 +257,30 @@ public class Game {
 
 
 	private void drawBullets(Graphics2D g2d) {
-		for (int i = 0; i < bulletList.size(); i++) {;      
-		g2d.drawLine(bulletList.get(i)[0], Game.height - bulletList.get(i)[1], bulletList.get(i)[2], Game.height - bulletList.get(i)[3]);
-		bulletList.get(i)[4]--;
+		int R = (int) (Math.random() * (255));
+		int G = (int) (Math.random() * (255));
+		int B = (int) (Math.random() * (255));
+
+		g2d.setColor(new Color(R,G,B));
+		
+		for (int i = 0; i < bulletList.size(); i++) {      
+			
+			g2d.drawLine(bulletList.get(i)[0], Game.height - bulletList.get(i)[1], bulletList.get(i)[2], Game.height - bulletList.get(i)[3]);
+			bulletList.get(i)[4]--;
 		}
 	}
 
 
 	private void drawBoxes(Graphics2D g2d) {
 		int x0, x1, y0, y1;
-		g2d.setColor(new Color(250,0,28));
+		//g2d.setColor(new Color(250,0,28));
 		for (int i = 0; i < boxes.length; i++){
 			x0 = boxes[i][0];
 			y0 = boxes[i][1];
 			x1 = boxes[i][2];
 			y1 = boxes[i][3];
-
-			int R = (int) (Math.random() * (255));
-			int G = (int) (Math.random() * (255));
-			int B = (int) (Math.random() * (255));
-
-			g2d.setColor(new Color(R,G,B));
+			
+			g2d.setColor(new Color(0,255,128));
 			g2d.drawRect(x0, Game.height - y1, x1 - x0, y1 - y0);
 		}
 	}

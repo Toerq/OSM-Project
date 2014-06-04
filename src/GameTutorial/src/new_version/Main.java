@@ -26,7 +26,7 @@ import javax.swing.table.DefaultTableModel;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
-	//static byte [] ip = {(byte) 109, (byte) 58, (byte) 144, (byte) 233};
+	//static byte [] ip = {(byte) 130, (byte) 238, (byte) 93, (byte) 252};
 	static byte [] ip = {127,0,0,1};
 	public static Jinterface_client client = new Jinterface_client(ip, 3010);
 	//static byte [] ip = null;
