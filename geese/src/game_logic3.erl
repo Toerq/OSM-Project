@@ -32,11 +32,11 @@
 make_new_state() ->
     {{2.3, 
       1.8, 
-      0.7, 
+      1.2, 
       8.3, 
       {{10, 600}, {1270,710}}, 
       9.6, 
-      [{{0, 0},{1280, 720}},{{250,100},{400,100}},{{1050,100},{1200,100}},{{500,200},{650,200}},{{-10,-10},{810,5}}]}, 
+      [{{0, 0},{1280, 720}},{{250,100},{400,100}},{{1050,100},{1200,100}},{{500,200},{650,200}},{{-10,-10},{1290,5}}]}, 
      {[],[]}}.
 
 %% do_actions(STATE, ACTIONLIST)
@@ -77,7 +77,7 @@ apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, E
 	    New_server_settings = change_settings(Server_settings, Argument),
 	    {New_server_settings, Player_list, Bullet_list};
 	remove_player ->
-	    New_player_list = remove_player(Argument, Player_list, []),
+	    New_player_list = remove_player(Entity_id, Player_list, []),
 	    {Server_settings, New_player_list, Bullet_list};
         respawn_player ->
             New_player_list = respawn_player(Server_settings, Entity_id, Player_list, []),
@@ -208,7 +208,7 @@ add_player(_ , Players, Aux_list) ->
 remove_player(_Player, [], Aux_list) ->
     Aux_list;
 %%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
-remove_player({_Name, _Pos, _Vel, _Hp, _Power, _Score, Id}, [{_N, _P, _V, _H, _P, _S, I} | T], Aux_list) when I =:= Id ->
+remove_player(Id, [{_N, _P, _V, _H, _P, _S, I} | T], Aux_list) when I =:= Id ->
     lists:append([T, Aux_list]);
 remove_player(Player, [P | T], Aux_list) ->
     remove_player(Player, T, [P | Aux_list]).
