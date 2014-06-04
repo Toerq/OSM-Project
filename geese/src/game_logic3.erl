@@ -11,7 +11,7 @@
 -define(PLAYERMIDDLEY, 20).
 
 -define(VERPOWERGAIN, 0.1).
--define(HORPOWERGAIN, 0.4).
+-define(HORPOWERGAIN, 0.2).
 
 -define(FIRECOST, 100).
 
@@ -25,18 +25,18 @@
 %%  gravity_factor,
 %%  air_friction,
 %%  base_jump_factor,
-%%  grid_limit,
+%%  grid_limit, "Spawn grid"
 %%  vel_limit,
 %%  level_list}
 
 make_new_state() ->
-    {{3.7, 
+    {{2.3, 
       1.8, 
-      1.8, 
-      21.0, 
-      {500, 500}, 
-      12.6, 
-      [{{0, 0},{800, 600}},{{250,100},{400,110}},{{500,200},{650,210}},{{-10,-10},{810,5}}]}, 
+      0.7, 
+      8.3, 
+      {{10, 600}, {1270,710}}, 
+      9.6, 
+      [{{0, 0},{1280, 720}},{{250,100},{400,100}},{{1050,100},{1200,100}},{{500,200},{650,200}},{{-10,-10},{810,5}}]}, 
      {[],[]}}.
 
 %% do_actions(STATE, ACTIONLIST)
@@ -46,10 +46,10 @@ do_actions({Server_settings, Entity_lists}, Action_list) ->
 
 apply_actions(Server_settings, Entity_lists, []) ->
     {Server_settings, Entity_lists};
-apply_actions(Server_settings, {Player_list, Bullet_list}, [{_Entity_id, Action, Var_list} | T]) when Action =:= server ->
+apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= server ->
     [Type, Argument] = Var_list,
     {New_server_settings, New_player_list, New_bullet_list} = 
-	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
+	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, Entity_id),
     apply_actions(New_server_settings, {New_player_list, New_bullet_list}, T);
 apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= fire ->
     %% If a dead player tries to fire. Dont...
@@ -68,7 +68,7 @@ apply_actions(Server_settings, {Player_list, Bullet_list}, [A | T]) ->
 		  {apply_action(Server_settings, Player_list, A, []), Bullet_list}, 
 		  T).
 
-apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) ->
+apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, Entity_id) ->
     case Type of
 	add_player ->
 	    New_player_list = add_player(Argument, Player_list, []),
@@ -78,7 +78,10 @@ apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) -
 	    {New_server_settings, Player_list, Bullet_list};
 	remove_player ->
 	    New_player_list = remove_player(Argument, Player_list, []),
-	    {Server_settings, New_player_list, Bullet_list}
+	    {Server_settings, New_player_list, Bullet_list};
+        respawn_player ->
+            New_player_list = respawn_player(Server_settings, Entity_id, Player_list, []),
+            {Server_settings, New_player_list, Bullet_list}
     end.
 
 
@@ -209,6 +212,26 @@ remove_player({_Name, _Pos, _Vel, _Hp, _Power, _Score, Id}, [{_N, _P, _V, _H, _P
     lists:append([T, Aux_list]);
 remove_player(Player, [P | T], Aux_list) ->
     remove_player(Player, T, [P | Aux_list]).
+
+respawn_player(_Server_settings, _Entity_id, [], Aux_list) ->
+    Aux_list;
+respawn_player(Server_settings, Entity_id, [{N, _P, _V, H, _PW, S, I} | T], Aux_list) when Entity_id =:= I andalso H < 1 ->
+    {_Move_factor,
+     _Gravity_factor,
+     _Air_friction,
+     _Base_jump_factor,
+     Grid_limit,
+     _Vel_limit,
+     _Level_list} = Server_settings,
+    {{X0,Y0},{X1,Y1}} = Grid_limit,
+    X = X0 + random:uniform(X1-X0),
+    Y = Y0 + random:uniform(Y1-Y0),
+    New_hp = 100,
+    New_vel = {0,0},
+    New_power = 0,
+    [{N, {X,Y}, New_vel, New_hp, New_power, S, I} | lists:append([T, Aux_list])];
+respawn_player(Server_settings, Entity_id, [P | T], Aux_list) ->
+    respawn_player(Server_settings, Entity_id, T, [P | Aux_list]).
 
 
 change_settings({M_f, G_f, A_f, B_j, G_l, V_l, L_l}, New_settings) ->
