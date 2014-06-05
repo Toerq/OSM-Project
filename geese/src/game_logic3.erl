@@ -391,7 +391,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
     {Name, {X,Y}, Vel, Hp, Power, Score, Id} = Player,
     {X_vel, Y_vel} = Vel,
-    if Power =/= ?FIRECOST ->
+    if Power >= ?FIRECOST ->
 	    %% NOT ENOUGH POWER!!!
 	    {[{Name, {X,Y}, {limitor(X_vel, Vel_limit, Air_friction), Y_vel - Gravity_factor}, Hp, Power, Score, Id} | Rest_list], nope};
        true ->
@@ -411,11 +411,12 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 	    if Hit =:= dummy ->
 		    %% no player hit, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Score_2, Id_2} = Fire_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
 		    io:format("NO HIT!!!"),
 		    %% no hit, only fire recoil
 		    Border_point,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, 0, Score_2, Id_2} | Rest_list_2], 
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), 
+				       Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, Score_2, Id_2} | Rest_list_2], 
 		     {Entity_id, {X_m, Y_m}, Border_point}};
 	       true ->
 		    io:format("Good! HIT!!!"),
@@ -427,7 +428,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 			    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
 			    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
 			    {Name_1, Pos_1, Vel_1, Hp_1, Power_1, Score_1, Id_1} = Hit_player,
-			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Score_2, Id_2} = Fire_player,
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
                             %%
                             New_hp_1 = Hp_1 - Type*Damage,
                             {Wins_1, Kills_1, Deaths_1} = Score_1,
@@ -447,14 +448,14 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
                             New_score_1 = {Wins_1, Kills_1, New_deaths_1},
                             New_score_2 = {Wins_2, New_kills_2, Deaths_2},
                             %%
-			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, New_score_2, Id_2} 
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, New_score_2, Id_2} 
 			      | [{Name_1, Pos_1, New_vel_1, New_hp_1, Power_1, New_score_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 		       true ->
 			    %% wall hit first, only fire recoil
 			    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Score_2, Id_2} = Fire_player,
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
 			    Border_point,
-			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, 0, Score_2, Id_2} | Rest_list_2],
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, Score_2, Id_2} | Rest_list_2],
 			     {Entity_id, {X_m, Y_m}, Border_point}}
 		    end
 	    end
