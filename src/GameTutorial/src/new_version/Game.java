@@ -156,7 +156,9 @@ public class Game {
 		else if (Canvas.keyboardKeyState(KeyEvent.VK_Q)) {
 			Main.client.removePlayer();
 		}
-
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_P)) {
+			Main.client.requestRestart();
+		}
 		else if (Canvas.keyboardKeyState(KeyEvent.VK_SPACE)) {
 			argList = new OtpErlangList(new OtpErlangAtom("normal"));
 			Main.client.doAction("jump", argList);
@@ -246,7 +248,8 @@ public class Game {
 		g2d.drawString("My Position: " , 5, 30);
 		g2d.drawString(Game.myPos[0] + ", " + Game.myPos[1] , 100, 30);
 
-		g2d.drawString("Players" , Game.width - 250, 15);
+		g2d.drawString("Wins", Game.width - 200, 15);
+		g2d.drawString("Players" , Game.width - 300, 15);
 		g2d.drawString("Kills" , Game.width - 145, 15);
 		g2d.drawString("Deaths" , Game.width - 105, 15);
 		ArrayList<Player> playerList = new ArrayList<Player>(players.values());
@@ -264,7 +267,9 @@ public class Game {
 		for(int i = 0; i < playerList.size(); i ++) {
 			currentPlayer = playerList.get(i);
 			g2d.setColor(Color.gray);
-			g2d.drawString(currentPlayer.name, Game.width - 250, 30 + i*15);
+			g2d.drawString(currentPlayer.name, Game.width - 300, 30 + i*15);
+			g2d.setColor(Color.yellow);
+			g2d.drawString(Integer.toString(currentPlayer.wins), Game.width - 200, 30 + i*15);
 			g2d.setColor(Color.green);
 			g2d.drawString(Integer.toString(currentPlayer.kills) , Game.width - 145, 30 + i*15);
 			g2d.setColor(Color.red);

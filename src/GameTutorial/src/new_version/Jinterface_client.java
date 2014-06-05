@@ -27,6 +27,7 @@ public class Jinterface_client {
 			
 			this.socket = new Socket();
 			socket.connect(new InetSocketAddress(InetAddress.getByAddress(host), port), 1000);
+			socket.setSoTimeout(1000);
 			
 			System.out.println("Connected to socket :" + socket);
 			this.out = socket.getOutputStream();
@@ -45,18 +46,29 @@ public class Jinterface_client {
 		}
 	}
 
+	/**
+	 * Sends the OtpErlangObject via TCP to the server
+	 * 
+	 * @param arg Argument sent to the server
+	 */
 	public void sendTCP(OtpErlangObject arg) {
 		OtpOutputStream availableStream = new OtpOutputStream(arg);
 		byte[] data = Utility.arrayPrepend(availableStream);
 		try {
 			dos.write(data);
-
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("Sent over TCP: " + arg.toString());
 	}
 
+	/**
+	 * Reads the answer from the server via TCP
+	 * 
+	 * @return answer
+	 */
 	OtpErlangObject getAnswer() {
 		OtpErlangObject answer = null;
 		byte[] message = new byte[2048];
@@ -64,21 +76,28 @@ public class Jinterface_client {
 			fromServer.read(message);
 			answer = (new OtpInputStream(message)).read_any();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		} catch (OtpErlangDecodeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}	
+		}
+		
 		return answer;
 	}
-
+	
+	/**
+	 * Sends the atom 'ping' to the server
+	 */
 	public void ping() {
 		OtpErlangAtom ping = new OtpErlangAtom("ping");
 		sendTCP(ping);
 		OtpErlangObject pong = getAnswer();
 	}
 
+	/**
+	 * Sends the atom 'my_id' to the server and expects the server to answer with the players id
+	 */
 	public void getMyId() {
 		OtpErlangAtom getId = new OtpErlangAtom("my_id");
 		sendTCP(getId);
@@ -86,6 +105,12 @@ public class Jinterface_client {
 		Game.myId = ((OtpErlangPid)id).id();
 	}
 
+	/**
+	 * Attempts to join a table (game session)
+	 * 
+	 * @param pid The pid of the table to join
+	 * @return true if join was successful, else false
+	 */
 	public boolean join (OtpErlangPid pid) {
 		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
@@ -104,6 +129,13 @@ public class Jinterface_client {
 		}
 	}
 
+	/**
+	 * Adds a table (game session) to the server
+	 * 
+	 * @param gameName title of the table
+	 * @param gameType type of game
+	 * @param maxPlayers maximum number of players
+	 */
 	public void add(String gameName, String gameType, int maxPlayers) {
 		OtpErlangAtom add = new OtpErlangAtom("add_table");
 		OtpErlangAtom name = new OtpErlangAtom(gameName);
@@ -115,6 +147,11 @@ public class Jinterface_client {
 		sendTCP(tuple);
 	}
 
+	/**
+	 * Requests the available tables (game sessions) on the server
+	 * 
+	 * @return available servers (Object[][])
+	 */
 	public Object[][] available() {
 
 		OtpErlangAtom availableAtom = new OtpErlangAtom("browse_tables");
@@ -132,6 +169,11 @@ public class Jinterface_client {
 		return tableList;
 	}
 
+	/**
+	 * Requests to change the name of the player
+	 * 
+	 * @param name requested player name
+	 */
 	public void setName(String name) {
 		OtpErlangAtom changeName = new OtpErlangAtom("change_name");
 		OtpErlangString newName = new OtpErlangString(name);
@@ -140,14 +182,45 @@ public class Jinterface_client {
 		sendTCP(tuple);
 	}
 	
-	// server action, remove_player (from table), anything
+	/**
+	 * Leaves the game (by leaving both the logic game state and the actual table)
+	 * 
+	 */
 	public void removePlayer () {
-		System.out.println("Jinterface_client; removePlayer()");
+		System.out.println("Requesting to leave...");
+		// Leaves the game state
 		OtpErlangObject[] argArray = {new OtpErlangAtom("remove_player"), new OtpErlangAtom("argument")};
+		OtpErlangList argList = new OtpErlangList(argArray);
+		doAction("server", argList);
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// Leaves the table
+		OtpErlangAtom leave = new OtpErlangAtom("leave_game");
+		sendTCP(leave);
+		System.out.println("Request to leave done!");
+		
+	}
+	
+	/**
+	 * Requests the game to restart
+	 */
+	public void requestRestart () {
+		// Leaves the game state
+		OtpErlangObject[] argArray = {new OtpErlangAtom("request_restart"), new OtpErlangAtom("argument")};
 		OtpErlangList argList = new OtpErlangList(argArray);
 		doAction("server", argList);
 	}
 	
+	/**
+	 * Requests to do an action in game state (ex. move, fire)
+	 * 
+	 * @param action type of action (ex. 'server', 'move')
+	 * @param argList arguments for the requested action (ex. 'respawn_player', 'right'
+	 */
 	public void doAction(String action, OtpErlangList argList) {
 		OtpErlangAtom doAction = new OtpErlangAtom("do_action");
 		OtpErlangAtom actionAtom = new OtpErlangAtom(action);
@@ -155,24 +228,34 @@ public class Jinterface_client {
 		OtpErlangTuple actionTuple = new OtpErlangTuple(actionArray);
 		OtpErlangObject[] argArray = {doAction, actionTuple};
 		OtpErlangTuple argTuple = new OtpErlangTuple(argArray);
-		//	System.out.println("Doing action");
 		sendTCP(argTuple);
-		//System.out.println("Action done");
 	}
 
 
 	// {{Player_move_factor::int, Grid_limit::int, Vel_limit::int, Friction},
 	// [{Name_string, {New_x_pos, New_y_pos}, {New_x_vel, New_y_vel}, Hp, Id} | Rest]}
 
-
-	public OtpErlangTuple getState(){
+	/**
+	 * Requests the current game state from the server
+	 * 
+	 * @return the current game state
+	 */
+	public OtpErlangTuple getState() {
 		OtpErlangAtom getState = new OtpErlangAtom("get_state");
 		sendTCP(getState);
 		OtpErlangTuple answer = (OtpErlangTuple) getAnswer();
+		while (answer == null) {
+			answer = getState();
+		}
 		OtpErlangTuple state = (OtpErlangTuple) answer.elementAt(1);
 		return state;
 	}
 
+	/**
+	 * Reads the level design from the state 
+	 * 
+	 * @param state the current state
+	 */
 	public void updateLevelList (OtpErlangTuple state) {
 		OtpErlangList levelList = (OtpErlangList) state.elementAt(2);
 		OtpErlangObject[] levelArray = levelList.elements();
@@ -194,6 +277,10 @@ public class Jinterface_client {
 		Game.boxes = boxes;
 	}
 
+	/**
+	 * 
+	 * @param state
+	 */
 	public void updateBulletList(OtpErlangTuple state) {
 		OtpErlangList bulletList = (OtpErlangList) state.elementAt(1);
 		OtpErlangObject[] bulletArray = bulletList.elements();
@@ -265,8 +352,9 @@ public class Jinterface_client {
 			int xVelocity = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(2)).elementAt(0)).intValue();
 			int hp = ((OtpErlangLong)player.elementAt(3)).intValue();
 			int power = ((OtpErlangLong)player.elementAt(4)).intValue();
-			int kills = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(0)).intValue();
-			int deaths = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(1)).intValue();
+			int wins = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(0)).intValue();
+			int kills = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(1)).intValue();
+			int deaths = ((OtpErlangLong)((OtpErlangTuple) player.elementAt(5)).elementAt(2)).intValue();
 			
 			System.out.println(name + " - Kills: " + kills + ", Deaths: " + deaths);
 			
@@ -286,6 +374,7 @@ public class Jinterface_client {
 			Game.players.get(id).setHP(hp);
 			Game.players.get(id).setPower(power);
 
+			Game.players.get(id).setWins(wins);
 			Game.players.get(id).setKills(kills);
 			Game.players.get(id).setDeaths(deaths);
 			

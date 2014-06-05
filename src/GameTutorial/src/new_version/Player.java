@@ -28,8 +28,10 @@ public class Player {
 	int xVelocity;
 	int HP;
 	int power;
+	
 	int kills;
 	int deaths;
+	int wins;
 
 	public Player(int id, String name){
 		this.id = id;
@@ -69,6 +71,10 @@ public class Player {
 
 	public void setKills(int kills){
 		this.kills = kills;
+	}
+	
+	public void setWins(int wins) {
+		this.wins = wins;
 	}
 
 	public void setDeaths(int deaths){

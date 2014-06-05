@@ -42,6 +42,7 @@ public class Main implements ActionListener {
 	Object[][] data;
 	Action join;
 	JButton connectButton, addTableButton, refreshButton, pingButton, changeNameButton;
+	Framework framework = null;
 
 	Main(String name) {
 		playerName = name;
@@ -62,10 +63,25 @@ public class Main implements ActionListener {
 		f.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
+            	System.out.println("Game over...");
+            	framework.gameState = Framework.GameState.GAMEOVER;
             	
-            	Main.client.removePlayer();
+            	try {
+            		Main.client.removePlayer();
+					Thread.sleep(100);
+	            	Main.client.removePlayer();
+	            	Thread.sleep(100);
+	            	Main.client.removePlayer();
+	            	Thread.sleep(100);
+	            	Main.client.removePlayer();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
                 //System.out.println("Replace sysout with your method call");
-                ((JFrame)(e.getComponent())).dispose();
+                
+            	f.dispose();
+                System.exit(0);
             }
         });
 
@@ -317,7 +333,7 @@ public class Main implements ActionListener {
 				boolean join_succeeded = client.join(pids[modelRow]);
 				System.out.println("join: " + join_succeeded);
 				if (join_succeeded) {
-					Framework framework = new Framework();
+					framework = new Framework();
 					f.setContentPane(framework);
 					f.validate();
 					System.out.println(framework.requestFocusInWindow());
