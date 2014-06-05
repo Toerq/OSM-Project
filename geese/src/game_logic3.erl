@@ -216,11 +216,12 @@ add_player(_ , Players, Aux_list) ->
 
 remove_player(_Player, [], Aux_list) ->
     Aux_list;
-%%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
-remove_player(Id, [{_N, _P, _V, _H, _P, _S, I} | T], Aux_list) when I =:= Id ->
-    lists:append([T, Aux_list]);
-remove_player(Player, [P | T], Aux_list) ->
-    remove_player(Player, T, [P | Aux_list]).
+remove_player(Id, [{N, P, V, H, PW, S, I} | T], Aux_list) ->
+    if I =:= Id ->
+	    lists:append([T, Aux_list]);
+       true ->
+	    remove_player(Id, T, [{N, P, V, H, PW, S, I} | Aux_list])
+    end.
 
 request_restart(_Server_settings, [], Bullet_list, Aux_list) ->
     {Aux_list, Bullet_list};
@@ -308,9 +309,9 @@ iterate_player(Server_settings, Player) ->
      _Vel_limit,
      Level_list} = Server_settings,
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list),
-    {X, Y} = New_pos,
+    {_X, Y} = New_pos,
     {Wins, Kills, Deaths} = Score,
-    {X_vel, Y_vel} = New_vel,
+    {_X_vel, Y_vel} = New_vel,
     if Y < 0 andalso Y_vel =/= 0 ->
 	    {Name, New_pos, {0,0}, 0, 0, {Wins, Kills -1, Deaths+1}, Id};
        true ->
