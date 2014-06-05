@@ -41,7 +41,7 @@ make_new_state() ->
       20.3, 
       {{10, 600}, {1270,710}}, 
       9.6, 
-      [{{-10, -10},{1300, 750}},{{100,50},{200,50}},{{300,50},{400,50}},{{500,50},{600,50}},{{700,50},{800,50}},{{900,50},{1000,50}},{{1000,50},{1100,50}},
+      [{{-10, -10},{1300, 750}},{{100,50},{200,50}},{{300,50},{400,50}},{{500,50},{600,50}},{{700,50},{800,50}},{{900,50},{1000,50}},{{1100,50},{1200,50}},
       {{250,250},{550,250}}, {{750,250},{1050,250}}, {{550,450},{750,450}}]}, 
      {[],[]}}.
 
@@ -224,9 +224,8 @@ remove_player(Player, [P | T], Aux_list) ->
 
 request_restart(_Server_settings, [], Bullet_list, Aux_list) ->
     {Aux_list, Bullet_list};
-request_restart(Server_settings, [{N, P, V, H, PW, S, I} | T], _Bullet_list, Aux_list) when S >= ?SCORELIMIT ->
-    {Wins, Deaths, Kills} = S,
-    {reset_player_list(Server_settings, [{N, P, V, H, PW, {Wins+1, Deaths, Kills}, I} | lists:append([T, Aux_list])], []) , [] }; 
+request_restart(Server_settings, [{N, P, V, H, PW, {Wins, Kills, Deaths}, I} | T], _Bullet_list, Aux_list) when Kills >= ?SCORELIMIT ->
+    {reset_player_list(Server_settings, [{N, P, V, H, PW, {Wins+1, Kills, Deaths}, I} | lists:append([T, Aux_list])], []) , [] }; 
 request_restart(Server_settings, [P | T], Bullet_list, Aux_list) ->
     request_restart(Server_settings, T, Bullet_list, [P | Aux_list]).
 
@@ -311,7 +310,8 @@ iterate_player(Server_settings, Player) ->
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list),
     {X, Y} = New_pos,
     {Wins, Kills, Deaths} = Score,
-    if X < 0 orelse Y < 0 ->
+    {X_vel, Y_vel} = New_vel,
+    if Y < 0 andalso Y_vel =/= 0 ->
 	    {Name, New_pos, {0,0}, 0, 0, {Wins, Kills -1, Deaths+1}, Id};
        true ->
 	    New_power = new_power(Power, New_vel),
