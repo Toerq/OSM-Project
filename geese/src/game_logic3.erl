@@ -17,6 +17,9 @@
 
 -define(SCORELIMIT, 10).
 
+-define(WEAKJUMP, 0.75).
+-define(STRONGJUMP, 1.5).
+
 -define(DAMAGELEGS, 1).
 -define(DAMAGEBODY, 2).
 -define(DAMAGEHEAD, 4).
@@ -35,10 +38,11 @@ make_new_state() ->
     {{2.3, 
       1.8, 
       1.2, 
-      8.3, 
+      20.3, 
       {{10, 600}, {1270,710}}, 
       9.6, 
-      [{{0, 0},{1280, 720}},{{250,100},{400,100}},{{1050,100},{1200,100}},{{500,200},{650,200}},{{-10,-10},{1290,5}}]}, 
+      [{{-10, -10},{1300, 750}},{{100,50},{200,50}},{{300,50},{400,50}},{{500,50},{600,50}},{{700,50},{800,50}},{{900,50},{1000,50}},{{1000,50},{1100,50}},
+      {{250,250},{550,250}}, {{750,250},{1050,250}}, {{550,450},{750,450}}]}, 
      {[],[]}}.
 
 %% do_actions(STATE, ACTIONLIST)
@@ -143,11 +147,11 @@ jump(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Type) ->
 	true ->
 	    case Type of 
 		weak ->
-		    Jump_vel = Base_jump_factor;
+		    Jump_vel = Base_jump_factor * ?WEAKJUMP;
 		normal ->
-		    Jump_vel = Base_jump_factor*2;
+		    Jump_vel = Base_jump_factor;
 		strong ->
-		    Jump_vel = Base_jump_factor*3
+		    Jump_vel = Base_jump_factor * ?STRONGJUMP
 	    end,
 	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel+Jump_vel-Gravity_factor}, Hp, Power, Score, E_id};
 	false ->
@@ -304,8 +308,15 @@ iterate_player(Server_settings, Player) ->
      _Vel_limit,
      Level_list} = Server_settings,
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list),
-    New_power = new_power(Power, New_vel),
-    {Name, New_pos, New_vel, New_hp, New_power, Score, Id}.
+    {X, Y} = New_pos,
+    {Wins, Kills, Deaths} = Score,
+    if X < 0 orelse Y < 0 ->
+	    {Name, New_pos, {0,0}, 0, New_power, {Wins, Kills -1, Deaths+1}, Id};
+       true ->
+	    New_power = new_power(Power, New_vel),
+	    {Name, New_pos, New_vel, New_hp, New_power, Score, Id}
+    end.
+
 
 get_borders([], Aux) ->
     Aux;
