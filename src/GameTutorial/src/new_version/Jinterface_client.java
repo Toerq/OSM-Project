@@ -27,7 +27,7 @@ public class Jinterface_client {
 			
 			this.socket = new Socket();
 			socket.connect(new InetSocketAddress(InetAddress.getByAddress(host), port), 1000);
-			socket.setSoTimeout(1000);
+			socket.setSoTimeout(5000);
 			
 			System.out.println("Connected to socket :" + socket);
 			this.out = socket.getOutputStream();
@@ -188,17 +188,8 @@ public class Jinterface_client {
 	 */
 	public void removePlayer () {
 		System.out.println("Requesting to leave...");
-		// Leaves the game state
-		OtpErlangObject[] argArray = {new OtpErlangAtom("remove_player"), new OtpErlangAtom("argument")};
-		OtpErlangList argList = new OtpErlangList(argArray);
-		doAction("server", argList);
-		try {
-			Thread.sleep(100);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		// Leaves the table
+		
+		// Leaves the table (and state)
 		OtpErlangAtom leave = new OtpErlangAtom("leave_game");
 		sendTCP(leave);
 		System.out.println("Request to leave done!");
