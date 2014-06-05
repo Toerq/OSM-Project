@@ -118,7 +118,7 @@ talk_state(State) ->
 			    Name = State#state.name,
 			    %% {X,Y} = {random:uniform(500), random:uniform(500)},		    		    
 			    io:format("Point1~n"),
-			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, 50, Player_id}]},
+			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, 50, {0,0,0}, Player_id}]},
 			    game_state:register_action(Call),
 			    gen_tcp:send(Socket, term_to_binary(join_succeeded)),
 			    game_state(New_state);
