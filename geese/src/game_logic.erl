@@ -1,3 +1,4 @@
+%% @author Johan Gille
 -module(game_logic).
 -compile(export_all).
 -export([do_actions/2, make_new_state/0]).
@@ -10,52 +11,81 @@
 -define(PLAYERMIDDLEX, 7).
 -define(PLAYERMIDDLEY, 20).
 
+-define(VERPOWERGAIN, 0.1).
+-define(HORPOWERGAIN, 0.2).
+
+-define(FIRECOST, 40).
+
+-define(SCORELIMIT, 10).
+
+-define(WEAKJUMP, 0.75).
+-define(STRONGJUMP, 1.5).
+
 -define(DAMAGELEGS, 1).
 -define(DAMAGEBODY, 2).
 -define(DAMAGEHEAD, 4).
 
+%% @doc Gives a template game state, with standard settings and
+%% empty lists for players and bullet.
+%% These basic settings can be changed with a "change settings" action.
+%% === Example ===
+%% <div class="example">
 %% STATE {SERVERSETTINGS, ENTITYLIST}
 %% SERVERSETINGS:
 %% {move_factor,
 %%  gravity_factor,
 %%  air_friction,
 %%  base_jump_factor,
-%%  grid_limit,
+%%  grid_limit, "Spawn grid"
 %%  vel_limit,
 %%  level_list}
-
+%% </div>
 make_new_state() ->
-    {{3.7, 
+    {{2.3, 
       1.8, 
-      1.8, 
-      21.0, 
-      {500, 500}, 
-      12.6, 
-      [{{0, 0},{800, 600}},{{250,100},{400,110}},{{500,200},{650,210}},{{-10,-10},{810,5}}]}, 
+      1.2, 
+      20.3, 
+      {{10, 650}, {1270,710}}, 
+      9.6, 
+      [{{-10, -10},{1300, 750}},{{75,50},{225,50}},{{275,50},{425,50}},{{475,50},{625,50}},{{675,50},{825,50}},{{875,50},{1025,50}},{{1075,50},{1225,50}},
+      {{250,250},{550,250}}, {{750,250},{1050,250}}, {{550,450},{750,450}}, {{639,270},{640,350}}, {{200,600},{300,600}}, {{400,600},{500,600}},
+       {{600,600},{700,600}}, {{800,600},{900,600}}, {{1000,600},{1100,600}}]}, 
      {[],[]}}.
 
-%% do_actions(STATE, ACTIONLIST)
-%% {State, Bullet_list}
+%% @doc Will apply actions and then iterate the game state.
+%% After all actions have been applied the logic will iterate all
+%% players and bullets accordingly.
 do_actions({Server_settings, Entity_lists}, Action_list) ->
     iterate_state(apply_actions(Server_settings, Entity_lists, Action_list)).
 
+%% applies actions, server actions can affect everything, while fire actions are added as bullets
+%% player and fire actions will only be executed if their hp > 0
 apply_actions(Server_settings, Entity_lists, []) ->
     {Server_settings, Entity_lists};
-apply_actions(Server_settings, {Player_list, Bullet_list}, [{_Entity_id, Action, Var_list} | T]) when Action =:= server ->
+apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= server ->
     [Type, Argument] = Var_list,
     {New_server_settings, New_player_list, New_bullet_list} = 
-	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument),
+	apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, Entity_id),
     apply_actions(New_server_settings, {New_player_list, New_bullet_list}, T);
 apply_actions(Server_settings, {Player_list, Bullet_list}, [{Entity_id, Action, Var_list} | T]) when Action =:= fire ->
-    [Type, Direction] = Var_list,
-    New_bullet_list = [{Entity_id, Type, Direction} | Bullet_list],
-    apply_actions(Server_settings, {Player_list, New_bullet_list}, T);
+    %% If a dead player tries to fire. Dont...
+    {{_Name, _Pos, _Vel, Hp, _Power, _Score, _E_id}, _Rest_list} = get_player(Player_list, Entity_id, []),
+    if Hp < 1 ->
+            %% dont
+            apply_actions(Server_settings, {Player_list, Bullet_list}, T);
+       true ->
+            %% try to fire!
+            [Type, Direction] = Var_list,
+            New_bullet_list = [{Entity_id, Type, Direction} | Bullet_list],
+            apply_actions(Server_settings, {Player_list, New_bullet_list}, T)
+    end;
 apply_actions(Server_settings, {Player_list, Bullet_list}, [A | T]) ->
     apply_actions(Server_settings, 
 		  {apply_action(Server_settings, Player_list, A, []), Bullet_list}, 
 		  T).
 
-apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) ->
+%% applies server actions
+apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, Entity_id) ->
     case Type of
 	add_player ->
 	    New_player_list = add_player(Argument, Player_list, []),
@@ -64,33 +94,39 @@ apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument) -
 	    New_server_settings = change_settings(Server_settings, Argument),
 	    {New_server_settings, Player_list, Bullet_list};
 	remove_player ->
-	    New_player_list = remove_player(Argument, Player_list, []),
-	    {Server_settings, New_player_list, Bullet_list}
+	    New_player_list = remove_player(Entity_id, Player_list, []),
+	    {Server_settings, New_player_list, Bullet_list};
+        respawn_player ->
+            New_player_list = respawn_player(Server_settings, Entity_id, Player_list, []),
+            {Server_settings, New_player_list, Bullet_list};
+	request_restart ->
+	    {New_player_list, New_bullet_list} = request_restart(Server_settings, Player_list, Bullet_list, []),
+	    {Server_settings, New_player_list, New_bullet_list} 
     end.
 
-
-
+%% applies a player action for the affected player if their hp > 0
 apply_action(_Server_settings, [], _A, Aux_list) ->
     Aux_list;
-apply_action(Server_settings, [{Name, Pos, Vel, Hp, Power, E_id} | T], {Entity_id, Action, Var_list}, Aux_list) when E_id =:= Entity_id ->
+apply_action(Server_settings, [{Name, Pos, Vel, Hp, Power, Score, E_id} | T], {Entity_id, Action, Var_list}, Aux_list) when E_id =:= Entity_id andalso Hp > 0 ->
     lists:append([[apply_action_aux(Server_settings, 
-				    {Name, Pos, Vel, Hp, Power, E_id}, 
+				    {Name, Pos, Vel, Hp, Power, Score, E_id}, 
 				    Action, 
 				    Var_list) | T], Aux_list]);
 apply_action(Server_settings, [E | T], A, Aux_list) ->
     apply_action(Server_settings, T, A, [E | Aux_list]).
 
-apply_action_aux(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Action, Var_list) ->
+apply_action_aux(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Action, Var_list) ->
     case Action of
 	move ->
 	    [Direction] = Var_list,
-	    move(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Direction);
+	    move(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Direction);
 	jump ->
 	    [Type] = Var_list,
-	    jump(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Type)
+	    jump(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Type)
     end.
 
-move(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Direction) ->
+%% upates your vel depending on move direction
+move(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Direction) ->
     {Move_factor,
      Gravity_factor,
      Air_friction,
@@ -108,9 +144,10 @@ move(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Direction) ->
     end,
     {X_vel, Y_vel} = Vel,
     New_x_vel = limitor(X_vel+Dir_vel, Vel_limit, Air_friction),
-    {Name, Pos, {New_x_vel, Y_vel-Gravity_factor}, Hp, Power, E_id}.
+    {Name, Pos, {New_x_vel, Y_vel-Gravity_factor}, Hp, Power, Score, E_id}.
 
-jump(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Type) ->
+%% if the player can jump it will get its vel updated for a jump
+jump(Server_settings, {Name, Pos, Vel, Hp, Power, Score, E_id}, Type) ->
     {_Move_factor,
      Gravity_factor,
      Air_friction,
@@ -123,17 +160,18 @@ jump(Server_settings, {Name, Pos, Vel, Hp, Power, E_id}, Type) ->
 	true ->
 	    case Type of 
 		weak ->
-		    Jump_vel = Base_jump_factor;
+		    Jump_vel = Base_jump_factor * ?WEAKJUMP;
 		normal ->
-		    Jump_vel = Base_jump_factor*2;
+		    Jump_vel = Base_jump_factor;
 		strong ->
-		    Jump_vel = Base_jump_factor*3
+		    Jump_vel = Base_jump_factor * ?STRONGJUMP
 	    end,
-	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel+Jump_vel-Gravity_factor}, Hp, Power, E_id};
+	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel+Jump_vel-Gravity_factor}, Hp, Power, Score, E_id};
 	false ->
-	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel-Gravity_factor}, Hp, Power, E_id}
+	    {Name, Pos, {limitor(X_vel, Vel_limit, Air_friction), Y_vel-Gravity_factor}, Hp, Power, Score, E_id}
     end.
 
+%% checks if the given posistion is a valid point to jump from
 can_jump(_Pos, []) ->
     false;
 can_jump({X, Y}, [O | T]) ->
@@ -149,11 +187,13 @@ can_jump({X, Y}, [O | T]) ->
 	    can_jump({X, Y}, T)
     end.
 
+%% gives the ground intreval of a level object
 ground_interval({{X_start, _Y_start}, {X_end, Y_end}}) ->
     {{X_start, X_end},Y_end}.
-    
 
-
+%% will limit so that -Limit =< X =< Limit, also if X is inbetween it will be reduced by fric
+%% but fric will never "turn" X, example if X is 3 and fric is 5 we would get 3 - 5 = -2 but 
+%% this will be limited to 0 so we dont change direction by friction.    
 limitor(X, Limit, Fric) ->
     if X > Limit ->
 	    Limit;
@@ -173,6 +213,7 @@ limitor(X, Limit, Fric) ->
 	    end
     end.
 
+%% not used
 modulor(X, Mod) ->
     if X > Mod ->
  	    X - Mod;
@@ -182,28 +223,80 @@ modulor(X, Mod) ->
  	    X
     end.
 
-
+%% adds a player to the playerlist, unless player is already present.
 add_player(Player, [], Aux_list) ->
     [Player | Aux_list];
-add_player({Name, Pos, Vel, Hp, Power, Id}, [{N, P, V, H, PW, I} | T], Aux_list) when I =/= Id ->
-    add_player({Name, Pos, Vel, Hp, Power, Id}, T, [{N, P, V, H, PW, I} | Aux_list]);
+add_player({Name, Pos, Vel, Hp, Power, Score, Id}, [{N, P, V, H, PW, S, I} | T], Aux_list) when I =/= Id ->
+    add_player({Name, Pos, Vel, Hp, Power, Score, Id}, T, [{N, P, V, H, PW, S, I} | Aux_list]);
 add_player(_ , Players, Aux_list) ->
     lists:append([Players, Aux_list]).
 
+%% removes a player from the playerlist
 remove_player(_Player, [], Aux_list) ->
     Aux_list;
-%%remove_player(Player, [P | T], Aux_list) when P =:= Player ->
-remove_player({_Name, _Pos, _Vel, _Hp, _Power, Id}, [{_N, _P, _V, _H, I} | T], Aux_list) when I =:= Id ->
-    lists:append([T, Aux_list]);
-remove_player(Player, [P | T], Aux_list) ->
-    remove_player(Player, T, [P | Aux_list]).
+remove_player(Id, [{N, P, V, H, PW, S, I} | T], Aux_list) ->
+    if I =:= Id ->
+	    lists:append([T, Aux_list]);
+       true ->
+	    remove_player(Id, T, [{N, P, V, H, PW, S, I} | Aux_list])
+    end.
 
+%% will restart and reset deaths and kills if one player have kills >= scorelimit, will also give him +1 in wins
+request_restart(_Server_settings, [], Bullet_list, Aux_list) ->
+    {Aux_list, Bullet_list};
+request_restart(Server_settings, [{N, P, V, H, PW, {Wins, Kills, Deaths}, I} | T], _Bullet_list, Aux_list) when Kills >= ?SCORELIMIT ->
+    {reset_player_list(Server_settings, [{N, P, V, H, PW, {Wins+1, Kills, Deaths}, I} | lists:append([T, Aux_list])], []) , [] }; 
+request_restart(Server_settings, [P | T], Bullet_list, Aux_list) ->
+    request_restart(Server_settings, T, Bullet_list, [P | Aux_list]).
 
+%% will reset all players and their stats (but wins) in the player list
+reset_player_list(_Server_settings, [], Aux) ->
+    Aux;
+reset_player_list(Server_settings, [{N, _P, _V, _H, _PW, {Wins, _Kills, _Deaths}, I} | T], Aux) ->
+    {_Move_factor,
+     _Gravity_factor,
+     _Air_friction,
+     _Base_jump_factor,
+     Grid_limit,
+     _Vel_limit,
+     _Level_list} = Server_settings,
+    {{X0,Y0},{X1,Y1}} = Grid_limit,
+    New_x = X0 + random:uniform(X1-X0),
+    New_y = Y0 + random:uniform(Y1-Y0),
+    New_vel = {0,0},
+    New_power = 0,
+    New_score = {Wins, 0, 0},
+    New_hp = 100,
+    reset_player_list(Server_settings, T, [{N, {New_x, New_y}, New_vel, New_hp, New_power, New_score, I} | Aux]).
+
+%% will respawn a player
+respawn_player(_Server_settings, _Entity_id, [], Aux_list) ->
+    Aux_list;
+respawn_player(Server_settings, Entity_id, [{N, _P, _V, H, _PW, S, I} | T], Aux_list) when Entity_id =:= I andalso H < 1 ->
+    {_Move_factor,
+     _Gravity_factor,
+     _Air_friction,
+     _Base_jump_factor,
+     Grid_limit,
+     _Vel_limit,
+     _Level_list} = Server_settings,
+    {{X0,Y0},{X1,Y1}} = Grid_limit,
+    X = X0 + random:uniform(X1-X0),
+    Y = Y0 + random:uniform(Y1-Y0),
+    New_hp = 100,
+    New_vel = {0,0},
+    New_power = 0,
+    [{N, {X,Y}, New_vel, New_hp, New_power, S, I} | lists:append([T, Aux_list])];
+respawn_player(Server_settings, Entity_id, [P | T], Aux_list) ->
+    respawn_player(Server_settings, Entity_id, T, [P | Aux_list]).
+
+%% will change settings to new_settings
 change_settings({M_f, G_f, A_f, B_j, G_l, V_l, L_l}, New_settings) ->
     Old_settings = [M_f, G_f, A_f, B_j, G_l, V_l, L_l],
     [N_m_f, N_g_f, N_a_f, N_b_j, N_g_l, N_v_l, N_l_l] = settings_update(Old_settings, New_settings, []),
     {N_m_f, N_g_f, N_a_f, N_b_j, N_g_l, N_v_l, N_l_l}.
 
+%% will update to a new settings unless the atom no_change is present, then the old will be kept
 settings_update([],[], Aux) ->
     lists:reverse(Aux);
 settings_update([O | OT], [N | NT], Aux) when N =:= no_change ->
@@ -211,7 +304,7 @@ settings_update([O | OT], [N | NT], Aux) when N =:= no_change ->
 settings_update([_O | OT], [N | NT], Aux) ->
     settings_update(OT, NT, [N | Aux]).
 
-
+%% will iterate the given state and return a new state and info about bullets during the state
 iterate_state({Server_settings, {Player_list, Bullet_list}}) ->
     {State, Bullet_info_list} = iterate_state_aux({Server_settings, {Player_list, Bullet_list}}, [], []),
     {State, Bullet_info_list}.
@@ -228,8 +321,9 @@ iterate_state_aux({Server_settings, {Player_list, [B | Bullet_list]}}, Aux_list,
 	    iterate_state_aux({Server_settings, {New_player_list, Bullet_list}}, Aux_list, [Bullet_info |Bullet_info_list])
     end.
 
+%% will iterate a player updating his pos and power, also kill him if he fell out of the map
 iterate_player(Server_settings, Player) ->    
-    {Name, Pos, Vel, Hp, Power, Id} = Player,
+    {Name, Pos, Vel, Hp, Power, Score, Id} = Player,
     {_Move_factor,
      _Gravity_factor,
      _Air_friction,
@@ -238,9 +332,17 @@ iterate_player(Server_settings, Player) ->
      _Vel_limit,
      Level_list} = Server_settings,
     {New_vel, New_pos, New_hp} = iterate_move(Vel, Pos, Hp, Level_list),
-    New_power = new_power(Power, New_vel),
-    {Name, New_pos, New_vel, New_hp, New_power, Id}.
+    {_X, Y} = New_pos,
+    {Wins, Kills, Deaths} = Score,
+    {_X_vel, Y_vel} = New_vel,
+    if Y < 0 andalso Y_vel =/= 0 ->
+	    {Name, New_pos, {0,0}, 0, 0, {Wins, Kills -1, Deaths+1}, Id};
+       true ->
+	    New_power = new_power(Power, New_vel),
+	    {Name, New_pos, New_vel, New_hp, New_power, Score, Id}
+    end.
 
+%% will return all the borders of a level object
 get_borders([], Aux) ->
     Aux;
 get_borders([O| T], {Aux_v, Aux_h}) ->
@@ -251,11 +353,7 @@ get_borders([O| T], {Aux_v, Aux_h}) ->
     Bot_h = {{X_start, X_end}, Y_start},
     get_borders(T, {[Left_v |[ Right_v| Aux_v]] , [Top_h |[Bot_h | Aux_h]]}).
 
-%% Vel = {4, -5}.
-%% Pos = {3,3}.
-%% Hp = 100.
-%% Level_list = [{{0,0},{10,10}}].
-
+%% will iterate a move of a player, returning a new vel and pos
 iterate_move(Vel, Pos, Hp, Level_list) ->
     {Vertical_list, Horizontal_list} = get_borders(Level_list, {[],[]}),
     {X_vel, Y_vel} = Vel,
@@ -312,7 +410,7 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 	    end
     end.
     
-
+%% will iterate a bullet, updating the affected players and returning info about the bullet
 iterate_bullet(Server_settings, Player_list, Bullet) ->
     {_Move_factor,			
      Gravity_factor,
@@ -323,11 +421,11 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
      Level_list} = Server_settings,
     {Entity_id, Type, Direction} = Bullet,
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
-    {Name, {X,Y}, Vel, Hp, Power, Id} = Player,
+    {Name, {X,Y}, Vel, Hp, Power, Score, Id} = Player,
     {X_vel, Y_vel} = Vel,
-    if Power =/= 100 ->
+    if Power < ?FIRECOST ->
 	    %% NOT ENOUGH POWER!!!
-	    {[{Name, {X,Y}, {limitor(X_vel, Vel_limit, Air_friction), Y_vel - Gravity_factor}, Hp, Power, Id} | Rest_list], nope};
+	    {[{Name, {X,Y}, {limitor(X_vel, Vel_limit, Air_friction), Y_vel - Gravity_factor}, Hp, Power, Score, Id} | Rest_list], nope};
        true ->
 	    %% FIRE!!!
 	    {X_m, Y_m} = {X+ ?PLAYERMIDDLEX ,Y+ ?PLAYERMIDDLEY},
@@ -345,11 +443,12 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 	    if Hit =:= dummy ->
 		    %% no player hit, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
+		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
 		    io:format("NO HIT!!!"),
 		    %% no hit, only fire recoil
 		    Border_point,
-		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), Y_f - Gravity_factor}, Hp_2, 0, Id_2} | Rest_list_2], 
+		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), 
+				       Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, Score_2, Id_2} | Rest_list_2], 
 		     {Entity_id, {X_m, Y_m}, Border_point}};
 	       true ->
 		    io:format("Good! HIT!!!"),
@@ -360,46 +459,72 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 			    %% player hit! fire recoil and damage!
 			    {Hit_player, Rest_list_2} = get_player(Player_list, Player_id, []),
 			    {Fire_player, Rest_list_3} = get_player(Rest_list_2, Entity_id, []),
-			    {Name_1, Pos_1, Vel_1, Hp_1, Power_1, Id_1} = Hit_player,
-			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
-			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, Id_2} 
-			      | [{Name_1, Pos_1, Vel_1, Hp_1 - Type*Damage, Power_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
+			    {Name_1, Pos_1, Vel_1, Hp_1, Power_1, Score_1, Id_1} = Hit_player,
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
+                            %%
+                            New_hp_1 = Hp_1 - Type*Damage,
+                            {Wins_1, Kills_1, Deaths_1} = Score_1,
+                            {Wins_2, Kills_2, Deaths_2} = Score_2,
+                            if New_hp_1 < 1 ->
+                                    %% dead
+                                    New_kills_2 = Kills_2 + 1,
+                                    New_deaths_1 = Deaths_1 + 1,
+                                    New_vel_1 = {0,0};
+                               true ->
+                                    %% not dead
+                                    %% no_change
+                                    New_kills_2 = Kills_2,
+                                    New_deaths_1 = Deaths_1,
+                                    New_vel_1 = Vel_1
+                            end,
+                            New_score_1 = {Wins_1, Kills_1, New_deaths_1},
+                            New_score_2 = {Wins_2, New_kills_2, Deaths_2},
+                            %%
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, New_score_2, Id_2} 
+			      | [{Name_1, Pos_1, New_vel_1, New_hp_1, Power_1, New_score_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
 		       true ->
 			    %% wall hit first, only fire recoil
 			    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
-			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Id_2} = Fire_player,
+			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
 			    Border_point,
-			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, 0, Id_2} | Rest_list_2],
+			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction) , Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, Score_2, Id_2} | Rest_list_2],
 			     {Entity_id, {X_m, Y_m}, Border_point}}
 		    end
 	    end
     end.
     
-
-
+%% will return the given player form his id and list of the rest of the players
 get_player([], _Id, _Aux) ->
     io:format("ERROR NO PLAYER FOR BULLET!!!~n"),
     error_no_such_player; %% Error
-get_player([{Name, Pos, Vel, Hp, Power, Id} | P_list], E_id, Aux) when E_id =:= Id ->
-    {{Name, Pos, Vel, Hp, Power, Id}, lists:append([P_list, Aux])};
+get_player([{Name, Pos, Vel, Hp, Power, Score, Id} | P_list], E_id, Aux) when E_id =:= Id ->
+    {{Name, Pos, Vel, Hp, Power, Score, Id}, lists:append([P_list, Aux])};
 get_player([P | P_list], Id, Aux) ->
     get_player(P_list, Id, [P | Aux]).
 
-
+%% returns the hitboxes of a player
 get_hit_boxes([], Aux) ->
     Aux;
 get_hit_boxes([P | P_list], {V_aux, H_aux}) ->
-    {_Name, {X, Y}, _Vel, _Hp, _Power, Id} = P,
-    Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
-    Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
-    Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
-    Right_body = {X+ ?PLAYERWIDTH,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
-    Left_legs = {X ,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
-    Right_legs = {X+ ?PLAYERWIDTH,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
-    Bot_body = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERLEGSHEIGHT, Id, ?DAMAGEBODY},
-    Top_head = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERHEIGHT, Id, ?DAMAGEHEAD},
-    get_hit_boxes(P_list, {[Left_head|[Left_body|[Left_legs|[Right_head|[Right_body|[Right_legs|V_aux]]]]]], [Top_head|[Bot_body|H_aux]]}).
+    {_Name, {X, Y}, _Vel, Hp, _Power, _Score, Id} = P,
+    %% If hp < 1, no hitboxes!!!
+    if Hp > 0 ->
+            %% get hitboxes!!!
+            Left_head = {X ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+            Right_head = {X+ ?PLAYERWIDTH ,{Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT ,Y+ ?PLAYERHEIGHT}, Id, ?DAMAGEHEAD},
+            Left_body = {X ,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+            Right_body = {X+ ?PLAYERWIDTH,{Y+ ?PLAYERLEGSHEIGHT ,Y+ ?PLAYERHEIGHT - ?PLAYERHEADHEIGHT}, Id, ?DAMAGEBODY},
+            Left_legs = {X ,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+            Right_legs = {X+ ?PLAYERWIDTH,{Y ,Y+ ?PLAYERLEGSHEIGHT}, Id, ?DAMAGELEGS},
+            Bot_body = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERLEGSHEIGHT, Id, ?DAMAGEBODY},
+            Top_head = {{X, X+ ?PLAYERWIDTH}, Y+ ?PLAYERHEIGHT, Id, ?DAMAGEHEAD},
+            get_hit_boxes(P_list, {[Left_head|[Left_body|[Left_legs|[Right_head|[Right_body|[Right_legs|V_aux]]]]]], [Top_head|[Bot_body|H_aux]]});
+       true ->
+            %% no hitbpxes #ghost
+            get_hit_boxes(P_list, {V_aux, H_aux})
+    end.
 
+%% returns if a player was hit or not, information about the hit or "dummy" if no hit, will be returned
 player_hit(Line, [], [], V_close, H_close) ->
     if V_close =:= dummy ->
 	    H_close;
@@ -457,7 +582,7 @@ player_hit(Line, [{X, {Y_start, Y_end}, Id, Damage} | V_list], H_list, V_close, 
 	    end
     end.
 
-
+%% will return the closest vertical or horizontal border that was hit.
 border_hit(Line, [], [], V_close, H_close) ->
     {{X0,Y0}, _Angle, _Dir} = Line,
     {_V_border, V_point, ver} = V_close,
@@ -499,6 +624,7 @@ border_hit(Line, [{X, {Y_start, Y_end}} | V_list], H_list, V_close, H_close) ->
             end
     end.
 
+%% from the line to point will return if the border was hit, padding is added to the return pos.
 line_hit(Line, Border, Type, Pad) when Type =:= hor ->
     {{X0,Y0}, Angle, Dir} = Line,
     {{X1,X2}, Y1} = Border,
@@ -609,7 +735,8 @@ shortest_distance({Start_x, Start_y}, {X1,Y1}, {X2, Y2}) ->
             {X1, Y1}
     end.
 
-
+%% will make a line from pos to direction
+%% a line is structured like, {Point of origin, Angle, Direction in posetiv or negative X}
 make_line(Pos, Direction) ->
     {X1, Y1} = Pos,
     {X2, Y2} = Direction,
@@ -629,7 +756,10 @@ make_line(Pos, Direction) ->
     end,  
     {Pos, Angle, Dir}.
 
-
+%% calculates a new power amount depending on the velocity
 new_power(Power, Vel)->
     {X, Y} = Vel,
-    limitor(round(Power + abs(X) + abs(Y)), 100, 0).
+    limitor(round(Power 
+                  + abs(X) * ?HORPOWERGAIN  
+                  + abs(Y) * ?VERPOWERGAIN
+                 ), 100, 0).
