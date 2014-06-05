@@ -28,7 +28,7 @@ stop() ->
 %% With var_list and Action for player_id. 
 %% === Example ===
 %% <div class="example">
-%% add(talbe_1, 3, move_left, []).
+%% add(table_1, 3, move_left, []).
 %% </div>
 -spec add(Db_name::atom(), Player_id::integer(), Action::atom(), Var_list::list()) -> ok.
 
