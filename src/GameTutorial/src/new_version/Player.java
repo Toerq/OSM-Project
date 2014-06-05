@@ -1,5 +1,6 @@
 package new_version;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -71,7 +72,7 @@ public class Player {
 	}
 
 	public void setDeaths(int deaths){
-		this.kills = deaths;
+		this.deaths = deaths;
 	}
 
 	public void draw(Graphics2D g2d){  	
@@ -82,21 +83,28 @@ public class Player {
 		drawName(g2d, x, y);
 		drawHpBar(g2d, x, y);
 		drawPowerBar(g2d, x, y);
-		if(id == Game.myId){
+		/*if(id == Game.myId){
 			Utility.drawCircle(g2d, Game.myCenter[0], Game.myCenter[1], Game.shootingRadius);
-		}
+		}*/
 	}
 
 	private void drawImage(Graphics2D g2d, int x, int y) {
+		if (HP < 1) {
+			float opacity = 0.5f;
+			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+		}
+		
 		if (xVelocity < 0 ) {
 			g2d.drawImage(playerImgLeft, x, y, null);
 		}
 		else {
 			g2d.drawImage(playerImgRight, x, y, null);
 		}
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
 	}
 
 	private void drawName(Graphics2D g2d, int x, int y) {
+		g2d.setColor(Color.white);
 		g2d.drawString(name, x -6 , y - 22);
 	}
 

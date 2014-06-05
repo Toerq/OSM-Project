@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -18,9 +19,14 @@ public class Utility {
 		String[] tokens = s.replaceFirst("^\\{", "").split("\\.|\\,|\\{|\\}");
 		
 		byte[] ip = new byte[4];
-		for (int i = 0; i < 4; i++) {
-			System.out.println(tokens[i]);
-			ip[i] = (byte) Integer.parseInt(tokens[i]); 
+		try {
+			for (int i = 0; i < 4; i++) {
+				System.out.println(tokens[i]);
+				
+					ip[i] = (byte) Integer.parseInt(tokens[i]); 
+			}
+		}catch(Exception e) {
+			ip = null;
 		}
 		return ip;
 	}
