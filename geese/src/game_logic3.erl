@@ -15,6 +15,8 @@
 
 -define(FIRECOST, 100).
 
+-define(SCORELIMIT, 10).
+
 -define(DAMAGELEGS, 1).
 -define(DAMAGEBODY, 2).
 -define(DAMAGEHEAD, 4).
@@ -81,7 +83,10 @@ apply_server_action(Server_settings, Player_list, Bullet_list, Type, Argument, E
 	    {Server_settings, New_player_list, Bullet_list};
         respawn_player ->
             New_player_list = respawn_player(Server_settings, Entity_id, Player_list, []),
-            {Server_settings, New_player_list, Bullet_list}
+            {Server_settings, New_player_list, Bullet_list};
+	request_restart ->
+	    {New_player_list, New_bullet_list} = request_restart(Server_settings, Player_list, Bullet_list, []),
+	    {Server_settings, New_player_list, New_bullet_list} 
     end.
 
 
@@ -212,6 +217,32 @@ remove_player(Id, [{_N, _P, _V, _H, _P, _S, I} | T], Aux_list) when I =:= Id ->
     lists:append([T, Aux_list]);
 remove_player(Player, [P | T], Aux_list) ->
     remove_player(Player, T, [P | Aux_list]).
+
+request_restart(_Server_settings, [], Bullet_list, Aux_list) ->
+    {Aux_list, Bullet_list};
+request_restart(Server_settings, [{N, P, V, H, PW, S, I} | T], _Bullet_list, Aux_list) when S >= ?SCORELIMIT ->
+    {reset_player_list(Server_settings, [{N, P, V, H, PW, S, I} | lists:append([T, Aux_list])], []) , [] }; 
+request_restart(Server_settings, [P | T], Bullet_list, Aux_list) ->
+    request_restart(Server_settings, T, Bullet_list, [P | Aux_list]).
+
+reset_player_list(_Server_settings, [], Aux) ->
+    Aux;
+reset_player_list(Server_settings, [{N, _P, _V, _H, _PW, {Wins, _Kills, _Deaths}, I} | T], Aux) ->
+    {_Move_factor,
+     _Gravity_factor,
+     _Air_friction,
+     _Base_jump_factor,
+     Grid_limit,
+     _Vel_limit,
+     _Level_list} = Server_settings,
+    {{X0,Y0},{X1,Y1}} = Grid_limit,
+    New_x = X0 + random:uniform(X1-X0),
+    New_y = Y0 + random:uniform(Y1-Y0),
+    New_vel = {0,0},
+    New_power = 0,
+    New_score = {Wins, 0, 0},
+    New_hp = 100,
+    reset_player_list(Server_settings, T, [{N, {New_x, New_y}, New_vel, New_hp, New_power, New_score, I} | Aux]).
 
 respawn_player(_Server_settings, _Entity_id, [], Aux_list) ->
     Aux_list;
@@ -399,8 +430,8 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 			    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, _Power_2, Score_2, Id_2} = Fire_player,
                             %%
                             New_hp_1 = Hp_1 - Type*Damage,
-                            {Kills_1, Deaths_1} = Score_1,
-                            {Kills_2, Deaths_2} = Score_2,
+                            {Wins_1, Kills_1, Deaths_1} = Score_1,
+                            {Wins_2, Kills_2, Deaths_2} = Score_2,
                             if New_hp_1 < 1 ->
                                     %% dead
                                     New_kills_2 = Kills_2 + 1,
@@ -413,8 +444,8 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
                                     New_deaths_1 = Deaths_1,
                                     New_vel_1 = Vel_1
                             end,
-                            New_score_1 = {Kills_1, New_deaths_1},
-                            New_score_2 = {New_kills_2, Deaths_2},
+                            New_score_1 = {Wins_1, Kills_1, New_deaths_1},
+                            New_score_2 = {Wins_2, New_kills_2, Deaths_2},
                             %%
 			    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction),Y_f - Gravity_factor}, Hp_2, 0, New_score_2, Id_2} 
 			      | [{Name_1, Pos_1, New_vel_1, New_hp_1, Power_1, New_score_1, Id_1} | Rest_list_3]],{Entity_id, {X_m, Y_m}, Point}};
