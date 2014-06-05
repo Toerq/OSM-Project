@@ -152,10 +152,6 @@ public class Game {
 				fire(mousePosition);	
 			//}	
 		}
-		
-		else if (Canvas.keyboardKeyState(KeyEvent.VK_Q)) {
-			Main.client.removePlayer();
-		}
 		else if (Canvas.keyboardKeyState(KeyEvent.VK_P)) {
 			Main.client.requestRestart();
 		}
@@ -163,11 +159,11 @@ public class Game {
 			argList = new OtpErlangList(new OtpErlangAtom("normal"));
 			Main.client.doAction("jump", argList);
 		}
-		else if (Canvas.keyboardKeyState(KeyEvent.VK_N)) {
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_CONTROL)) {
 			argList = new OtpErlangList(new OtpErlangAtom("weak"));
 			Main.client.doAction("jump", argList);
 		}
-		else if (Canvas.keyboardKeyState(KeyEvent.VK_M)) {
+		else if (Canvas.keyboardKeyState(KeyEvent.VK_W)) {
 			argList = new OtpErlangList(new OtpErlangAtom("strong"));
 			Main.client.doAction("jump", argList);
 		}
@@ -185,13 +181,13 @@ public class Game {
 			OtpErlangObject[] argArray = {new OtpErlangAtom("respawn_player"), new OtpErlangAtom("argument")};
 			argList = new OtpErlangList(argArray);
 			Main.client.doAction("server", argList);
-			
 		}
 
 		else {
 			argList = new OtpErlangList(new OtpErlangAtom("stop"));
 			Main.client.doAction("move", argList);
 		}
+		
 		try {
 			Thread.sleep(5);
 		} catch (InterruptedException e) {
@@ -202,7 +198,7 @@ public class Game {
 
 	private void fire(Point mousePosition) {
 		OtpErlangList argList;
-		OtpErlangInt type = new OtpErlangInt(25);
+		OtpErlangInt type = new OtpErlangInt(20);
 		OtpErlangInt x = new OtpErlangInt(mousePosition.x);
 		OtpErlangInt y = new OtpErlangInt(Game.height - mousePosition.y);
 		OtpErlangObject[] posArray = {x,  y};

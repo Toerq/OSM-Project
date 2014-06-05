@@ -63,21 +63,17 @@ public class Main implements ActionListener {
 		f.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
+            	
+            	Framework.gameState = Framework.GameState.GAMEOVER;
             	System.out.println("Game over...");
-            	framework.gameState = Framework.GameState.GAMEOVER;
             	
             	try {
-            		Main.client.removePlayer();
-					Thread.sleep(100);
-	            	Main.client.removePlayer();
-	            	Thread.sleep(100);
-	            	Main.client.removePlayer();
-	            	Thread.sleep(100);
-	            	Main.client.removePlayer();
+					Thread.sleep(500);
 				} catch (InterruptedException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+            	Main.client.removePlayer();
                 //System.out.println("Replace sysout with your method call");
                 
             	f.dispose();
