@@ -137,7 +137,7 @@ public class Game {
 
 	private void removeOldBullets() {
 		for (int i = 0; i < bulletList.size(); i++) {
-			if(bulletList.get(i)[4] == 0) {
+			if(bulletList.get(i)[4] <= 0) {
 				bulletList.remove(i);
 			}
 		}
