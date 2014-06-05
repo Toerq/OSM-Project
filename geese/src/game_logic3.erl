@@ -403,7 +403,7 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     {Player, Rest_list} = get_player(Player_list, Entity_id, []),
     {Name, {X,Y}, Vel, Hp, Power, Score, Id} = Player,
     {X_vel, Y_vel} = Vel,
-    if Power >= ?FIRECOST ->
+    if Power < ?FIRECOST ->
 	    %% NOT ENOUGH POWER!!!
 	    {[{Name, {X,Y}, {limitor(X_vel, Vel_limit, Air_friction), Y_vel - Gravity_factor}, Hp, Power, Score, Id} | Rest_list], nope};
        true ->
