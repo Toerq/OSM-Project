@@ -168,7 +168,9 @@ game_state(State) ->
 		    game_state(State);
 
 		leave_game ->
-		    coordinator:remove_player_from_table(self()),
+		    Call = {action_add, Db_name, Player_id, server, [remove_player, arg]},
+		    game_state:register_action(Call),
+		    geese_coordinator:remove_player_from_table(self()),
 		    talk_state(State);
 
 		E ->
