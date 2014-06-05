@@ -168,7 +168,7 @@ game_state(State) ->
 		    game_state(State);
 
 		leave_game ->
-		    tbi,
+		    coordinator:remove_player_from_table(self()),
 		    talk_state(State);
 
 		E ->
