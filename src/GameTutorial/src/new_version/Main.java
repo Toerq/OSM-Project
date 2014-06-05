@@ -239,7 +239,7 @@ public class Main implements ActionListener {
 			
 				table = createServerTable();
 
-				f.setTitle("GEESE - " + playerName + " - Connected to: " + Arrays.toString(ip));
+				f.setTitle("GEESE - " + playerName + " - Connected to: " + ipArrayToString(ip));
 			} else {
 				f.setTitle("GEESE - " + playerName);
 				table = new JScrollPane();
@@ -265,7 +265,7 @@ public class Main implements ActionListener {
 			
 			if(Main.ip != null) {
 				client.setName(name);
-				f.setTitle("GEESE - " + playerName + " - Connected to: " + Arrays.toString(ip));
+				f.setTitle("GEESE - " + playerName + " - Connected to: " + ipArrayToString(ip));
 			} else {
 				f.setTitle("GEESE - " + playerName);
 			}
@@ -275,6 +275,19 @@ public class Main implements ActionListener {
 			f.validate();
 		}
 	}
+	
+	private String ipArrayToString(byte[] ip) {
+		String ipString = new String();
+		for(int i = 0; i < ip.length; i++) {
+			if(ip[i] < 0) {
+				ipString = ipString + (ip[i]+256) + ".";
+			} else {
+				ipString = ipString + ip[i] + ".";
+			}
+		}
+		return ipString;
+	}
+	
 	private class RefreshButtonHandler implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			table = createServerTable();
