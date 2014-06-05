@@ -41,9 +41,9 @@
 %%  level_list}
 %% </div>
 make_new_state() ->
-    {{5.3, 
+    {{2.3, 
       1.8, 
-      3.2, 
+      0.2, 
       20.3, 
       {{10, 650}, {1270,710}}, 
       9.6, 
@@ -211,16 +211,6 @@ limitor(X, Limit, Fric) ->
 	       true ->
 		    X + Fric
 	    end
-    end.
-
-%% not used
-modulor(X, Mod) ->
-    if X > Mod ->
- 	    X - Mod;
-       X < 0 ->
- 	    Mod + X;
-       true ->
- 	    X
     end.
 
 %% adds a player to the playerlist, unless player is already present.

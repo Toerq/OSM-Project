@@ -109,21 +109,6 @@ get_actions(Db_name) ->
     {_, Action_list} = ?MODULE:do_call({action_available, Db_name}),
     [{X,Y,Z} ||{_, X, Y, Z} <- Action_list].
 
-
-
-
-%% Pid = spawn(fun() -> test:state_sender() end).
-%% game_state:start(action, Pid, 1).
-%% Action = {action_add, action, server, add_player, [{"Player1",{0,0},{10, 20}, 100, 1}]}.
-%% Action2 = {action_add, action, server, add_player, [{"Player2",{50,50},{20, 20}, 100, 2}]}.
-%% Action3 = {action_add, action, server, add_player, [{"Player3",{100,100},{-20, -20}, 100, 3}]}.
-%% Action4 = {action_add, action, server, add_player, [{"Player4",{100,100},{-20, 10}, 100, 4}]}.
-%% Action5 = {action_add, action, 1, move_up, []}.
-%% Action6 = {action_add, action, 2, move_down, []}.
-%% Action7 = {action_add, action, 3, move_left, []}.
-%% Action8 = {action_add, action, 4, move_right, []}.
-%% game_state:register_action(Action).
-
 %% @doc Shifts unsigned ascii from Java to signed Erlang ascii. 
 -spec makestring(Sting::list(), Aux::list()) -> List::list().
 
