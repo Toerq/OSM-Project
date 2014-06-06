@@ -4,12 +4,10 @@
 
 -export([start_link/1]).
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, talk_state/1, game_state/1,
          terminate/2, code_change/3]).
 
 -record(state, {player_id, accept_socket, table_ref, db_name, state_sender, name}).
-
--define(SERVER, ?MODULE).
 
 start_link(Accept_socket) ->
     gen_server:start(?MODULE, [Accept_socket], []).
@@ -17,36 +15,34 @@ start_link(Accept_socket) ->
 init([Accept_socket]) ->
     {ok, #state{player_id = self(), accept_socket = Accept_socket, name = "Player"}}.
 
-%% @doc Communicates with the client through TCP connection. Recieves packages, and the handles them in a predefined way. The following are the defined receive terms.
-
-%% === Received cases: ===
+%% @doc Communicates with the client through TCP connection. Recieves packages, and the handles them in a predefined way. The following are the defined receive terms:
+%% === {get_state, Name} ===
 %% <div class="example">
-%%  Case {getasd_state, Name} 
 %% Changes the name of the player stored in the State of the player process.
-%% 
-%%  Case {add_table, Name, Game_type, Max_players} 
-
+%% </div> 
+%% === {add_table, Name, Game_type, Max_players} ===
+%% <div class="example">
 %% Calls the coordinator module and adds a new table  with name Name, game_type Game_type, and max players Max_players.
-%% 
-%%  Case ping 
-
+%% </div>
+%% === ping ===
+%% <div class="example">
 %% Sends the erlang atom pong through TCP.
-%% 
-%%  Case browse_tables 
-
+%% </div>
+%% === browse_tables ===
+%% <div class="example">
 %% Sends the list of tables stored in the coordinator module through TCP.
-%% 
-%%  Case browse_players 
-
+%% </div>
+%% === browse_players ===
+%% <div class="example">
 %% Sends the list of players stored in the coordinator module through TCP. 
-%% 
-%%  {join_table, Table_ref} 
-
+%% </div>
+%% === {join_table, Table_ref} ===
+%% <div class="example">
 %% Attempts to join a new table with the current player process and table with reference Table_ref by calling geese_coordinator:join_table/2.
 %% Either returns the atom join_succeeded or join_failed depending on wether the join succeeded or not.
-%% 
-%%  leave_game 
-
+%% </div>
+%% === leave_game ===
+%% <div class="example">
 %% Removes the player element of the called player process in the coordinator module. Also terminates the player process being called.
 %% </div>
 talk_state(State) -> 
@@ -112,19 +108,19 @@ talk_state(State) ->
     end.
 
 %% @doc The function that the client communicates with when inside a game. The game_state module also communicates with this module.
-%% === Case {do_action, {Action, Var_list}} (received through TCP) ===
+%% === {do_action, {Action, Var_list}} (received through TCP) ===
 %% <div class="example">
 %% Calls game_state:register_action/1 with the received tuple as argument. 
 %% </div>
-%% === Case get_state (received through TCP) ===
+%% === get_state (received through TCP) ===
 %% <div class="example">
 %% Sends the current state stored in the module game_state through TCP
 %% </div>
-%% === Case leave_game  (received through TCP) ===
+%% === leave_game  (received through TCP) ===
 %% <div class="example">
 %% Calls game_state:register_action/1 with the received atom as argument. Also calls geese_coordinator:remove_player_from_lobby/1 with its own pid as argument.
 %% </div>
-%% === Case {state, Game_state} (received from game_state module) ===
+%% === {state, Game_state} (received from game_state module) ===
 %% <div class="example">
 %% Receives the state of the game_state module and sends it through TCP to the client.
 %% </div>
