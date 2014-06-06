@@ -91,5 +91,24 @@ public class Utility {
 		}
 		return false;
 	}
+	
+	public static boolean contains(final int[] id, final Integer key) {
+	    for ( final int e : id )
+	        if ( e == key || key != null && key.equals( e ) )
+	            return true;
+	    return false;
+	}
+	
+	public static String ipArrayToString(byte[] ip) {
+		String ipString = new String();
+		for(int i = 0; i < ip.length; i++) {
+			if(ip[i] < 0) {
+				ipString = ipString + (ip[i]+256) + ".";
+			} else {
+				ipString = ipString + ip[i] + ".";
+			}
+		}
+		return ipString;
+	}
 
 }

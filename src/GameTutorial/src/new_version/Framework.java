@@ -17,7 +17,7 @@ import javax.imageio.ImageIO;
 /**
  * Framework that controls the game (Game.java) that created it, update it and draw it on the screen.
  * 
- * taken from www.gametutorial.net
+ * Taken and modified from www.gametutorial.net
  */
 
 public class Framework extends Canvas {
@@ -47,7 +47,7 @@ public class Framework extends Canvas {
 	 * FPS - Frames per second
 	 * How many times per second the game should update?
 	 */
-	private final int GAME_FPS = 24;
+	private final int GAME_FPS = 32;
 	/**
 	 * Pause between updates. It is in nanoseconds.
 	 */
@@ -71,43 +71,36 @@ public class Framework extends Canvas {
 
 	// The actual game
 	private Game game;
-
+	
+	// The aim cursor
 	private Cursor aimCursor;
-	private Cursor noAimCursor;
 
 	/**
 	 * Image for menu.
 	 */
 	private BufferedImage startScreen;
 
-
 	public Framework ()
 	{
 		super();
-
 		gameState = GameState.VISUALIZING;
-
 		// If you will draw your own mouse cursor or if you just want that mouse cursor disapear, 
 		// insert "true" into if condition and mouse cursor will be removed.
+	
 		if(true)
 		{
 			URL aimCursorUrl = this.getClass().getResource("/new_images/aim.png");
-			//URL noAimCursorUrl = this.getClass().getResource("/new_images/noaim.png");
 			BufferedImage aimCursorImg = null;
-			//BufferedImage noAimCursorImg = null;
 			try {
 				aimCursorImg = ImageIO.read(aimCursorUrl);
-				//noAimCursorImg = ImageIO.read(noAimCursorUrl);
-
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			aimCursor = Toolkit.getDefaultToolkit().createCustomCursor(aimCursorImg, new Point(0, 0), null);
-			//noAimCursor = Toolkit.getDefaultToolkit().createCustomCursor(noAimCursorImg, new Point(0, 0), null);
 			this.setCursor(aimCursor);
 		}
-
+		
 		//We start game in new thread.
 		Thread gameThread = new Thread() {
 			@Override
@@ -118,15 +111,6 @@ public class Framework extends Canvas {
 		gameThread.start();
 	}
 
-
-	/**
-	 * Set variables and objects.
-	 * This method is intended to set the variables and objects for this class, variables and objects for the actual game can be set in Game.java.
-	 */
-	private void Initialize()
-	{
-
-	}
 
 	/**
 	 * Load files - images, sounds, ...
@@ -145,7 +129,7 @@ public class Framework extends Canvas {
 	}
 
 	/**
-	 * In specific intervals of time (GAME_UPDATE_PERIOD) the game/logic is updated and then the game is drawn on the screen.
+	 * In specific intervals of time (GAME_UPDATE_PERIOD) the game is updated and then the game is drawn on the screen.
 	 */
 	private void GameLoop()
 	{
@@ -163,9 +147,7 @@ public class Framework extends Canvas {
 			{
 			case PLAYING:
 				gameTime += System.nanoTime() - lastTime;
-				//setCursor();
 				game.UpdateGame(gameTime, mousePosition());
-
 				lastTime = System.nanoTime();
 				break;
 			case GAMEOVER:
@@ -174,15 +156,7 @@ public class Framework extends Canvas {
 			case MAIN_MENU:
 				//...
 				break;
-			case OPTIONS:
-				//...
-				break;
-			case GAME_CONTENT_LOADING:
-				//...
-				break;
 			case STARTING:
-				// Sets variables and objects.
-				Initialize();
 				// Load files - images, sounds, ...
 				LoadContent();
 
@@ -198,7 +172,7 @@ public class Framework extends Canvas {
 				{
 					frameWidth = this.getWidth();
 					frameHeight = this.getHeight();
-
+					
 					// When we get size of frame we change status.
 					gameState = GameState.STARTING;
 				}
@@ -226,16 +200,6 @@ public class Framework extends Canvas {
 		}
 	}
 
-/*
-	private void setCursor() {
-		if(mousePosition().distance((double) Game.myCenter[0], (double) Game.myCenter[1]) < (double) Game.shootingRadius){
-			this.setCursor(aimCursor);
-		}
-		else {
-			this.setCursor(noAimCursor);
-		}
-	}
-*/
 	/**
 	 * Draw the game to the screen. It is called through repaint() method in GameLoop() method.
 	 */
@@ -248,17 +212,9 @@ public class Framework extends Canvas {
 			game.Draw(g2d, mousePosition());
 			break;
 		case GAMEOVER:
-			//    game.DrawGameOver(g2d, mousePosition(), gameTime);
 			break;
 		case MAIN_MENU:
 			g2d.drawImage(startScreen, 0, 0, frameWidth, frameHeight, null);
-			break;
-		case OPTIONS:
-			//...
-			break;
-		case GAME_CONTENT_LOADING:
-			g2d.setColor(Color.white);
-			g2d.drawString("GAME is LOADING", frameWidth / 2 - 50, frameHeight / 2);
 			break;
 		}
 	}
@@ -271,23 +227,7 @@ public class Framework extends Canvas {
 		// We set gameTime to zero and lastTime to current time for later calculations.
 		gameTime = 0;
 		lastTime = System.nanoTime();
-
 		game = new Game();
-	}
-
-	/**
-	 *  Restart game - reset game time and call RestartGame() method of game object so that reset some variables.
-	 */
-	private void restartGame()
-	{
-		// We set gameTime to zero and lastTime to current time for later calculations.
-		gameTime = 0;
-		lastTime = System.nanoTime();
-
-		game.RestartGame();
-
-		// We change game status so that the game can start.
-		gameState = GameState.PLAYING;
 	}
 
 	/**
@@ -327,10 +267,6 @@ public class Framework extends Canvas {
 		case MAIN_MENU:
 			newGame();
 			break;
-		case GAMEOVER:
-			if(e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_ENTER)
-				restartGame();
-			break;
 		}
 	}
 
@@ -344,7 +280,5 @@ public class Framework extends Canvas {
 	{
 
 	}
-
-
 
 }
