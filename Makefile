@@ -82,7 +82,7 @@ clean:
 	rm -fr .#* *.dump
 	rm -fr ebin/*
 	rm -fr jbin/*	
-	rm -fr doc/html/*
+	rm -fr doc/html/*.html
 ## (cd doc/html && find . -name "*" -a ! -name overview.edoc -exec rm -rf {} \;)
 
 remove_finderinfo:
