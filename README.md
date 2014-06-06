@@ -1,6 +1,6 @@
-==== OSM-Project ====
+# ==== OSM-Project ==== #
 
-==== COURSE ==== 
+## ==== COURSE ==== ## 
 
 Process Oriented Programming (1DT049) Spring 2014
 
