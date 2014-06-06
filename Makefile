@@ -1,5 +1,5 @@
 ######################
-# GROUP_NUMBER := 10 #
+GROUP_NUMBER := 10
 ######################
 
 #####################
@@ -35,13 +35,14 @@ space:= $(empty) $(empty)
 EDOC_SRC := $(filter-out %_test.erl, $(_GEESE_FILES))
 EDOC_SRC_LIST := [$(subst $(space),$(comma),$(patsubst src/%.erl,'src/%.erl', $(EDOC_SRC)))]
 
-#REQUIRED_DIR_NAME := pop_2012_project_group_$(GROUP_NUMBER)
+REQUIRED_DIR_NAME := pop_2012_project_group_$(GROUP_NUMBER)
 REQUIRED_DIR_NAME := OSM-Project
 
 PROJECT_DIR := $(notdir $(shell pwd))
 
 USER=$(shell whoami)
-ARCHIVE_NAME :=  $(REQUIRED_DIR_NAME)_archive_$(USER)_$(shell date "+%Y-%m-%d__%H%M%S")__.tar.gz
+## ARCHIVE_NAME := $(REQUIRED_DIR_NAME)_archive_$(USER)_$(shell date "+%Y-%m-%d__%H%M%S")__.tar.gz
+ARCHIVE_NAME := OSM_2014_group_$(GROUP_NUMBER)_final_deliverable__$(shell date "+%Y-%m-%d__%H%M%S")__.tar.gz
 ARCHIVE_DIR := ..
 
 #=======================================================================#
@@ -89,7 +90,7 @@ remove_finderinfo:
 
 archive: clean
 ifeq ($(REQUIRED_DIR_NAME), $(PROJECT_DIR))
-	(cd $(ARCHIVE_DIR) && tar cvfz $(ARCHIVE_NAME) $(PROJECT_DIR) )
+	(cd $(ARCHIVE_DIR) && tar cvfz $(ARCHIVE_NAME) $(PROJECT_DIR) --exclude .git)
 	@echo 
 	@echo NOTE: Archive created in $(ARCHIVE_DIR)/$(ARCHIVE_NAME)
 	@echo 
