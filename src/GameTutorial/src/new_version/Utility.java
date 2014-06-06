@@ -11,7 +11,7 @@ import com.ericsson.otp.erlang.OtpOutputStream;
 /**
  * Utility functions
  * 
- * @author Niklas Hökenström, Jonas Nilsson
+ * @author Niklas Hï¿½kenstrï¿½m, Jonas Nilsson
  */
 public class Utility {
 	
@@ -22,14 +22,11 @@ public class Utility {
 	 * @return The ip byte array
 	 */
 	public static byte[] stringToIp(String s) {
-		System.out.println(s);
 		String[] tokens = s.replaceFirst("^\\{", "").split("\\.|\\,|\\{|\\}");
 		byte[] ip = new byte[4];
 		try {
 			for (int i = 0; i < 4; i++) {
-				System.out.println(tokens[i]);
-				
-					ip[i] = (byte) Integer.parseInt(tokens[i]); 
+				ip[i] = (byte) Integer.parseInt(tokens[i]); 
 			}
 		}catch(Exception e) {
 			ip = null;

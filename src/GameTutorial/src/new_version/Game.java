@@ -20,7 +20,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Actual game.
  * 
- * @author Niklas Hökenström, Jonas Nilson
+ * @author Niklas Hï¿½kenstrï¿½m, Jonas Nilson
  */
 
 public class Game {
@@ -212,7 +212,7 @@ public class Game {
 	 */
 	public void draw(Graphics2D g2d, Point mousePosition)
 	{
-		g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
+		//g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
 		drawPlatforms(g2d);
 		drawBullets(g2d);
 		drawStatistics(g2d);

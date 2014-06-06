@@ -13,7 +13,7 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 /**
  * The main window of the application
  * 
- * @author Niklas Hökenström, Jonas Nilsson
+ * @author Niklas Hï¿½kenstrï¿½m, Jonas Nilsson
  */
 public class Main implements ActionListener {
 	static byte [] ip = null;
@@ -47,7 +47,6 @@ public class Main implements ActionListener {
 			@Override
 			public void componentHidden(ComponentEvent e) {
 				Framework.gameState = Framework.GameState.GAMEOVER;
-				System.out.println("Game over...");	
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e1) {
@@ -296,14 +295,12 @@ public class Main implements ActionListener {
 	 * @return a JScrollPane containing the list of games
 	 */
 	private JScrollPane createGameList() {
-		System.out.println("In createServerTable");
 		Object[][] tmp = client.available();
 		final OtpErlangPid[] pids = new OtpErlangPid[tmp.length];
 		data = new Object[tmp.length][5];
 		for(int i = 0; i < tmp.length; i++) {
 			for (int j = 0; j < 3; j++) {
 				data[i][j] = tmp[i][j].toString();
-				System.out.println("Tables: " + data[i][j]);
 			}
 			data[i][3] = (Object) (tmp[i][3].toString() + "/" + tmp[i][4].toString());
 			pids[i] = (OtpErlangPid) tmp[i][0];
@@ -327,12 +324,10 @@ public class Main implements ActionListener {
 				int modelRow = Integer.valueOf( e.getActionCommand() );
 
 				boolean join_succeeded = client.join(pids[modelRow]);
-				System.out.println("join: " + join_succeeded);
 				if (join_succeeded) {
 					framework = new Framework();
 					f.setContentPane(framework);
 					f.validate();
-					System.out.println(framework.requestFocusInWindow());
 				}
 			}
 		};
@@ -354,7 +349,6 @@ public class Main implements ActionListener {
 
 	public void actionPerformed(ActionEvent ae) {
 		String comStr = ae.getActionCommand();
-		System.out.println(comStr + " Selected");
 	}
 
 	public static void main(String args[]) {
