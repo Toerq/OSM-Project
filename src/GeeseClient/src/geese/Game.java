@@ -1,4 +1,4 @@
-package new_version;
+package geese;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
