@@ -31,16 +31,14 @@ init([]) ->
 
 join_lobby(Pid, Name, Socket) -> gen_server:call(?MODULE, {join_lobby, Pid, Name, Socket}).
 browse_tables() -> gen_server:call(?MODULE, browse_tables).
-join_table(Player_id, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_id, Table_ref}).
+join_table(Player_pid, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_pid, Table_ref}).
 add_table(Name, Game_type, Max_players) -> gen_server:cast(?MODULE, {add_table, Name, Game_type, Max_players}).
 browse_players() -> gen_server:call(?MODULE, browse_players_on_server).
 get_state() -> gen_server:call(?MODULE, get_state).
-remove_player_from_table(Player_id) -> gen_server:call(?MODULE, {remove_player_from_table, Player_id}).
+remove_player_from_table(Player_pid) -> gen_server:call(?MODULE, {remove_player_from_table, Player_pid}).
 remove_table(Table_pid) -> gen_server:call(?MODULE, {remove_table, Table_pid}).
-remove_player_from_lobby(Player_id) -> gen_server:cast(?MODULE, {remove_player_from_lobby, Player_id}).
+remove_player_from_lobby(Player_pid) -> gen_server:cast(?MODULE, {remove_player_from_lobby, Player_pid}).
     
-
-
 back_up(State) ->
     geese_coordinator_backup:back_up(State).
 
@@ -73,7 +71,7 @@ handle_call({join_table, Pid, Table_ref}, _From, State) ->
 	false ->
 	    {reply, spelare_finns_ej_i_join_table_coordinator, State};
 	{Pid, Player_name, Socket, _} ->
-	    case gen_server:call(Table_ref, {join_table, Pid, Player_name, Socket}) of
+	    case gen_server:call(Table_ref, {join_table, Pid, Player_name}) of
 		join_failed ->
 		    {reply, join_failed, State};
 		Tuple ->
@@ -132,9 +130,9 @@ handle_cast({add_table, Name, Game_type, Max_players}, State) ->
     back_up(New_state),
     {noreply, New_state};
 
-handle_cast({remove_player_from_lobby, Player_id}, State) ->
+handle_cast({remove_player_from_lobby, Player_pid}, State) ->
     Players = State#coordinator_state.players,    
-    case lists:keydelete(Player_id, 1, Players) of
+    case lists:keydelete(Player_pid, 1, Players) of
 	false ->
 	    New_state = State;
 

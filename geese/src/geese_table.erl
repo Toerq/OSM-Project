@@ -44,6 +44,18 @@ remove_player(Pid) -> gen_server:call(?MODULE, {remove_player, Pid}).
 %% <div class="example">
 %% Returns the current state of the table
 %% </div>
+%% === Case {get_players} ===
+%% <div class="example">
+%% Returns the current players in the table on the form [{Pid0, Player_name0}, ..., {PidN, Player_nameN}.
+%% </div>
+%% === Case {available_slots} ===
+%% <div class="example">
+%% Returns a tuple which consists of the number of players in the table, the number of max allowed players and the number of available slots.
+%% </div>
+%% === Case {join_table, Pid, Player_name, } ===
+%% <div class="example">
+%% Returns the current players in the table on the form [{Pid0, Player_name0}, ..., {PidN, Player_nameN}.
+%% </div>
 handle_call(get_state, _From, State) ->
     {reply, {State#table_state.players, 
 	     State#table_state.number_of_players, 
@@ -65,7 +77,7 @@ handle_call(db_name, _From, State) ->
     {reply, State#table_state.db_name, State};
 
 %% @doc Adds a new player to the table if Max players > Number of players
-handle_call({join_table, Pid, Player_name, _Socket}, _From, State) ->
+handle_call({join_table, Pid, Player_name}, _From, State) ->
     Number_of_players = State#table_state.number_of_players,
     Max_players = State#table_state.max_players,
     if (Max_players > Number_of_players) -> 
