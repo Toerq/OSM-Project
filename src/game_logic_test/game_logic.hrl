@@ -1,1 +1,0 @@
--record(player, {playername, pid, x_pos, y_pos}).
