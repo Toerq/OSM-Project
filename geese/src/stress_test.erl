@@ -1,3 +1,4 @@
+%% @private
 -module(stress_test).
 
 -compile(export_all).
