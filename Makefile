@@ -8,12 +8,12 @@ ERLC := erlc
 ERLC_FLAGS := -W -I include
 
 JAVAC := javac
-JAVAC_FLAGS := -classpath ".:./src/GameTutorial/resources/jinterface-1.5.6.jar"
+JAVAC_FLAGS := -classpath ".:./src/GeeseClient/resources/jinterface-1.5.6.jar"
 #####################
 
 .PHONY: doc
 
-## Erlang files - custom (ugly) version 1.0 ##
+## Erlang files ##
 _GEESE_FILES := $(wildcard geese/src/*.erl)
 _BEAM_GEESE := $(patsubst geese/src/%.erl,geese_ebin/%.beam,${GEESE_FILES})
 ## end of Erlang files
@@ -65,24 +65,20 @@ server: erlc
 test: all
 	(cd ebin && erl -noinput -eval 'eunit:test({dir, "."}, [verbose]), init:stop()')
 
-#$(_BEAM_GEESE)
-doc: 
-	erl -noshell -run edoc_run application "'$(APPNAME)'"  '"./geese/src/"' '[{dir, ["doc/html"]}, {def,{vsn,"$(VSN)"}}, {stylesheet, "my_style.css"}]'
-#erl -noshell -run edoc_run application "'$(APPNAME)'"  '"."' '[{stylesheet, "my_style.css"}, {dir, 'doc/html'}]'
-#erl -noshell -eval "edoc:files($(EDOC_SRC_LIST), [{dir, 'doc/html'}, {def,{vsn,"$(VSN)"}}, {stylesheet, "my_style.css"}])" -s init stop
-#erl -noshell -eval "edoc:files($(EDOC_SRC_LIST), [{dir, 'doc/html'}])" -s init stop	
+doc: edoc javadoc
 
+edoc: 
+	erl -noshell -run edoc_run application "'$(APPNAME)'"  '"./geese/src/"' '[{dir, ["doc/html/erlang_server"]}, {def,{vsn,"$(VSN)"}}, {stylesheet, "my_style.css"}]'
 
-
-
-
-
+javadoc:
+	javadoc -d ./doc/html/java_client -sourcepath ./src/GeeseClient/src -subpackages geese -classpath ".:./src/GeeseClient/resources/jinterface-1.5.6.jar"
 
 clean:
 	rm -fr .#* *.dump
 	rm -fr ebin/*
 	rm -fr jbin/*	
-	rm -fr doc/html/*.html
+	rm -fr doc/html/erlang_server/*.html
+	rm -fr doc/html/java_client/*
 ## (cd doc/html && find . -name "*" -a ! -name overview.edoc -exec rm -rf {} \;)
 
 remove_finderinfo:
