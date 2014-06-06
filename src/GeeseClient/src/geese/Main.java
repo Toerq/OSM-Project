@@ -199,6 +199,12 @@ public class Main implements ActionListener {
 			int maxPlayers = Integer.parseInt(maxCombo.getSelectedItem().toString());
 
 			client.add(name, type, maxPlayers);
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			table = createGameList();
 			f.getContentPane().removeAll();
 			f.setContentPane(createContentPanel());
