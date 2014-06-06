@@ -17,16 +17,13 @@
 %% This module is started by the root supervisor, and is restarted when it
 %% crashes. Upon a crash, the backup state is lost in this module, and must
 %% be filled in from the ggs_coordinator.
-
-%% @doc Start a new ggs_coordinator backup instance, and register it under
+%% Start a new ggs_coordinator backup instance, and register it under
 %% this name. This means that there can only be one instance of this module
 %% running.
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-%% @doc Stops the server with the specified reason.
-%% @spec stop(Reason) -> ok.
-%%      Reason = String
+-spec stop(Reason:string()) -> ok.
 stop(_Reason) -> 
     tbi.
 
