@@ -24,7 +24,7 @@ EBIN=$(ROOT)ebin/
 
 GEESE=$(ROOT)geese/src/
 
-GEESE_FILES=$(GEESE)geese_player.erl $(GEESE)geese_coordinator.erl $(GEESE)geese_player.erl $(GEESE)geese_table.erl $(GEESE)geese_dispatcher.erl $(GEESE)geese_coordinator_backup.erl $(GEESE)geese_sup.erl $(GEESE)game_state.erl $(GEESE)game_logic.erl $(GEESE)action_db.erl $(GEESE)geese_server.erl
+GEESE_FILES=$(GEESE)geese_player.erl $(GEESE)geese_coordinator.erl $(GEESE)geese_player.erl $(GEESE)geese_table.erl $(GEESE)geese_dispatcher.erl $(GEESE)geese_coordinator_backup.erl $(GEESE)geese_sup.erl $(GEESE)game_state.erl $(GEESE)game_logic.erl $(GEESE)action_db.erl
 
 GEESE_TEST_FILES=$(GEESE)table_test.erl $(GEESE)coordinator_test.erl
 
