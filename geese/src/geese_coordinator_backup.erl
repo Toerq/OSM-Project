@@ -23,7 +23,6 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
--spec stop(Reason:string()) -> ok.
 stop(_Reason) -> 
     tbi.
 

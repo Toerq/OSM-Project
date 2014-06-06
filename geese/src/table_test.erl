@@ -1,3 +1,4 @@
+%% @private
 -module(table_test).
 
 -compile(export_all).

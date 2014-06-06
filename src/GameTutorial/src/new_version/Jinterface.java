@@ -15,19 +15,29 @@ import javax.swing.JOptionPane;
 
 import com.ericsson.otp.erlang.*; 
 
-public class Jinterface_client {
+/**
+ * Handle the communication between the client application and the server
+ * 
+ * @author Niklas Hokenstrom, Jonas Nilson
+ */
+public class Jinterface {
 	private Socket socket; 
 	private OutputStream out;
 	private DataOutputStream dos;
 	private DataInputStream fromServer;
 
-	public Jinterface_client(byte[] host, int port) {
+	/**
+	 * Creates a new Jinterface communication object with a TCP socket 
+	 * connected to server: (host, port), wher host is the servers ip and port is the portnumber
+	 * @param host The ip adress that Jinterface object will connect to
+	 * @param port The port number that the Jinterface object will connect to
+	 */
+	public Jinterface(byte[] host, int port) {
 		try {			
 			this.socket = new Socket();
 			socket.connect(new InetSocketAddress(InetAddress.getByAddress(host), port), 1000);
 			socket.setSoTimeout(5000);
 
-			System.out.println("Connected to socket :" + socket);
 			this.out = socket.getOutputStream();
 			this.dos = new DataOutputStream(out);
 			this.fromServer = new DataInputStream(socket.getInputStream());
@@ -101,7 +111,6 @@ public class Jinterface_client {
 	 * @return true if join was successful, else false
 	 */
 	public boolean join (OtpErlangPid pid) {
-		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
 		OtpErlangObject[] arg = new OtpErlangObject[2];
 		arg[0] = join;
@@ -282,26 +291,19 @@ public class Jinterface_client {
 	 * @param state The current state
 	 */
 	public void updatePlayerList(OtpErlangTuple state) {
-		System.out.println();
-		System.out.println("State: " + state);
 		OtpErlangList playerList = (OtpErlangList) state.elementAt(0);
 		OtpErlangObject[] playerArray = playerList.elements();
 		int size = playerArray.length;
 		int[] id = new int[size];
-		System.out.println();
 
 		for(int i = 0; i < size; i++) {
 			updatePlayer(playerArray, i, id);
 		}
 
-		System.out.println("ID ARRAY: " + Arrays.toString(id));
-
 		Enumeration<Integer> enumKey = Game.players.keys();
 		while(enumKey.hasMoreElements()) {
 			Integer key = enumKey.nextElement();
 			if(!(Utility.contains(id,key))) {
-				System.out.println(Arrays.asList(id).toString());
-				System.out.println("REMOVING PLAYER WITH ID: " + key);
 				Game.players.remove(key);
 			}
 		}
@@ -336,7 +338,6 @@ public class Jinterface_client {
 			}
 
 			Game.players.get(id).setPos(x, y);
-			System.out.println(Game.players.get(id).id + " :" + "(" + Game.players.get(id).position[0] + ", " +   Game.players.get(id).position[1] + ")"  );
 			Game.players.get(id).setVel(xVelocity);
 			Game.players.get(id).setHP(hp);
 			Game.players.get(id).setPower(power);

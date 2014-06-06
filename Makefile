@@ -11,11 +11,14 @@ JAVAC := javac
 JAVAC_FLAGS := -classpath ".:./src/GameTutorial/resources/jinterface-1.5.6.jar"
 #####################
 
+.PHONY: doc
+
 ## Erlang files - custom (ugly) version 1.0 ##
 _GEESE_FILES := $(wildcard geese/src/*.erl)
 _BEAM_GEESE := $(patsubst geese/src/%.erl,geese_ebin/%.beam,${GEESE_FILES})
 ## end of Erlang files
 
+APPNAME=GEESE Project Group 10 - OSM 2014
 ROOT=./
 EBIN=$(ROOT)ebin/
 
@@ -23,13 +26,13 @@ GEESE=$(ROOT)geese/src/
 
 GEESE_FILES=$(GEESE)geese_player.erl $(GEESE)geese_coordinator.erl $(GEESE)geese_player.erl $(GEESE)geese_table.erl $(GEESE)geese_dispatcher.erl $(GEESE)geese_coordinator_backup.erl $(GEESE)geese_sup.erl $(GEESE)game_state.erl $(GEESE)game_logic.erl $(GEESE)action_db.erl $(GEESE)geese_server.erl
 
-GEESE_TEST_FILES=$(GEESE)table_test.erl
+GEESE_TEST_FILES=$(GEESE)table_test.erl $(GEESE)coordinator_test.erl
 
 comma:= ,
 empty:=
 space:= $(empty) $(empty)
 
-EDOC_SRC := $(filter-out %_test.erl, $(ERL_FILES))
+EDOC_SRC := $(filter-out %_test.erl, $(_GEESE_FILES))
 EDOC_SRC_LIST := [$(subst $(space),$(comma),$(patsubst src/%.erl,'src/%.erl', $(EDOC_SRC)))]
 
 #REQUIRED_DIR_NAME := pop_2012_project_group_$(GROUP_NUMBER)
@@ -62,8 +65,18 @@ server: erlc
 test: all
 	(cd ebin && erl -noinput -eval 'eunit:test({dir, "."}, [verbose]), init:stop()')
 
-doc: $(BEAM_FILES)
-	erl -noshell -eval "edoc:files($(EDOC_SRC_LIST), [{dir, 'doc/html'}])" -s init stop
+#$(_BEAM_GEESE)
+doc: 
+	erl -noshell -run edoc_run application "'$(APPNAME)'"  '"./geese/src/"' '[{dir, ["doc/html"]}, {def,{vsn,"$(VSN)"}}, {stylesheet, "my_style.css"}]'
+#erl -noshell -run edoc_run application "'$(APPNAME)'"  '"."' '[{stylesheet, "my_style.css"}, {dir, 'doc/html'}]'
+#erl -noshell -eval "edoc:files($(EDOC_SRC_LIST), [{dir, 'doc/html'}, {def,{vsn,"$(VSN)"}}, {stylesheet, "my_style.css"}])" -s init stop
+#erl -noshell -eval "edoc:files($(EDOC_SRC_LIST), [{dir, 'doc/html'}])" -s init stop	
+
+
+
+
+
+
 
 clean:
 	rm -fr .#* *.dump

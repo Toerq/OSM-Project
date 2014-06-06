@@ -1,3 +1,4 @@
+%% @private
 -module(coordinator_test).
 
 -compile(export_all).

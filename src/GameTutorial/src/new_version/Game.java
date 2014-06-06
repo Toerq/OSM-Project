@@ -20,7 +20,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Actual game.
  * 
- * @author 
+ * @author Niklas Hokenstrom, Jonas Nilson
  */
 
 public class Game {
@@ -39,18 +39,22 @@ public class Game {
 	public static int[][] boxes;
 	private ArrayList<Integer[]> bulletList;
 	public static Integer[][] bullets;
+	
+	private BufferedImage backgroundImg;
 
-
+	/**
+	 * Creates a new Game
+	 */
 	public Game() {		
 		Framework.gameState = Framework.GameState.GAME_CONTENT_LOADING;
 		Thread threadForInitGame = new Thread() {
 			@Override
 			public void run(){
 				// Load game files
-				LoadContent();
+				loadContent();
 
 				// Sets variables and objects for the game.
-				Initialize();
+				initialize();
 
 				Framework.gameState = Framework.GameState.PLAYING;
 			}
@@ -62,7 +66,7 @@ public class Game {
 	/**
 	 * Set variables and objects for the game.
 	 */
-	private void Initialize()
+	private void initialize()
 	{
 		bulletList = new ArrayList<Integer[]>();
 		Main.client.updateState();
@@ -71,7 +75,7 @@ public class Game {
 	/**
 	 * Load game files - images, sounds, ...
 	 */
-	private void LoadContent()
+	private void loadContent()
 	{
 		try
 		{          
@@ -87,6 +91,8 @@ public class Game {
 				tmp = ImageIO.read(playerImgRightUrl[i]);
 				Game.playerImages[i][1] = Utility.toCompatibleImage(tmp);
 			}
+			//URL backgroundImgUrl = this.getClass().getResource("/new_images/background.jpg");
+			//backgroundImg = Utility.toCompatibleImage(ImageIO.read(backgroundImgUrl));
 		}
 		catch (IOException ex) {
 			Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
@@ -101,7 +107,7 @@ public class Game {
 	 * @param gameTime gameTime of the game.
 	 * @param mousePosition current mouse position.
 	 */
-	public void UpdateGame(long gameTime, Point mousePosition)
+	public void updateGame(long gameTime, Point mousePosition)
 	{
 		action(mousePosition);
 		Main.client.updateState();
@@ -204,8 +210,9 @@ public class Game {
 	 * @param g2d Graphics2D
 	 * @param mousePosition current mouse position.
 	 */
-	public void Draw(Graphics2D g2d, Point mousePosition)
+	public void draw(Graphics2D g2d, Point mousePosition)
 	{
+		//g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
 		drawPlatforms(g2d);
 		drawBullets(g2d);
 		drawStatistics(g2d);
