@@ -79,7 +79,10 @@ public class Framework extends Canvas {
 	 * Image for menu.
 	 */
 	private BufferedImage startScreen;
-
+	
+	/**
+	 * Creates a new framework for the application
+	 */
 	public Framework ()
 	{
 		super();
@@ -105,7 +108,7 @@ public class Framework extends Canvas {
 		Thread gameThread = new Thread() {
 			@Override
 			public void run(){
-				GameLoop();
+				gameLoop();
 			}
 		};
 		gameThread.start();
@@ -116,7 +119,7 @@ public class Framework extends Canvas {
 	 * Load files - images, sounds, ...
 	 * This method is intended to load files for this class, files for the actual game can be loaded in Game.java.
 	 */
-	private void LoadContent()
+	private void loadContent()
 	{
 		try
 		{
@@ -131,7 +134,7 @@ public class Framework extends Canvas {
 	/**
 	 * In specific intervals of time (GAME_UPDATE_PERIOD) the game is updated and then the game is drawn on the screen.
 	 */
-	private void GameLoop()
+	private void gameLoop()
 	{
 		// This two variables are used in VISUALIZING state of the game. We used them to wait some time so that we get correct frame/window resolution.
 		long visualizingTime = 0, lastVisualizingTime = System.nanoTime();
@@ -147,7 +150,7 @@ public class Framework extends Canvas {
 			{
 			case PLAYING:
 				gameTime += System.nanoTime() - lastTime;
-				game.UpdateGame(gameTime, mousePosition());
+				game.updateGame(gameTime, mousePosition());
 				lastTime = System.nanoTime();
 				break;
 			case GAMEOVER:
@@ -158,7 +161,7 @@ public class Framework extends Canvas {
 				break;
 			case STARTING:
 				// Load files - images, sounds, ...
-				LoadContent();
+				loadContent();
 
 				// When all things that are called above finished, we change game status to main menu.
 				gameState = GameState.MAIN_MENU;
@@ -204,12 +207,12 @@ public class Framework extends Canvas {
 	 * Draw the game to the screen. It is called through repaint() method in GameLoop() method.
 	 */
 	@Override
-	public void Draw(Graphics2D g2d)
+	public void draw(Graphics2D g2d)
 	{
 		switch (gameState)
 		{
 		case PLAYING:
-			game.Draw(g2d, mousePosition());
+			game.draw(g2d, mousePosition());
 			break;
 		case GAMEOVER:
 			break;

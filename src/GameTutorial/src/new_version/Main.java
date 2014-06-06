@@ -12,7 +12,7 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 
 public class Main implements ActionListener {
 	static byte [] ip = null;
-	public static Jinterface_client client = null;
+	public static Jinterface client = null;
 	JFrame f;
 	JScrollPane table;
 	String playerName;
@@ -22,6 +22,11 @@ public class Main implements ActionListener {
 	JButton connectButton, addTableButton, refreshButton, pingButton, changeNameButton;
 	Framework framework = null;
 
+	/**
+	 * Creates the main application window
+	 * 
+	 * @param name The players name
+	 */
 	Main(String name) {
 		playerName = name;
 		f = new JFrame("GEESE - " + name);
@@ -211,7 +216,7 @@ public class Main implements ActionListener {
 			String ipString = field1.getText();
 			String portString = field2.getText();
 			Main.ip = Utility.stringToIp(ipString);
-			Main.client = new Jinterface_client(Main.ip, Integer.parseInt(portString));
+			Main.client = new Jinterface(Main.ip, Integer.parseInt(portString));
 
 			if(ip != null) {
 				try {
