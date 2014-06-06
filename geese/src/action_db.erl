@@ -40,7 +40,6 @@ add(Db_name, Player_id, Action, Var_list) ->
 		    Entry = #action{player_id = Player_id, 
 				    action = Action, 
 				    varlist = Var_list},
-		    io:format("Action: ~w~n", [Entry]),
 		    mnesia:write(Db_name, Entry, write);
 		[E] ->
                     %% update action

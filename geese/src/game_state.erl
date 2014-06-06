@@ -31,7 +31,6 @@ start(Db_name, State_sender, Tick_rate) ->
 
 register_action(Action) ->
     E =  action_db:do_call(Action),
-    io:format("Do call: ~w~n", [E]),
     E.
     
 %% @doc State will loop and read actions so it can update its State. Depending on what actions
@@ -83,12 +82,11 @@ state_sender(State) ->
         {new_state, NewState} ->
 	    state_sender(NewState);
 	{terminate, Reason} ->
-	    io:format("~s~n", [Reason]);
+	    ok;
 	{get_state, PID} ->
 	    PID ! {state, State},
 	    state_sender(State);
         E ->
-            io:format("~w~n", [E]),
             state_sender(State)
     end.
 

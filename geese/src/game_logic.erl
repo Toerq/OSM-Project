@@ -176,7 +176,6 @@ can_jump(_Pos, []) ->
     false;
 can_jump({X, Y}, [O | T]) ->
     {{X_start, X_end}, Y_end} = ground_interval(O),
-    %% io:format("Need to be at: ~w~n Is at: ~w~n",[Y_end, Y]),
     if round(Y) =:= Y_end+1 -> %% Fraud x2
 	    if X >= X_start andalso X =< X_end ->
 		    true;
@@ -356,7 +355,6 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
     Short = shortest_distance(Pos, Ideal_point, Point),
     if Short =:= Ideal_point ->
             %% BRA inge krock
-	    %% io:format("Fall1: Ingen krock"),
 	    {{X_vel, Y_vel},Ideal_point, Hp}; 
        true ->
             %% Krock, stuff
@@ -372,11 +370,9 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
-			    %% io:format("Fall2: Hor. Krock bara~n~w~n~w~n", [Short, Ideal_point_2]),
 			    {{X_vel, 0.0},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
-			    %% io:format("Fall3: Hor. Krock sen Ver. krock"),
 			    {{0.0, 0.0},Short_2, Hp}
 		    end;
 		ver ->
@@ -390,11 +386,9 @@ iterate_move(Vel, Pos, Hp, Level_list) ->
 		    Short_2 = shortest_distance(Short, Ideal_point_2, Point_2),
 		    if Short_2 =:= Ideal_point_2 ->
 			    %% BRA ingen krock
-			    %% io:format("Fall4: Ver. Krock bara~n~w~n~w~n",[Short, Line_2]),
 			    {{0.0, Y_vel},Ideal_point_2, Hp};
 		       true ->
 			    %% BRA krock!
-			    %% io:format("Fall5: Verr. Krock sen Hor. krock"),
 			    {{0.0, 0.0},Short_2, Hp}
 		    end		    
 	    end
@@ -434,14 +428,12 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
 		    %% no player hit, only fire recoil
 		    {Fire_player, Rest_list_2} = get_player(Player_list, Entity_id, []),
 		    {Name_2, Pos_2, {X_f,Y_f}, Hp_2, Power_2, Score_2, Id_2} = Fire_player,
-		    io:format("NO HIT!!!"),
 		    %% no hit, only fire recoil
 		    Border_point,
 		    {[{Name_2, Pos_2, {limitor(X_f, Vel_limit, Air_friction), 
 				       Y_f - Gravity_factor}, Hp_2, Power_2 - ?FIRECOST, Score_2, Id_2} | Rest_list_2], 
 		     {Entity_id, {X_m, Y_m}, Border_point}};
 	       true ->
-		    io:format("Good! HIT!!!"),
 		    %%hit! fire recoil, hit recoil and damage!
 		    {Player_id, Point, Damage} = Hit,
 		    Short = shortest_distance({X_m, Y_m}, Border_point, Point),
@@ -485,7 +477,6 @@ iterate_bullet(Server_settings, Player_list, Bullet) ->
     
 %% will return the given player form his id and list of the rest of the players
 get_player([], _Id, _Aux) ->
-    io:format("ERROR NO PLAYER FOR BULLET!!!~n"),
     error_no_such_player; %% Error
 get_player([{Name, Pos, Vel, Hp, Power, Score, Id} | P_list], E_id, Aux) when E_id =:= Id ->
     {{Name, Pos, Vel, Hp, Power, Score, Id}, lists:append([P_list, Aux])};
