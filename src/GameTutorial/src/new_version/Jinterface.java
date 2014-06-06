@@ -15,6 +15,11 @@ import javax.swing.JOptionPane;
 
 import com.ericsson.otp.erlang.*; 
 
+/**
+ * Handle the communication between the client application and the server
+ * 
+ * @author Niklas Hökenström, Jonas Nilson
+ */
 public class Jinterface {
 	private Socket socket; 
 	private OutputStream out;

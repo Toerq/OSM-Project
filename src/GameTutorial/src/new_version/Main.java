@@ -10,6 +10,11 @@ import com.ericsson.otp.erlang.OtpErlangAtom;
 import com.ericsson.otp.erlang.OtpErlangObject;
 import com.ericsson.otp.erlang.OtpErlangPid;
 
+/**
+ * The main window of the application
+ * 
+ * @author Niklas Hökenström, Jonas Nilsson
+ */
 public class Main implements ActionListener {
 	static byte [] ip = null;
 	public static Jinterface client = null;

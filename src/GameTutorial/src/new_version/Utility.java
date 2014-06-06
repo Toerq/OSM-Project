@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import com.ericsson.otp.erlang.OtpOutputStream;
 
+/**
+ * Utility functions
+ * 
+ * @author Niklas Hökenström, Jonas Nilsson
+ */
 public class Utility {
 	
 	/**

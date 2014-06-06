@@ -20,7 +20,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Actual game.
  * 
- * @author 
+ * @author Niklas Hökenström, Jonas Nilson
  */
 
 public class Game {
@@ -39,6 +39,8 @@ public class Game {
 	public static int[][] boxes;
 	private ArrayList<Integer[]> bulletList;
 	public static Integer[][] bullets;
+	
+	private BufferedImage backgroundImg;
 
 	/**
 	 * Creates a new Game
@@ -89,6 +91,8 @@ public class Game {
 				tmp = ImageIO.read(playerImgRightUrl[i]);
 				Game.playerImages[i][1] = Utility.toCompatibleImage(tmp);
 			}
+			URL backgroundImgUrl = this.getClass().getResource("/new_images/background.jpg");
+			backgroundImg = Utility.toCompatibleImage(ImageIO.read(backgroundImgUrl));
 		}
 		catch (IOException ex) {
 			Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
@@ -208,7 +212,7 @@ public class Game {
 	 */
 	public void draw(Graphics2D g2d, Point mousePosition)
 	{
-		//g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
+		g2d.drawImage(backgroundImg, 0, 0, Framework.frameWidth, Framework.frameHeight, null);
 		drawPlatforms(g2d);
 		drawBullets(g2d);
 		drawStatistics(g2d);
