@@ -12,11 +12,11 @@
 -record(coordinator_state,
 	{
 	  players = [],
-	  test_table,
-	  tables,
-	  test}
+	  tables
+	}
        ).
 
+%% @doc Initiates a new coordinator module. In short, this module is responsible for keeping track of all active tables and players. When the coordinator is initiated, it first checks if there is a state stored in the coordinator backup module. If it is, the coordinator will start with the stated stored in the backup module, otherwise start with a new state.
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
@@ -29,14 +29,33 @@ init([]) ->
 	    {ok, State}
     end.
 
+%% @doc Adds a new player to list of players stored in the state. Possible return values are: join_succeeded; player_already_exists.
 join_lobby(Pid, Name, Socket) -> gen_server:call(?MODULE, {join_lobby, Pid, Name, Socket}).
+
+%% @doc Returns the list of tables stored in the state.
 browse_tables() -> gen_server:call(?MODULE, browse_tables).
-join_table(Player_pid, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_pid, Table_ref}).
-add_table(Name, Game_type, Max_players) -> gen_server:cast(?MODULE, {add_table, Name, Game_type, Max_players}).
+
+%% @doc Returns the list of tables stored in the state.
 browse_players() -> gen_server:call(?MODULE, browse_players_on_server).
+
+%% @doc Returns the coordinator state.
 get_state() -> gen_server:call(?MODULE, get_state).
+
+%% @doc Attempts to join a player with pid Player_pid to the table with reference Table_ref. Possible return values are: player_not_found; join_failed; table_not_found, {Pid_from_table::pid(), State_sender::pid(), Db_name::atom()}.
+-spec join_table(Player_pid::pid(), Table_ref::pid()) -> ok.
+join_table(Player_pid, Table_ref) -> gen_server:call(?MODULE, {join_table, Player_pid, Table_ref}).
+
+%% @doc Initiates a new tables process. Also adds the new table with info about name, max_players, connected players and pid to the list of tables in the coordinator state.
+-spec add_table(Name::term(), Game_type::atom(), Max_players::integer()) -> ok.
+add_table(Name, Game_type, Max_players) -> gen_server:cast(?MODULE, {add_table, Name, Game_type, Max_players}).
+
+%% @doc Removes a player from the table that player is in. Also calls the table that the player is in and then that table removes the player from its' state.
+-spec remove_player_from_table(Player_pid::pid()) -> ok.
 remove_player_from_table(Player_pid) -> gen_server:call(?MODULE, {remove_player_from_table, Player_pid}).
+%% @doc Terminates the table process with pid Table_pid. Also removes that table from the list of tables in the coordinator state.
+-spec remove_table(Table_pid::pid()) -> ok.
 remove_table(Table_pid) -> gen_server:call(?MODULE, {remove_table, Table_pid}).
+%% @doc Removes a player with pid Player_pid from the list of players in the coordinator state.
 remove_player_from_lobby(Player_pid) -> gen_server:cast(?MODULE, {remove_player_from_lobby, Player_pid}).
     
 back_up(State) ->
@@ -69,7 +88,7 @@ handle_call({join_table, Pid, Table_ref}, _From, State) ->
     Players = State#coordinator_state.players,
     case lists:keyfind(Pid, 1, Players) of
 	false ->
-	    {reply, spelare_finns_ej_i_join_table_coordinator, State};
+	    {reply, player_not_found, State};
 	{Pid, Player_name, Socket, _} ->
 	    case gen_server:call(Table_ref, {join_table, Pid, Player_name}) of
 		join_failed ->
@@ -126,7 +145,7 @@ handle_cast({add_table, Name, Game_type, Max_players}, State) ->
     Tables = State#coordinator_state.tables,
     Table = {Table_pid, Name, Game_type, 0, Max_players},
     Tables =  State#coordinator_state.tables,
-    New_state = State#coordinator_state{tables = [Table | Tables], test_table = Table_pid},
+    New_state = State#coordinator_state{tables = [Table | Tables]},
     back_up(New_state),
     {noreply, New_state};
 

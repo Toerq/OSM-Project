@@ -10,8 +10,9 @@
          terminate/2, 
          code_change/3]).
 
+%% @doc Initiates a new Dispatcher which accepts connections and starts a new player process for each client that connects.
+-spec start_link(Port::integer()) -> {ok, pid()}.
 start_link(Port) -> 
-    io:format("start_link dispatcher"),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [Port], []).
 
 stop() ->
@@ -26,9 +27,11 @@ init([Port]) ->
     accept_spawner(Listen_socket),
     {ok, {Listen_socket}}.
 
+%% @doc Spawns 20 new processes that listens for new connections.
 accept_spawner(Listen_socket) ->
     [spawn(fun() -> accept_function(Listen_socket, self()) end) || _ <- lists:seq(1, 20)].
-    		  
+
+%% @doc Waits for a client to connect through the TCP-protocol. Starts a new player process for each client that gets accepted.
 accept_function(Listen_socket, Dispatcher_pid) ->
     {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
     case geese_player:start_link(Accept_socket) of

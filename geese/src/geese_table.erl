@@ -52,9 +52,13 @@ remove_player(Pid) -> gen_server:call(?MODULE, {remove_player, Pid}).
 %% <div class="example">
 %% Returns a tuple which consists of the number of players in the table, the number of max allowed players and the number of available slots.
 %% </div>
-%% === Case {join_table, Pid, Player_name, } ===
+%% === Case {join_table, Pid, Player_name} ===
 %% <div class="example">
-%% Returns the current players in the table on the form [{Pid0, Player_name0}, ..., {PidN, Player_nameN}.
+%% Adds a new player to the table if the Max players of the table > Number of players in the table.
+%% </div>
+%% === Case {remove_player, Pid} ===
+%% <div class="example">
+%% Removes the player with the pid Pid if that player exists in the table.
 %% </div>
 handle_call(get_state, _From, State) ->
     {reply, {State#table_state.players, 

@@ -17,11 +17,40 @@ start_link(Accept_socket) ->
 init([Accept_socket]) ->
     {ok, #state{player_id = self(), accept_socket = Accept_socket, name = "Player"}}.
 
-%% @doc Recieves packages sent through the TCP-protocol as messages and handles them in a pre-defined way.
+%% @doc Communicates with the client through TCP connection. Recieves packages, and the handles them in a predefined way. The following are the defined receive terms.
+%% === Case {get_state, Name} ===
+%% <div class="example">
+%% Changes the name of the player stored in the State of the player process.
+%% </div>
+%% === Case {add_table, Name, Game_type, Max_players} ===
+%% <div class="example">
+%% Calls the coordinator module and adds a new table  with name Name, game_type Game_type, and max players Max_players.
+%% </div>
+%% === Case ping ===
+%% <div class="example">
+%% Sends the erlang atom pong through TCP.
+%% </div>
+%% === Case browse_tables ===
+%% <div class="example">
+%% Sends the list of tables stored in the coordinator module through TCP.
+%% </div>
+%% === Case browse_players ===
+%% <div class="example">
+%% Sends the list of players stored in the coordinator module through TCP. 
+%% </div>
+%% === {join_table, Table_ref} ===
+%% <div class="example">
+%% Attempts to join a new table with the current player process and table with reference Table_ref by calling geese_coordinator:join_table/2.
+%% Either returns the atom join_succeeded or join_failed depending on wether the join succeeded or not.
+%% </div>
+%% === leave_game ===
+%% <div class="example">
+%% Removes the player element of the called player process in the coordinator module. Also terminates the player process being called.
+%% </div>
 talk_state(State) -> 
     io:format("<In talk state>~n"),
     Accept_socket = State#state.accept_socket,
-    Player_id = State#state.player_id,
+    Player_pid = State#state.player_id,
     receive
 	{tcp, Accept_socket, Packet} ->
 	    io:format("~nPacket ->~p<-~n",[binary_to_term(Packet)]),
@@ -29,10 +58,6 @@ talk_state(State) ->
 		{change_name, Name} ->
 		    New_state = State#state{name = Name},
 		    talk_state(New_state);
-
-		add_table_hw ->
-		    geese_coordinator:add_table(hw_name, hw_game_type, 5),
-		    talk_state(State);
 		    
 		{add_table, Name, Game_type, Max_players} -> 
 		    geese_coordinator:add_table(Name, Game_type, Max_players),
@@ -58,12 +83,12 @@ talk_state(State) ->
 
 		{join_table, Table_ref} ->
 		    Socket = State#state.accept_socket,
-		    case geese_coordinator:join_table(Player_id, Table_ref) of
+		    case geese_coordinator:join_table(Player_pid, Table_ref) of
 			{Table_pid, Game_pid, Db_name} ->
 			    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
 			    Name = State#state.name,
 			    io:format("Point1~n"),
-			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, 50, {0,0,0}, Player_id}]},
+			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, 50, {0,0,0}, Player_pid}]},
 			    game_state:register_action(Call),
 			    gen_tcp:send(Socket, term_to_binary(join_succeeded)),
 			    game_state(New_state);
@@ -84,25 +109,42 @@ talk_state(State) ->
 	    io:format("<<<E>>>: ~p vs. Accept_socket ~p", [E, Accept_socket])
     end.
 
+%% @doc The function that the client communicates with when inside a game. The game_state module also communicates with this module.
+%% === Case {do_action, {Action, Var_list}} (received through TCP) ===
+%% <div class="example">
+%% Calls game_state:register_action/1 with the received tuple as argument. 
+%% </div>
+%% === Case get_state (received through TCP) ===
+%% <div class="example">
+%% Sends the current state stored in the module game_state through TCP
+%% </div>
+%% === Case leave_game  (received through TCP) ===
+%% <div class="example">
+%% Calls game_state:register_action/1 with the received atom as argument. Also calls geese_coordinator:remove_player_from_lobby/1 with its own pid as argument.
+%% </div>
+%% === Case {state, Game_state} (received from game_state module) ===
+%% <div class="example">
+%% Receives the state of the game_state module and sends it through TCP to the client.
+%% </div>
 game_state(State) ->
     Accept_socket = State#state.accept_socket, 
     Db_name = State#state.db_name,  
     State_sender = State#state.state_sender,
-    Player_id = State#state.player_id,
+    Player_pid = State#state.player_id,
     receive 
 	{tcp, Accept_socket, Packet} ->
 	    case binary_to_term(Packet) of
 		{do_action, {Action, Var_list}} ->
-		    Call = {action_add, Db_name, Player_id, Action, Var_list},
+		    Call = {action_add, Db_name, Player_pid, Action, Var_list},
 		    game_state:register_action(Call),
 		    game_state(State);
 
 		get_state ->
-		    State_sender ! {get_state, Player_id},
+		    State_sender ! {get_state, Player_pid},
 		    game_state(State);
 
 		leave_game ->
-		    Call = {action_add, Db_name, Player_id, server, [remove_player, arg]},
+		    Call = {action_add, Db_name, Player_pid, server, [remove_player, arg]},
 		    game_state:register_action(Call),
 		    geese_coordinator:remove_player_from_table(self()),
 		    talk_state(State);
@@ -117,11 +159,17 @@ game_state(State) ->
 	    tbi
     end.
 
+%% @doc asynchronous call-handlers.
+%% === Case {get_state} ===
+%% <div class="example">
+%% Calls geese_coordinator:join_lobby/2 with the arguments Player_pid, Name and Accept_socket which are stored in the player process' state.
+%% </div>
+
 handle_cast(start_player, State) ->
     Accept_socket = State#state.accept_socket, 
     Name = State#state.name, 
-    Player_id = State#state.player_id,
-    geese_coordinator:join_lobby(Player_id, Name, Accept_socket),
+    Player_pid = State#state.player_id,
+    geese_coordinator:join_lobby(Player_pid, Name, Accept_socket),
     talk_state(State),
     {noreply, State}.
 

@@ -4,6 +4,7 @@
 -export([start_link/1]).
 -export([init/1]).
 
+%% @doc Initiates a new supervisor that starts the modules geese_coordinator_backup, geese_coordinator and geese_dispatcher with restart strategy one_for_one.
 start_link(Port) ->
     supervisor:start_link({local,?MODULE}, ?MODULE, Port).
 

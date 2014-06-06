@@ -81,12 +81,12 @@ state_sender(State) ->
     receive 
         {new_state, NewState} ->
 	    state_sender(NewState);
-	{terminate, Reason} ->
+	{terminate, _Reason} ->
 	    ok;
 	{get_state, PID} ->
 	    PID ! {state, State},
 	    state_sender(State);
-        E ->
+        _E ->
             state_sender(State)
     end.
 
