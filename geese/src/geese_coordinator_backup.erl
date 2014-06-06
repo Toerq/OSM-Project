@@ -10,23 +10,13 @@
 
 -define(SERVER, ?MODULE).
 
-%% (Obs. dokumentationen nedan bör skrivas om)
-%% @doc This module is repsponsible for keeping a backup of the coodinator
-%% at all times. At any point in time a backup can be restored from this
-%% module.
-%% This module is started by the root supervisor, and is restarted when it
-%% crashes. Upon a crash, the backup state is lost in this module, and must
-%% be filled in from the ggs_coordinator.
-%% Start a new ggs_coordinator backup instance, and register it under
-%% this name. This means that there can only be one instance of this module
-%% running.
+%% @doc This module is responsible of keeping the state of the coordinator state as a backup if the coordinator module would crash.
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop(_Reason) -> 
     tbi.
 
-%% API
 back_up(State) ->
     gen_server:cast(?MODULE, State).
 
@@ -36,11 +26,7 @@ back_up(State) ->
 get_state() ->
     gen_server:call(?MODULE, get_state).
 
-%% gen_server callbacks
-
-%% @doc Initiate the server. This is called from gen_server
 init([]) ->
-    io:format("backup init"),
     {ok, no_state_saved}.
 
 handle_call(get_state, _From, State) ->
@@ -50,9 +36,6 @@ handle_cast(NewState, _State) ->
     {noreply, NewState}.
 
 handle_info(_Msg, State) ->
-%%    io:format("Received out of bounds message! "),
-%%    erlang:display(Msg),
-%%    io:format("~n"),
     {noreply, State}.
 
 terminate(normal, _State) ->
