@@ -11,7 +11,7 @@ import com.ericsson.otp.erlang.OtpOutputStream;
 /**
  * Utility functions
  * 
- * @author Niklas H�kenstr�m, Jonas Nilsson
+ * @author Niklas Hokenstrom, Jonas Nilson
  */
 public class Utility {
 	

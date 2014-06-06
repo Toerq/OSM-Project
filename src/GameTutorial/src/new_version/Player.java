@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 /**
  * Represents a player in the current game
  * 
- * @author Niklas Hökenström, Jonas Nilson
+ * @author Niklas Hokenstrom, Jonas Nilson
  *
  */
 public class Player {

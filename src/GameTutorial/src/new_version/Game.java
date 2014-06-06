@@ -20,7 +20,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Actual game.
  * 
- * @author Niklas H�kenstr�m, Jonas Nilson
+ * @author Niklas Hokenstrom, Jonas Nilson
  */
 
 public class Game {

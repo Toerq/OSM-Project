@@ -18,7 +18,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Handle the communication between the client application and the server
  * 
- * @author Niklas H�kenstr�m, Jonas Nilson
+ * @author Niklas Hokenstrom, Jonas Nilson
  */
 public class Jinterface {
 	private Socket socket; 

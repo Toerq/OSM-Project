@@ -13,7 +13,7 @@ import com.ericsson.otp.erlang.OtpErlangPid;
 /**
  * The main window of the application
  * 
- * @author Niklas H�kenstr�m, Jonas Nilsson
+ * @author Niklas Hokenstrom, Jonas Nilson
  */
 public class Main implements ActionListener {
 	static byte [] ip = null;
