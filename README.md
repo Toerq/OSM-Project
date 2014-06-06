@@ -1,6 +1,6 @@
 # ==== OSM-Project ==== #
 
-## ==== COURSE ==== ## 
+## ==== COURSE ====  
 
 Process Oriented Programming (1DT049) Spring 2014
 
@@ -9,17 +9,17 @@ Department of Information Technology
 Uppsala university
 
 
-==== GROUP ==== 
+## ==== GROUP ==== 
 
 10
 
 
-==== PROJECT NAME ==== 
+## ==== PROJECT NAME ==== 
 
 GEESE (Generic Erlang Server)
 
 
-==== GROUP MEMBERS ==== 
+## ==== GROUP MEMBERS ==== 
 
 930922-3452 Johan.Gille.8100@student.uu.se
 
@@ -31,19 +31,19 @@ GEESE (Generic Erlang Server)
 
 920104-0616 Christian.Tornqvist.2175@student.uu.se
 
-==== MAY THE SOURCE BE WITH YOU ==== 
+## ==== MAY THE SOURCE BE WITH YOU ==== 
 
 Use 'git clone https://github.com/Toerq/OSM-Project.git' to get the latest version of the project.
 
-==== ERLANG VERSION ====
+## ==== ERLANG VERSION ====
 
 The server was developed and tested using Erlang R15B01 and Erlagn R16B
 
-==== JAVA VERSION ====
+## ==== JAVA VERSION ====
 
 The client was developed and tested using Java 6
      	      	  	    	       
-==== MAKE IT HAPPEN ==== 
+## ==== MAKE IT HAPPEN ==== 
 
 Using the make utility you can perform the following actions:
 
@@ -62,12 +62,12 @@ make doc                ==> Generates Edoc and Javadoc documentation in the doc/
 make test               ==> Runs all tests.
 
 
-==== TO COMPILE ==== 
+## ==== TO COMPILE ==== 
 
 To compile the project, simply type make and press enter.
 
 
-==== TO RUN AND TEST THE SYSTEM ==== 
+## ==== TO RUN AND TEST THE SYSTEM ==== 
 
 To run the server type 'make server' when standing in the root directory of the project. 
 
