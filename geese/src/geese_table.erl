@@ -39,7 +39,7 @@ get_players() -> gen_server:call(?MODULE, get_players).
 join_table(Pid, Player_name, Socket) -> gen_server:call(?MODULE, {join_table, Pid, Player_name, Socket}).
 remove_player(Pid) -> gen_server:call(?MODULE, {remove_player, Pid}).
 
-%% @doc Synchronous call-handlers
+%% @doc Synchronous call-handlers.
 %% === Case {get_state} ===
 %% <div class="example">
 %% Returns the current state of the table
