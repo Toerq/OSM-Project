@@ -1,8 +1,8 @@
 -module(geese_dispatcher).
 -behaviour(gen_server).
 
-%%Ta bort compile efter development-state
--compile(export_all).
+-export([start_link/1, stop/0]).
+
 -export([init/1,
          handle_call/3, 
          handle_cast/2,
@@ -18,8 +18,7 @@ stop() ->
     gen_server:cast(?MODULE, shutdown).
 
 init([Port]) ->
-    %% To know when the parent shuts down
-    process_flag(trap_exit, true), %% <- behövs detta?
+    process_flag(trap_exit, true),
     {ok, Listen_socket} = gen_tcp:listen(Port, [binary,
 						{packet, 0},
 						{reuseaddr, true},
@@ -34,7 +33,6 @@ accept_function(Listen_socket, Dispatcher_pid) ->
     {ok, Accept_socket} = gen_tcp:accept(Listen_socket),
     case geese_player:start_link(Accept_socket) of
 	{ok, Player_pid} ->
-%%	    io:format("~n Pid from spawned player: ~p~n", [Player_pid]),
 	    gen_tcp:controlling_process(Accept_socket, Player_pid),
 	    gen_server:cast(Player_pid, start_player),
 	    accept_function(Listen_socket, Dispatcher_pid);
@@ -43,16 +41,9 @@ accept_function(Listen_socket, Dispatcher_pid) ->
     end.
  
 handle_cast({accept, Listen_socket, _Dispatcher_pid}, _State) -> 
-    io:format("cast, accept, dispatcher, pid: ~p", [self()]),
-    {noreply, {accept_spawner(Listen_socket)}};
+    {noreply, {accept_spawner(Listen_socket)}}.
 
-handle_cast({standard, Message}, State) -> 
-    io:format("Generic call handler: '~p' while in '~p'~n", 
-	      [Message, State]),
-    {noreply, State}.
-  
-handle_call(Message, From, State) -> 
-    io:format("Generic call handler: '~p' from '~p' while in '~p'~n",[Message, From, State]),
+handle_call(_Message, _From, State) -> 
     {reply, ok, State}.
 
 handle_info(_Message, _Server) -> 
