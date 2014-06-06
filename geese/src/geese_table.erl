@@ -17,11 +17,12 @@
 -define(SERVER, ?MODULE).
 -define(TICKRATE, 32).
 
-%% @doc Initiates a game table with the maximum amount of allowed players Max_players. Also, initiate a new game_state process.
--spec start_link(Max_players::integer()) -> {ok, pid()}.
+
 start_link(Max_players, debug) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [Max_players], []).
 
+%% @doc Initiates a game table with the maximum amount of allowed players Max_players. Also, initiate a new game_state process.
+-spec start_link(Max_players::integer()) -> {ok, pid()}.
 start_link(Max_players) ->
     gen_server:start(?MODULE, [Max_players], []).
 
