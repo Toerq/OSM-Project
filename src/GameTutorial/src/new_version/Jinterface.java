@@ -18,7 +18,7 @@ import com.ericsson.otp.erlang.*;
 /**
  * Handle the communication between the client application and the server
  * 
- * @author Niklas Hökenström, Jonas Nilson
+ * @author Niklas Hï¿½kenstrï¿½m, Jonas Nilson
  */
 public class Jinterface {
 	private Socket socket; 
@@ -38,7 +38,6 @@ public class Jinterface {
 			socket.connect(new InetSocketAddress(InetAddress.getByAddress(host), port), 1000);
 			socket.setSoTimeout(5000);
 
-			System.out.println("Connected to socket :" + socket);
 			this.out = socket.getOutputStream();
 			this.dos = new DataOutputStream(out);
 			this.fromServer = new DataInputStream(socket.getInputStream());
@@ -112,7 +111,6 @@ public class Jinterface {
 	 * @return true if join was successful, else false
 	 */
 	public boolean join (OtpErlangPid pid) {
-		System.out.println("Joining table: " + pid);
 		OtpErlangAtom join = new OtpErlangAtom("join_table");
 		OtpErlangObject[] arg = new OtpErlangObject[2];
 		arg[0] = join;

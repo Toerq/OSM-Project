@@ -91,8 +91,8 @@ public class Game {
 				tmp = ImageIO.read(playerImgRightUrl[i]);
 				Game.playerImages[i][1] = Utility.toCompatibleImage(tmp);
 			}
-			URL backgroundImgUrl = this.getClass().getResource("/new_images/background.jpg");
-			backgroundImg = Utility.toCompatibleImage(ImageIO.read(backgroundImgUrl));
+			//URL backgroundImgUrl = this.getClass().getResource("/new_images/background.jpg");
+			//backgroundImg = Utility.toCompatibleImage(ImageIO.read(backgroundImgUrl));
 		}
 		catch (IOException ex) {
 			Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);

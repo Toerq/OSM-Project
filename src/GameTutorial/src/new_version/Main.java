@@ -47,6 +47,7 @@ public class Main implements ActionListener {
 			@Override
 			public void componentHidden(ComponentEvent e) {
 				Framework.gameState = Framework.GameState.GAMEOVER;
+
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e1) {
@@ -328,6 +329,7 @@ public class Main implements ActionListener {
 					framework = new Framework();
 					f.setContentPane(framework);
 					f.validate();
+					framework.requestFocusInWindow();
 				}
 			}
 		};
