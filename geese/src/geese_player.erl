@@ -87,7 +87,7 @@ talk_state(State) ->
 			    New_state = State#state{table_ref = Table_pid, db_name = Db_name, state_sender = Game_pid},
 			    Name = State#state.name,
 			    io:format("Point1~n"),
-			    Call = {action_add, Db_name, server, server, [add_player, {Name, {15,15}, {0.0,0.0}, 100, 50, {0,0,0}, Player_pid}]},
+			    Call = {action_add, Db_name, server, server, [add_player, {Name, {100, 700}, {0.0,0.0}, 100, 50, {0,0,0}, Player_pid}]},
 			    game_state:register_action(Call),
 			    gen_tcp:send(Socket, term_to_binary(join_succeeded)),
 			    game_state(New_state);
