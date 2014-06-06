@@ -54,7 +54,9 @@ public class Main implements ActionListener {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				Main.client.removePlayer();               
+				if(ip != null) {
+					Main.client.removePlayer();
+				}
 				f.dispose();
 				System.exit(0);
 			}

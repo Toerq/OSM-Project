@@ -59,6 +59,9 @@ geese_compile:
 
 ## end of Erlang compilation
 
+client: 
+	java -jar jar/geese_client.jar &
+
 server: erlc
 	(cd ebin && erl -eval 'io:format("~n~p~n", ["START THE SERVER BY TYPING: geese_sup:start_link(3010)."])')
 
