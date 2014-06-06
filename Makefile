@@ -8,26 +8,22 @@ ERLC := erlc
 ERLC_FLAGS := -W -I include
 
 JAVAC := javac
-JAVAC_FLAGS := -classpath ".:./src/lib/jinterface-1.5.6.jar"
-# local jinterface .jar file
+JAVAC_FLAGS := -classpath ".:./src/GameTutorial/resources/jinterface-1.5.6.jar"
 #####################
 
-
-ERL_FILES := $(wildcard src/*.erl) 
-# the wildcard function will get a list of all the .erl files in the src folder
-BEAM_FILES := $(patsubst src/%.erl,ebin/%.beam,${ERL_FILES}) 
-# $(patsubst pattern,replacement,text) - the list of ERL_FILES are modified so
-# that the .erl extension is replaced by .beam. 
-# $(patsubst %.erl,%.beam,foo.erl bar.erl) -> 'foo.beam bar.erl'
-
-
 ## Erlang files - custom (ugly) version 1.0 ##
-ERL_UDP_FILES := $(wildcard src/simple_UDP_testing/*.erl)
-BEAM_SIMPLE_UDP_TESTING := $(patsubst src/simple_UDP_testing/%.erl,simpleUDP_ebin/%.beam,${ERL_UDP_FILES})
-
-ERL_SB_FILES := $(wildcard src/server_browser_draft/*.erl)
-BEAM_SERVER_BROWSER_DRAFT := $(patsubst src/server_browser_draft/%.erl,serverBrowser_ebin/%.beam,${ERL_SB_FILES})
+_GEESE_FILES := $(wildcard geese/src/*.erl)
+_BEAM_GEESE := $(patsubst geese/src/%.erl,geese_ebin/%.beam,${GEESE_FILES})
 ## end of Erlang files
+
+ROOT=./
+EBIN=$(ROOT)ebin/
+
+GEESE=$(ROOT)geese/src/
+
+GEESE_FILES=$(GEESE)geese_player.erl $(GEESE)geese_coordinator.erl $(GEESE)geese_player.erl $(GEESE)geese_table.erl $(GEESE)geese_dispatcher.erl $(GEESE)geese_coordinator_backup.erl $(GEESE)geese_sup.erl $(GEESE)game_state.erl $(GEESE)game_logic.erl $(GEESE)action_db.erl $(GEESE)geese_server.erl
+
+GEESE_TEST_FILES=$(GEESE)table_test.erl
 
 comma:= ,
 empty:=
@@ -45,48 +41,23 @@ USER=$(shell whoami)
 ARCHIVE_NAME :=  $(REQUIRED_DIR_NAME)_archive_$(USER)_$(shell date "+%Y-%m-%d__%H%M%S")__.tar.gz
 ARCHIVE_DIR := ..
 
+#=======================================================================#
 
-
-all: javac erlc $(BEAM_SIMPLE_UDP_TESTING) $(BEAM_FILES) $(BEAM_SERVER_BROWSER_DRAFT)
+all: erlc
 
 ## ERLANG CUSTOM COMPILATION (.beam files in ebin folder)
-erlc: server_browser_draft simple_UDP_testing
+erlc: geese_compile geese_tests
 
-simple_UDP_testing: src/simple_UDP_testing/
-	$(ERLC) $(ERLC_FLAGS) -o $< src/simple_UDP_testing/*.erl
+geese_tests:
+	$(ERLC) $(ERLC_FLAGS) -o ebin $(GEESE_TEST_FILES)
 
-server_browser_draft: src/server_browser_draft/
-	$(ERLC) $(ERLC_FLAGS) -o $< src/server_browser_draft/*.erl
-
-# ebin/%.beam: src/%.erl
-# 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
-
-# simpleUDP_ebin/%.beam: src/simple_UDP_testing/%.erl
-# 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
-
-# serverBrowser_ebin/%.beam: src/server_browser_draft/%.erl
-# 	$(ERLC) $(ERLC_FLAGS) -o ebin $<
+geese_compile:
+	$(ERLC) $(ERLC_FLAGS) -o ebin $(GEESE_FILES)
 
 ## end of Erlang compilation
 
-
-## JAVA CUSTOM COMPILATION (.class files in jbin folder)
-javac: game_server
-
-game_server:
-	$(JAVAC) $(JAVAC_FLAGS) src/game_server/src/*.java
-## $(JAVAC) $(JAVAC_FLAGS) -d jbin src/game_server/src/*.java
-## end of Java compilation
-
-
-start_server: 
-	(cd src/server_browser_draft && erl -eval 'game_logic:init_player(), bank_manager:init_bank(), bank_server:start()')
-
-start_node:
-	(cd src/server_browser_draft && erl -sname enode -setcookie erlang)
-
-start: all
-	(cd ebin && erl -eval 'foo:start(), init:stop()')
+server: erlc
+	(cd ebin && erl -eval 'io:format("~n~p~n", ["START THE SERVER BY TYPING: geese_sup:start_link(3010)."])')
 
 test: all
 	(cd ebin && erl -noinput -eval 'eunit:test({dir, "."}, [verbose]), init:stop()')
@@ -96,9 +67,9 @@ doc: $(BEAM_FILES)
 
 clean:
 	rm -fr .#* *.dump
-	rm -fr ebin/*.beam
-	rm -fr jbin/*.class
-	(cd doc/html && find . -name "*" -a ! -name overview.edoc -exec rm -rf {} \;)
+	rm -fr ebin/*
+	rm -fr jbin/*	
+## (cd doc/html && find . -name "*" -a ! -name overview.edoc -exec rm -rf {} \;)
 
 remove_finderinfo:
 	-xattr -d "com.apple.FinderInfo" src/*.erl include/*.hrl doc/* doc/html/*
