@@ -1,3 +1,4 @@
+%% @author Christian Törnqvist
 -module(geese_table).
 
 -behaviour(gen_server).

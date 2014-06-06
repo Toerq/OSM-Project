@@ -1,3 +1,4 @@
+%% @author Christian Törnqvist
 -module(geese_sup).
 -behaviour(supervisor).
 

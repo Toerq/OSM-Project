@@ -1,3 +1,4 @@
+%% @author Christian Törnqvist
 -module(geese_coordinator_backup).
 
 -behaviour(gen_server).
