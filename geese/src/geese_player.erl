@@ -18,33 +18,35 @@ init([Accept_socket]) ->
     {ok, #state{player_id = self(), accept_socket = Accept_socket, name = "Player"}}.
 
 %% @doc Communicates with the client through TCP connection. Recieves packages, and the handles them in a predefined way. The following are the defined receive terms.
-%% === Case {get_state, Name} ===
+
+%% === Received cases: ===
 %% <div class="example">
+%%  Case {getasd_state, Name} 
 %% Changes the name of the player stored in the State of the player process.
-%% </div>
-%% === Case {add_table, Name, Game_type, Max_players} ===
-%% <div class="example">
+%% 
+%%  Case {add_table, Name, Game_type, Max_players} 
+
 %% Calls the coordinator module and adds a new table  with name Name, game_type Game_type, and max players Max_players.
-%% </div>
-%% === Case ping ===
-%% <div class="example">
+%% 
+%%  Case ping 
+
 %% Sends the erlang atom pong through TCP.
-%% </div>
-%% === Case browse_tables ===
-%% <div class="example">
+%% 
+%%  Case browse_tables 
+
 %% Sends the list of tables stored in the coordinator module through TCP.
-%% </div>
-%% === Case browse_players ===
-%% <div class="example">
+%% 
+%%  Case browse_players 
+
 %% Sends the list of players stored in the coordinator module through TCP. 
-%% </div>
-%% === {join_table, Table_ref} ===
-%% <div class="example">
+%% 
+%%  {join_table, Table_ref} 
+
 %% Attempts to join a new table with the current player process and table with reference Table_ref by calling geese_coordinator:join_table/2.
 %% Either returns the atom join_succeeded or join_failed depending on wether the join succeeded or not.
-%% </div>
-%% === leave_game ===
-%% <div class="example">
+%% 
+%%  leave_game 
+
 %% Removes the player element of the called player process in the coordinator module. Also terminates the player process being called.
 %% </div>
 talk_state(State) -> 
