@@ -16,6 +16,7 @@ JAVAC_FLAGS := -classpath ".:./src/GeeseClient/resources/jinterface-1.5.6.jar"
 ## Erlang files ##
 _GEESE_FILES := $(wildcard geese/src/*.erl)
 _BEAM_GEESE := $(patsubst geese/src/%.erl,geese_ebin/%.beam,${GEESE_FILES})
+_GEESE_TEST_FILES := $(wildcard geese/src/*_test.erl)
 ## end of Erlang files
 
 APPNAME=GEESE Project Group 10 - OSM 2014
@@ -24,9 +25,11 @@ EBIN=$(ROOT)ebin/
 
 GEESE=$(ROOT)geese/src/
 
-GEESE_FILES=$(GEESE)geese_player.erl $(GEESE)geese_coordinator.erl $(GEESE)geese_player.erl $(GEESE)geese_table.erl $(GEESE)geese_dispatcher.erl $(GEESE)geese_coordinator_backup.erl $(GEESE)geese_sup.erl $(GEESE)game_state.erl $(GEESE)game_logic.erl $(GEESE)action_db.erl
+## Filter out test files
+GEESE_FILES=$(filter-out $(EUNIT_FILES), $(_GEESE_FILES))
 
-GEESE_TEST_FILES=$(GEESE)table_test.erl $(GEESE)coordinator_test.erl
+## Filter out non-EUnit files
+GEESE_TEST_FILES=$(filter-out geese/src/stress_test.erl, $(_GEESE_TEST_FILES))
 
 comma:= ,
 empty:=
