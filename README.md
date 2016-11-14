@@ -21,15 +21,15 @@ GEESE (Generic Erlang Server)
 
 ## ==== GROUP MEMBERS ==== 
 
-930922-3452 Johan.Gille.8100@student.uu.se
+Johan.Gille.8100@student.uu.se
 
-880615-6215 Niklas.Hokenstrom.6511@student.uu.se
+Niklas.Hokenstrom.6511@student.uu.se
 
-900215-5217 Valle.Magnusson.5911@student.uu.se
+Valle.Magnusson.5911@student.uu.se
 
-920927-2179 Jonas.Nilson.8705@student.uu.se
+Jonas.Nilson.8705@student.uu.se
 
-920104-0616 Christian.Tornqvist.2175@student.uu.se
+Christian.Tornqvist.2175@student.uu.se
 
 ## ==== MAY THE SOURCE BE WITH YOU ==== 
 
